@@ -1,0 +1,35 @@
+# Игнорировать системные файлы и директории
+.DS_Store
+Thumbs.db
+
+# Игнорировать директории сборки или кэширования
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Игнорировать среду разработки
+.vscode/
+.idea/
+*.swp
+
+# Игнорировать виртуальные среды Python
+venv/
+env/
+*.egg-info/
+
+# Игнорировать файлы конфигурации OS
+*.log
+*.bak
+*.tmp
+
+# Игнорировать логи
+*.log
+download_log.txt
+
+# Оставляем бинарные файлы и специфичные для проекта файлы
+# goodbyedpi.exe, fackrkn.ico и файлы черных списков НЕ будут игнорироваться
+!goodbyedpi.exe
+!fackrkn.ico
+!russia-blacklist.txt
+!russia-youtube.txt
