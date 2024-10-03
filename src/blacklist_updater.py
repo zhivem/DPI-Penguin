@@ -8,7 +8,7 @@ def update_blacklist():
     # URL, откуда загружается список доменов.
     url = "https://p.thenewone.lol/domains-export.txt"
     # Путь для сохранения черного списка.
-    output_file = os.path.join(BASE_FOLDER, "russia-blacklist.txt")
+    output_file = os.path.join(BASE_FOLDER, "black", "russia-blacklist.txt")
     # Путь для логирования загрузок.
     log_file = os.path.join(BASE_FOLDER, "download_log.txt")
 

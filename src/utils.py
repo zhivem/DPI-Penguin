@@ -13,12 +13,12 @@ BASE_FOLDER = os.path.dirname(os.path.abspath(__file__))
 
 # Пути к файлам черного списка.
 BLACKLIST_FILES = [
-    os.path.join(BASE_FOLDER, "russia-blacklist.txt"),
-    os.path.join(BASE_FOLDER, "russia-youtube.txt")
+    os.path.join(BASE_FOLDER, "black", "russia-blacklist.txt"),
+    os.path.join(BASE_FOLDER, "black", "russia-youtube.txt")
 ]
 
 # Путь к исполняемому файлу GoodbyeDPI.
-GOODBYE_DPI_EXE = os.path.join(BASE_FOLDER, get_architecture(), "goodbyedpi.exe")
+GOODBYE_DPI_EXE = os.path.join(BASE_FOLDER, "bin", get_architecture(), "goodbyedpi.exe")
 
 # Команда для остановки WinDivert (сетевая утилита).
 WIN_DIVERT_COMMAND = ["net", "stop", "WinDivert"]
@@ -42,7 +42,7 @@ def ensure_module_installed(module_name):
 def get_latest_version():
     import requests
     # URL для получения информации о последнем релизе с GitHub.
-    url = 'https://api.github.com/repos/{owner}/{repo}/releases/latest'.format(owner='zhivem', repo='GUI')
+    url = 'https://api.github.com/repos/{owner}/{repo}/releases/latest'.format(owner='zhivem', repo='GoodByDPI-GUI-by-Zhivem')
     try:
         # Выполняем запрос на получение информации о последнем релизе.
         response = requests.get(url)

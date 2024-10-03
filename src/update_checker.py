@@ -26,4 +26,4 @@ class UpdateCheckerThread(QtCore.QThread):
                 self.no_update.emit()
         else:
             # В случае ошибки при получении версии, отправляем сигнал с ошибкой.
-            self.update_error.emit("Не удалось получить последнюю версию. Проверьте подключение к интернету.")
+            self.update_error.emit("Не удалось получить последнюю версию.")
