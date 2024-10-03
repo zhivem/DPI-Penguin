@@ -15,7 +15,7 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
         self.check_for_updates()
 
     def init_ui(self):
-        self.setWindowTitle("GoodByeDPI GUI by [Ярослав Zhivem]")
+        self.setWindowTitle("GoodByeDPI GUI by Zhivem")
         self.setFixedSize(420, 450)
         self.setWindowIcon(QIcon(os.path.join(BASE_FOLDER, "icon", 'fackrkn.ico')))
         setTheme(Theme.LIGHT)
