@@ -1,60 +1,91 @@
-import os 
-from PyQt5 import QtWidgets, QtCore  
-from PyQt5.QtGui import QIcon, QTextCursor, QDesktopServices 
-from qfluentwidgets import PushButton, ComboBox, TextEdit, Theme, setTheme  
-from process_worker import WorkerThread  
-from update_checker import UpdateCheckerThread  
-from blacklist_updater import update_blacklist  
-from utils import BASE_FOLDER, BLACKLIST_FILES, GOODBYE_DPI_EXE, WIN_DIVERT_COMMAND, GOODBYE_DPI_PROCESS_NAME 
+from PyQt5 import QtWidgets, QtCore
+from PyQt5.QtGui import QIcon, QTextCursor
+from qfluentwidgets import PushButton, ComboBox, TextEdit, Theme, setTheme
+import os
 import psutil
+from updater import Updater
+import subprocess
+import platform
+from process_worker import WorkerThread
+from utils import BASE_FOLDER, BLACKLIST_FILES, GOODBYE_DPI_EXE, WIN_DIVERT_COMMAND, GOODBYE_DPI_PROCESS_NAME
+
 
 class GoodbyeDPIApp(QtWidgets.QWidget):
+
     def __init__(self):
-        super().__init__()  
-        self.init_ui() 
-        self.check_for_updates() 
+        super().__init__()
+        self.init_ui()
+        self.updater = Updater()
 
     def init_ui(self):
-        self.setWindowTitle("GoodByeDPI GUI by Zhivem")  
-        self.setFixedSize(420, 450)  
-        self.setWindowIcon(QIcon(os.path.join(BASE_FOLDER, "icon", 'fackrkn.ico'))) 
-        setTheme(Theme.LIGHT)  
+        self.setWindowTitle("GoodByeDPI GUI by Zhivem v1.2")
+        self.setFixedSize(420, 350)
+        self.setWindowIcon(QIcon(os.path.join(BASE_FOLDER, "icon", 'fackrkn.ico')))
+        setTheme(Theme.LIGHT)
 
         layout = QtWidgets.QVBoxLayout(self)
+        tab_widget = self.create_tabs()
+        layout.addWidget(tab_widget)
+
+    def create_tabs(self):
+        tab_widget = QtWidgets.QTabWidget(self)
+
+        # Вкладка процессов
+        process_tab = QtWidgets.QWidget()
+        process_layout = QtWidgets.QVBoxLayout(process_tab)
+        tab_widget.addTab(process_tab, "GoodbyeDPI")
 
         self.script_options = {
-            "YouTube (Актуальный метод)": [
-                "-9", "--blacklist", BLACKLIST_FILES[0], "--blacklist", BLACKLIST_FILES[1]
-            ],
-            "Ростелеком (Тестовая версия)": [
-                "-5", "-e1", "--blacklist", BLACKLIST_FILES[0], "--blacklist", BLACKLIST_FILES[1]
-            ]
+            "Обход блокировок YouTube (Актуальный метод)": ["-9", "--blacklist", BLACKLIST_FILES[1]],
+            "Обход блокировок для всех сайтов": ["-9", "--blacklist", BLACKLIST_FILES[0], "--blacklist", BLACKLIST_FILES[1]]
         }
 
-        self.selected_script = ComboBox() 
-        self.selected_script.addItems(self.script_options.keys())  
-        layout.addWidget(self.selected_script) 
+        self.selected_script = ComboBox()
+        self.selected_script.addItems(self.script_options.keys())
+        process_layout.addWidget(self.selected_script)
 
-        self.run_button = PushButton("Запустить")
-        self.run_button.clicked.connect(self.run_exe)
-        layout.addWidget(self.run_button)
+        self.run_button = self.create_button("Запустить", self.run_exe, process_layout)
+        self.stop_close_button = self.create_button("Остановить и закрыть", self.stop_and_close, process_layout, enabled=False)
 
-        self.stop_close_button = PushButton("Остановить WinDivert и закрыть GoodbyeDPI")
-        self.stop_close_button.setEnabled(False)
-        self.stop_close_button.clicked.connect(self.stop_and_close)
-        layout.addWidget(self.stop_close_button)
-
-        self.update_blacklist_button = PushButton("Обновить черный список")
-        self.update_blacklist_button.clicked.connect(self.update_blacklist)
-        layout.addWidget(self.update_blacklist_button)
-
-        self.update_button = PushButton("Проверить обновления")
-        self.update_button.clicked.connect(self.check_for_updates)
-        layout.addWidget(self.update_button)
-
-        self.console_output = TextEdit()
+        self.console_output = TextEdit(self)
         self.console_output.setReadOnly(True)
-        layout.addWidget(self.console_output)
+        process_layout.addWidget(self.console_output)
+
+        # Вкладка настроек
+        settings_tab = QtWidgets.QWidget()
+        settings_layout = QtWidgets.QVBoxLayout(settings_tab)
+        tab_widget.addTab(settings_tab, "Настройки")
+
+        self.create_label("Службы", settings_layout)
+        self.create_button("Создать службу", self.create_service, settings_layout)
+        self.create_button("Удалить службу", self.delete_service, settings_layout)
+
+        settings_layout.addStretch(1)
+
+        self.create_label("Обновления", settings_layout)
+        self.create_button("Обновить черный список", self.update_blacklist, settings_layout)
+        self.update_button = self.create_button("Проверить обновления", self.check_for_updates, settings_layout)
+
+        settings_layout.addStretch(1)
+        self.create_label("GoodbyeDPI GUI by Zhivem v1.2", settings_layout, centered=True)
+        self.create_label('<a href="https://github.com/zhivem/GoodByDPI-GUI-by-Zhivem">Проект на GitHub</a>', settings_layout, centered=True, link=True)
+
+        return tab_widget
+
+    def create_button(self, text, func, layout, enabled=True):
+        button = PushButton(text, self)
+        button.setEnabled(enabled)
+        button.clicked.connect(func)
+        layout.addWidget(button)
+        return button
+
+    def create_label(self, text, layout, centered=False, link=False):
+        label = QtWidgets.QLabel(text, self)
+        if centered:
+            label.setAlignment(QtCore.Qt.AlignCenter)
+        if link:
+            label.setOpenExternalLinks(True)
+        layout.addWidget(label)
 
     def run_exe(self):
         command = [GOODBYE_DPI_EXE] + self.script_options[self.selected_script.currentText()]
@@ -89,7 +120,7 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
             self.run_button.setEnabled(True)
             self.stop_close_button.setEnabled(False)
             self.console_output.append(f"Процесс {process_name} завершен.")
-    
+
     def stop_and_close(self):
         self.start_process(WIN_DIVERT_COMMAND, "WinDivert")
         self.close_goodbyedpi()
@@ -106,36 +137,65 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
 
     def update_blacklist(self):
         self.clear_console("Обновление черного списка...")
-        success = update_blacklist()
-        if success:
-            self.console_output.append("Обновление черного списка успешно завершено.")
-        else:
-            self.console_output.append("Не удалось обновить черный список. Проверьте соединение с интернетом.")
+        self.updater.blacklist_updated.connect(self.on_blacklist_updated)
+        self.updater.update_error.connect(self.on_update_error)
+        self.updater.update_blacklist()
+
+    def check_for_updates(self):
+        self.update_button.setEnabled(False)
+        self.updater.update_available.connect(self.notify_update)
+        self.updater.no_update.connect(self.no_update)
+        self.updater.update_error.connect(self.on_update_error)
+        self.updater.finished.connect(self.on_update_finished)
+        self.updater.start()
+
+    def no_update(self):
+        self.console_output.append("Обновлений не найдено.")
+        QtWidgets.QMessageBox.information(self, "Обновление", "Обновлений не найдено.")
+
+    def on_update_finished(self):
+        self.update_button.setEnabled(True)
+
+    def on_blacklist_updated(self):
+        QtWidgets.QMessageBox.information(self, "Обновление черного списка", "Черный список обновлен.")
+    
+    def on_update_error(self, error_message):
+        self.console_output.append(error_message)
+        QtWidgets.QMessageBox.warning(self, "Ошибка обновления", error_message)
+
+    def notify_update(self, latest_version):
+        QtWidgets.QMessageBox.information(self, "Доступно обновление", f"Доступна новая версия {latest_version}. Перейдите на страницу загрузки.")
+
+    def create_service(self):
+        try:
+            arch = 'x86_64' if platform.machine().endswith('64') else 'x86'
+            binary_path = f'"{os.getcwd()}\\{arch}\\goodbyedpi.exe"'
+            blacklist_path = f'"{os.getcwd()}\\russia-blacklist.txt"'
+            youtube_blacklist_path = f'"{os.getcwd()}\\russia-youtube.txt"'
+
+            subprocess.run([
+                'sc', 'create', 'GoodbyeDPI',
+                f'binPath= {binary_path} -9 --blacklist {blacklist_path} --blacklist {youtube_blacklist_path}',
+                'start=', 'auto'
+            ], check=True)
+
+            subprocess.run([
+                'sc', 'description', 'GoodbyeDPI',
+                'Passive Deep Packet Inspection blocker and Active DPI circumvention utility'
+            ], check=True)
+
+            QtWidgets.QMessageBox.information(self, "Служба", "Служба GoodbyeDPI создана и настроена для автоматического запуска.")
+        except subprocess.CalledProcessError:
+            QtWidgets.QMessageBox.warning(self, "Ошибка", "Не удалось создать службу.")
+
+    def delete_service(self):
+        try:
+            subprocess.run(['sc', 'delete', 'GoodbyeDPI'], check=True)
+            QtWidgets.QMessageBox.information(self, "Служба", "Служба успешно удалена.")
+        except subprocess.CalledProcessError:
+            QtWidgets.QMessageBox.warning(self, "Ошибка", "Не удалось удалить службу GoodbyeDPI.")
 
     def clear_console(self, initial_text=""):
         self.console_output.clear()
         if initial_text:
             self.console_output.append(initial_text)
-
-    def check_for_updates(self):
-        self.update_thread = UpdateCheckerThread()
-        self.update_thread.update_available.connect(self.notify_update)
-        self.update_thread.no_update.connect(self.no_update)
-        self.update_thread.update_error.connect(self.update_error)
-        self.update_thread.start()
-
-    def no_update(self):
-        self.console_output.append("Обновлений нет. Вы используете последнюю версию.")
-
-    def update_error(self, error_message):
-        self.console_output.append(error_message)
-
-    def notify_update(self, latest_version):
-        reply = QtWidgets.QMessageBox.question(
-            self,
-            "Доступно обновление",
-            f"Доступна новая версия {latest_version}. Хотите перейти на страницу загрузки?",
-            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No
-        )
-        if reply == QtWidgets.QMessageBox.Yes:
-            QDesktopServices.openUrl(QtCore.QUrl('https://github.com/zhivem/GUI/releases'))

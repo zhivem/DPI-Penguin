@@ -20,14 +20,20 @@ WIN_DIVERT_COMMAND = ["net", "stop", "WinDivert"]
 
 GOODBYE_DPI_PROCESS_NAME = "goodbyedpi.exe"
 
-current_version = '1.1'
+current_version = '1.2'
 
 def ensure_module_installed(module_name):
     try:
         __import__(module_name)
     except ImportError:
         logging.warning(f"Модуль {module_name} не найден, установка...")
+        install_module(module_name)
+
+def install_module(module_name):
+    try:
         subprocess.check_call([sys.executable, "-m", "pip", "install", module_name])
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Ошибка установки модуля {module_name}: {e}")
 
 def get_latest_version():
     import requests
@@ -45,3 +51,4 @@ def get_latest_version():
 
 def is_newer_version(latest, current):
     from packaging.version import parse as parse_version
+    return parse_version(latest) > parse_version(current)
