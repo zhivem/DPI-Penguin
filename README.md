@@ -9,6 +9,7 @@
 ![image](https://github.com/user-attachments/assets/28eba44d-d51a-4236-9b29-2e0bd565d87a)
 ![image](https://github.com/user-attachments/assets/c6eb5974-3e11-4ec0-81c3-34d064e2e43c)
 
+
 ## Основные файлы
 
 - **`main.py`** — основной файл для запуска графического интерфейса.
