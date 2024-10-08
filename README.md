@@ -76,7 +76,7 @@
 
 Программа предлагает удобный графический интерфейс для запуска, управления и обновления утилиты GoodByeDPI. Просто выберите нужный сценарий, нажмите "Запустить", и программа выполнит необходимые действия.
 
-# Similar projects
+# Похожие проекты
 
 - **[GoodbyeDPI UI](https://github.com/Storik4pro/goodbyeDPI-UI)** by @Storik4pro
 - **[Launcher for GoodbyeDPI](https://topersoft.com/programs/launchergdpi)** by @TOPERSOFT 
