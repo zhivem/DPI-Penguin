@@ -7,9 +7,7 @@
 Доступна также **версия программы в формате `.exe`** для пользователей, которые не хотят вручную устанавливать зависимости или запускать исходный код. Готовую сборку можно скачать на странице [релизов проекта](https://github.com/zhivem/GoodByDPI-GUI-by-zhivem/releases).
 
 ![image](https://github.com/user-attachments/assets/d08452c5-3a59-4512-9f7b-8fdb055b8b70)
-![image](https://github.com/user-attachments/assets/76a77437-24d0-47a9-b2a3-b9e5f856f5bd)
-
-
+![image](https://github.com/user-attachments/assets/206bb6be-3583-4995-8c51-5ca66cd07afd)
 
 ## Основные файлы
 
