@@ -1,4 +1,4 @@
-# GoodByeDPI GUI by Zhivem
+# GoodByeDPI GUI by Zhivem [YouTube + Discord ( + Голосовой чат )]
 
 ## О проекте
 
@@ -6,8 +6,9 @@
 
 Доступна также **версия программы в формате `.exe`** для пользователей, которые не хотят вручную устанавливать зависимости или запускать исходный код. Готовую сборку можно скачать на странице [релизов проекта](https://github.com/zhivem/GoodByDPI-GUI-by-zhivem/releases).
 
-![image](https://github.com/user-attachments/assets/d08452c5-3a59-4512-9f7b-8fdb055b8b70)
-![image](https://github.com/user-attachments/assets/206bb6be-3583-4995-8c51-5ca66cd07afd)
+![image](https://github.com/user-attachments/assets/6d08d6ed-73ac-45e9-bf1d-addbf5325c37)
+![image](https://github.com/user-attachments/assets/fc2a294c-c9af-4f76-ae1b-73b31b92a475)
+
 
 ## Основные файлы
 
@@ -16,7 +17,6 @@
 - **`process_worker.py`** — отвечает за выполнение фоновых процессов для управления GoodByeDPI.
 - **`updater.py`** — обновлённый модуль для проверки доступных версий программы и работы с обновлениями.
 - **`utils.py`** — содержит полезные функции и константы, которые используются в других модулях.
-- **`config.py`** — содержит основные конфигурации программы.
 - **`site_checker.py`** — отвечает за проверку доступности списка веб-сайтов в фоновом потоке с использованием библиотеки PyQt5.
 
 ## Новые возможности
@@ -78,7 +78,8 @@
 # Похожие проекты
 
 - **[GoodbyeDPI UI](https://github.com/Storik4pro/goodbyeDPI-UI)** by @Storik4pro
-- **[Launcher for GoodbyeDPI](https://topersoft.com/programs/launchergdpi)** by @TOPERSOFT 
+- **[Launcher for GoodbyeDPI](https://topersoft.com/programs/launchergdpi)** by @TOPERSOFT
+- **[Zapret](https://github.com/bol-van/zapret)** by bol-van
 
 ## Вклад в проект
 
