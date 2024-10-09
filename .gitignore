@@ -1,21 +1,19 @@
-.DS_Store
-Thumbs.db
+# Byte-compiled / optimized / DLL files
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-.vscode/
-.idea/
-*.swp
+*.py[cod]
+*$py.class
+
+# Virtual environment
 venv/
 env/
+ENV/
+.venv/
+
+# Распределение / упаковка
+build/
+dist/
 *.egg-info/
-*.log
-*.bak
-*.tmp
-*.log
-download_log.txt
-!goodbyedpi.exe
-!fackrkn.ico
-!russia-blacklist.txt
-!russia-youtube.txt
+
+# IDE
+.idea/
+.vscode/

@@ -1,11 +1,5 @@
 PyQt5
-blacklist_updater
-datetime
-logging
-platform
-process_worker
-psutil
 qfluentwidgets
 requests
-update_checker
-utils
+packaging
+psutil
