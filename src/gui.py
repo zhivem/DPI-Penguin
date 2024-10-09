@@ -1,17 +1,29 @@
 import os
+import sys 
 import platform
 import logging
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtGui import QIcon, QPixmap, QColor
 from qfluentwidgets import PushButton, ComboBox, TextEdit, Theme, setTheme
 from process_worker import WorkerThread
-from utils import SITES, DISPLAY_NAMES, BASE_FOLDER, BLACKLIST_FILES, GOODBYE_DPI_EXE, WIN_DIVERT_COMMAND, GOODBYE_DPI_PROCESS_NAME, current_version
+from utils import (
+    SITES, DISPLAY_NAMES, BASE_FOLDER, BLACKLIST_FILES, 
+    GOODBYE_DPI_EXE, WIN_DIVERT_COMMAND, GOODBYE_DPI_PROCESS_NAME, 
+    current_version, SCRIPT_OPTIONS
+)
 from site_checker import SiteCheckerWorker
 from updater import Updater
 import psutil
 import subprocess
+import webbrowser
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+LOG_FILE = os.path.join(BASE_FOLDER, "app_zhivem_v1.5.log")
+
+logging.basicConfig(
+    filename=LOG_FILE,
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
 class GoodbyeDPIApp(QtWidgets.QWidget):
     site_status_updated = QtCore.pyqtSignal(str, str)
@@ -40,69 +52,71 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
     def create_tabs(self):
         tab_widget = QtWidgets.QTabWidget(self)
 
-        process_tab = QtWidgets.QWidget()
-        process_layout = QtWidgets.QVBoxLayout(process_tab)
+        process_tab = self.create_process_tab()
         tab_widget.addTab(process_tab, "GoodbyeDPI")
 
-        self.script_options = {
-            "Обход блокировок YouTube (Актуальный метод)": ["-9", "--blacklist", BLACKLIST_FILES[1]],
-            "Обход блокировки Discord": ["-9", "--blacklist", BLACKLIST_FILES[2]],
-            "Обход блокировки YouTube и Discord": ["-9", "--blacklist", BLACKLIST_FILES[1], "--blacklist", BLACKLIST_FILES[2]],
-            "Обход блокировок для всех сайтов": ["-9", "--blacklist", BLACKLIST_FILES[0]]
-        }
+        settings_tab = self.create_settings_tab()
+        tab_widget.addTab(settings_tab, "Настройки")
+
+        return tab_widget
+
+    def create_process_tab(self):
+        process_tab = QtWidgets.QWidget()
+        process_layout = QtWidgets.QVBoxLayout(process_tab)
 
         self.selected_script = ComboBox()
-        self.selected_script.addItems(self.script_options.keys())
+        self.selected_script.addItems(SCRIPT_OPTIONS.keys())
         process_layout.addWidget(self.selected_script)
 
         buttons_layout = QtWidgets.QHBoxLayout()
         self.run_button = self.create_button("Запустить", self.run_exe, buttons_layout)
-        self.stop_close_button = self.create_button("Остановить и закрыть", self.stop_and_close, buttons_layout, enabled=False)
+        self.stop_close_button = self.create_button(
+            "Остановить и закрыть", self.stop_and_close, buttons_layout, enabled=False
+        )
         process_layout.addLayout(buttons_layout)
 
         self.console_output = TextEdit(self)
         self.console_output.setReadOnly(True)
         process_layout.addWidget(self.console_output)
 
+        return process_tab
+
+    def create_settings_tab(self):
         settings_tab = QtWidgets.QWidget()
         settings_layout = QtWidgets.QVBoxLayout(settings_tab)
-        tab_widget.addTab(settings_tab, "Настройки")
 
         services_group = QtWidgets.QGroupBox("Службы")
         services_layout = QtWidgets.QVBoxLayout()
         services_group.setLayout(services_layout)
-        settings_layout.addWidget(services_group)
-
         self.create_button("Создать службу", self.create_service, services_layout)
         self.create_button("Удалить службу", self.delete_service, services_layout)
+        settings_layout.addWidget(services_group)
 
         updates_group = QtWidgets.QGroupBox("Обновления")
         updates_layout = QtWidgets.QVBoxLayout()
         updates_group.setLayout(updates_layout)
-        settings_layout.addWidget(updates_group)
-
         self.create_button("Обновить черный список", self.update_blacklist, updates_layout)
         self.update_button = self.create_button("Проверить обновления", self.check_for_updates, updates_layout)
+        settings_layout.addWidget(updates_group)
 
-        sites_group = QtWidgets.QGroupBox("Основные сайты")
+        sites_group = QtWidgets.QGroupBox("Основные сайты YouTube")
         sites_layout = QtWidgets.QVBoxLayout()
         sites_group.setLayout(sites_layout)
-        settings_layout.addWidget(sites_group)
-
-        # Изменяем на использование DISPLAY_NAMES для отображения
         sites_widget = self.create_sites_list(DISPLAY_NAMES)
         sites_layout.addWidget(sites_widget)
-
         self.check_sites_button = PushButton("Проверить доступность", self)
         self.check_sites_button.clicked.connect(self.check_sites_status)
         sites_layout.addWidget(self.check_sites_button)
+        settings_layout.addWidget(sites_group)
 
         info_layout = QtWidgets.QVBoxLayout()
         info_label = QtWidgets.QLabel(f"GoodbyeDPI GUI by Zhivem v{current_version}")
         info_label.setAlignment(QtCore.Qt.AlignCenter)
         info_layout.addWidget(info_label)
 
-        github_label = QtWidgets.QLabel('<a href="https://github.com/zhivem/GoodByDPI-GUI-by-Zhivem">Проект на GitHub</a>')
+        github_label = QtWidgets.QLabel(
+            '<a href="https://github.com/zhivem/GoodByDPI-GUI-by-Zhivem">Проект на GitHub</a>'
+        )
         github_label.setAlignment(QtCore.Qt.AlignCenter)
         github_label.setOpenExternalLinks(True)
         info_layout.addWidget(github_label)
@@ -110,7 +124,7 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
         settings_layout.addLayout(info_layout)
         settings_layout.addStretch(1)
 
-        return tab_widget
+        return settings_tab
 
     def create_sites_list(self, sites):
         list_widget = QtWidgets.QListWidget()
@@ -136,28 +150,71 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
         return button
 
     def run_exe(self):
-        if not os.path.exists(GOODBYE_DPI_EXE):
-            logging.error(f"Файл {GOODBYE_DPI_EXE} не найден.")
-            self.console_output.append(f"Ошибка: файл {GOODBYE_DPI_EXE} не найден.")
+        selected_option = self.selected_script.currentText()
+        if selected_option not in SCRIPT_OPTIONS:
+            logging.error(f"Неизвестный вариант скрипта: {selected_option}")
+            self.console_output.append(f"Ошибка: неизвестный вариант скрипта {selected_option}.")
             return
 
-        command = [GOODBYE_DPI_EXE] + self.script_options[self.selected_script.currentText()]
+        executable, args = SCRIPT_OPTIONS[selected_option]
+
+        if not self.is_executable_available(executable, selected_option):
+            return
+
+        command = [executable] + args
         logging.debug(f"Команда для запуска: {command}")
-        
+
         try:
-            self.start_process(command, "GoodbyeDPI", disable_run=True, clear_console_text="Процесс GoodbyeDPI запущен...")
+            capture_output = not selected_option in ["Обход блокировки Discord", "Обход Discord + YouTube"]
+            self.start_process(
+                command,
+                selected_option,
+                disable_run=True,
+                clear_console_text=f"Установка: {selected_option} запущена...",
+                capture_output=capture_output
+            )
         except Exception as e:
             logging.error(f"Ошибка запуска процесса: {e}")
             self.console_output.append(f"Ошибка запуска процесса: {e}")
 
-    def start_process(self, command, process_name, disable_run=False, clear_console_text=None):
+    def is_executable_available(self, executable, selected_option):
+        if not os.path.exists(executable):
+            logging.error(f"Файл {executable} не найден.")
+            self.console_output.append(f"Ошибка: файл {executable} не найден.")
+            return False
+
+        if not os.access(executable, os.X_OK):
+            logging.error(f"Недостаточно прав для запуска {executable}.")
+            self.console_output.append(f"Ошибка: Недостаточно прав для запуска {executable}.")
+            return False
+
+        if selected_option in ["Обход блокировки Discord", "Обход Discord + YouTube"]:
+            required_files = [
+                os.path.join(BASE_FOLDER, "black", "discord-blacklist.txt"),
+                os.path.join(BASE_FOLDER, "zapret", "quic_initial_www_google_com.bin"),
+                os.path.join(BASE_FOLDER, "zapret", "tls_clienthello_www_google_com.bin")
+            ]
+            missing_files = [f for f in required_files if not os.path.exists(f)]
+            if missing_files:
+                logging.error(f"Не найдены необходимые файлы: {', '.join(missing_files)}")
+                self.console_output.append(f"Ошибка: не найдены файлы: {', '.join(missing_files)}")
+                return False
+
+        return True
+
+    def start_process(self, command, process_name, disable_run=False, clear_console_text=None, capture_output=True):
         if clear_console_text:
             self.clear_console(clear_console_text)
 
         try:
-            creationflags = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
-            self.worker_thread = WorkerThread(command, process_name, encoding="cp866")
-            self.worker_thread.output_signal.connect(self.update_output)
+            self.worker_thread = WorkerThread(
+                command, 
+                process_name, 
+                encoding="cp866", 
+                capture_output=capture_output
+            )
+            if capture_output:
+                self.worker_thread.output_signal.connect(self.update_output)
             self.worker_thread.finished_signal.connect(self.on_finished)
 
             self.worker_thread.start()
@@ -181,25 +238,26 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
             cursor.deleteChar()
 
     def on_finished(self, process_name):
-        if process_name == "GoodbyeDPI":
+        if process_name in SCRIPT_OPTIONS:
             self.run_button.setEnabled(True)
             self.stop_close_button.setEnabled(False)
             logging.debug(f"Процесс {process_name} завершён.")
 
     def stop_and_close(self):
-        self.start_process(WIN_DIVERT_COMMAND, "WinDivert")
-        self.close_goodbyedpi()
+        self.start_process(WIN_DIVERT_COMMAND, "WinDivert", capture_output=False)
+        self.close_process(GOODBYE_DPI_PROCESS_NAME, "GoodbyeDPI")
+        self.close_process("winws.exe", "winws.exe")
 
-    def close_goodbyedpi(self):
+    def close_process(self, process_name, display_name):
         try:
             for proc in psutil.process_iter(['pid', 'name']):
-                if proc.info['name'] == GOODBYE_DPI_PROCESS_NAME:
+                if proc.info['name'].lower() == process_name.lower():
                     psutil.Process(proc.info['pid']).terminate()
-                    self.console_output.append("Процесс GoodbyeDPI завершен.")
-                    return
-            self.console_output.append("Процесс GoodbyeDPI не найден.")
+                    self.console_output.append(f"Процесс {display_name} завершен.")
+                    logging.debug(f"Процесс {display_name} (PID: {proc.info['pid']}) завершён.")
         except psutil.Error as e:
-            self.console_output.append(f"Ошибка завершения процесса: {str(e)}")
+            self.console_output.append(f"Ошибка завершения процесса {display_name}: {str(e)}")
+            logging.error(f"Ошибка завершения процесса {display_name}: {str(e)}")
 
     def update_blacklist(self):
         self.updater.blacklist_updated.connect(self.on_blacklist_updated)
@@ -233,9 +291,9 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
     def create_service(self):
         try:
             arch = 'x86_64' if platform.machine().endswith('64') else 'x86'
-            binary_path = f'"{os.getcwd()}\\{arch}\\goodbyedpi.exe"'
-            blacklist_path = f'"{os.getcwd()}\\russia-blacklist.txt"'
-            youtube_blacklist_path = f'"{os.getcwd()}\\russia-youtube.txt"'
+            binary_path = f'"{os.path.join(os.getcwd(), arch, "goodbyedpi.exe")}"'
+            blacklist_path = f'"{os.path.join(os.getcwd(), "russia-blacklist.txt")}"'
+            youtube_blacklist_path = f'"{os.path.join(os.getcwd(), "russia-youtube.txt")}"'
 
             subprocess.run([
                 'sc', 'create', 'GoodbyeDPI',
@@ -266,13 +324,14 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
 
     def check_sites_status(self):
         self.check_sites_button.setEnabled(False)
+
         self.site_checker_thread = QtCore.QThread()
         self.site_checker_worker = SiteCheckerWorker(self.site_status.keys())
         self.site_checker_worker.moveToThread(self.site_checker_thread)
 
         self.site_checker_thread.started.connect(self.site_checker_worker.run)
-        self.site_checker_worker.site_checked.connect(self.site_status_updated.emit)
-        self.site_checker_worker.finished.connect(self.sites_check_finished.emit)
+        self.site_checker_worker.site_checked.connect(self.update_site_status)
+        self.site_checker_worker.finished.connect(self.sites_check_finished)
         self.site_checker_worker.finished.connect(self.site_checker_thread.quit)
         self.site_checker_worker.finished.connect(self.site_checker_worker.deleteLater)
         self.site_checker_thread.finished.connect(self.site_checker_thread.deleteLater)
@@ -293,7 +352,6 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
         self.check_sites_button.setEnabled(True)
 
 def main():
-    import sys
     app = QtWidgets.QApplication(sys.argv)
     window = GoodbyeDPIApp()
     window.show()

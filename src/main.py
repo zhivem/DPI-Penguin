@@ -4,15 +4,24 @@ import logging
 import ctypes
 from PyQt5 import QtWidgets
 from gui import GoodbyeDPIApp
-from utils import ensure_module_installed
+from utils import ensure_module_installed, BASE_FOLDER
 from updater import Updater
-import webbrowser 
+import webbrowser
+
+LOG_FILE = os.path.join(BASE_FOLDER, "app_zhivem_v1.5.log")
+
+logging.basicConfig(
+    filename=LOG_FILE,
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
 def is_admin():
     if os.name == 'nt':
         try:
             return ctypes.windll.shell32.IsUserAnAdmin()
-        except:
+        except Exception as e:
+            logging.error(f"Ошибка при проверке прав администратора: {e}")
             return False
     elif os.name == 'posix':
         return os.geteuid() == 0
@@ -28,23 +37,27 @@ class MyApp(QtWidgets.QApplication):
             return super().notify(receiver, event)
         except Exception as e:
             logging.error(f"Ошибка: {e}")
+            QtWidgets.QMessageBox.critical(None, "Ошибка", f"Произошла ошибка: {e}")
             return False
 
 def check_for_updates_on_startup(updater):
     updater.update_available.connect(prompt_update) 
-    updater.no_update.connect(lambda: None)
+    updater.no_update.connect(lambda: logging.info("Обновления не найдены."))
     updater.update_error.connect(lambda error_message: logging.error(f"Ошибка проверки обновлений: {error_message}"))
     updater.start()
 
 def prompt_update(latest_version):
-    reply = QtWidgets.QMessageBox.question(None, "Обновление", f"Доступна новая версия {latest_version}. Хотите перейти на страницу загрузки?", 
-                                           QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+    reply = QtWidgets.QMessageBox.question(
+        None,
+        "Обновление",
+        f"Доступна новая версия {latest_version}. Хотите перейти на страницу загрузки?", 
+        QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+        QtWidgets.QMessageBox.No
+    )
     if reply == QtWidgets.QMessageBox.Yes:
         webbrowser.open("https://github.com/zhivem/GoodByDPI-GUI-by-Zhivem")
 
-if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO)
-
+def main():
     ensure_module_installed('packaging')
 
     app = MyApp(sys.argv)
@@ -58,9 +71,14 @@ if __name__ == '__main__':
     check_for_updates_on_startup(updater)
 
     try:
-        ex = GoodbyeDPIApp()
-        ex.show()
+        app.ex.show()
         result = app.exec_()
+    except Exception as e:
+        logging.error(f"Неожиданная ошибка: {e}")
+        QtWidgets.QMessageBox.critical(None, "Ошибка", f"Произошла ошибка: {e}")
     finally:
         updater.wait()  
         sys.exit(result)
+
+if __name__ == '__main__':
+    main()
