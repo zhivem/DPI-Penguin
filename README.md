@@ -1,4 +1,4 @@
-# GoodByeDPI GUI by Zhivem [YouTube + Discord ( + Голосовой чат )]
+# GoodByeDPI GUI by Zhivem [YouTube + Discord]
 
 ## О проекте
 
