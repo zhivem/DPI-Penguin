@@ -1,11 +1,10 @@
-import os
 import logging
-from datetime import datetime
+import os
 
 import requests
 from PyQt5.QtCore import QThread, pyqtSignal
 
-from utils import get_latest_version, is_newer_version, current_version, BASE_FOLDER
+from utils import BASE_FOLDER, current_version, get_latest_version, is_newer_version
 
 class Updater(QThread):
     update_available = pyqtSignal(str)

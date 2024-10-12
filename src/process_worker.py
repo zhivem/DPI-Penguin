@@ -1,8 +1,10 @@
-from PyQt5 import QtCore
-import subprocess
-import logging
 import locale
+import logging
 import os
+import subprocess
+
+from PyQt5 import QtCore
+
 
 class WorkerThread(QtCore.QThread):
     output_signal = QtCore.pyqtSignal(str)
@@ -14,18 +16,19 @@ class WorkerThread(QtCore.QThread):
         self.process_name = process_name
         self.encoding = encoding or locale.getpreferredencoding()
         self.capture_output = capture_output
+        self.process = None 
 
     def run(self):
         try:
             logging.debug(f"Запуск команды: {self.command}")
-            
+
             popen_params = {
                 'args': self.command,
                 'text': True,
                 'encoding': self.encoding,
                 'creationflags': subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
             }
-            
+
             if self.capture_output:
                 popen_params.update({
                     'stdout': subprocess.PIPE,
@@ -36,16 +39,15 @@ class WorkerThread(QtCore.QThread):
                     'stdout': subprocess.DEVNULL,
                     'stderr': subprocess.DEVNULL
                 })
-            
-            process = subprocess.Popen(**popen_params)
-            self.process = process
-            
+
+            self.process = subprocess.Popen(**popen_params)
+
             if self.capture_output:
-                for output in process.stdout:
+                for output in self.process.stdout:
                     if output.strip():
                         self.output_signal.emit(output.strip())
 
-            process.wait()
+            self.process.wait()
         except subprocess.SubprocessError as e:
             logging.error(f"Ошибка запуска процесса {self.process_name}: {e}")
             if self.capture_output:
@@ -56,8 +58,8 @@ class WorkerThread(QtCore.QThread):
                 self.output_signal.emit(f"Неожиданная ошибка: {str(e)}")
         finally:
             self.finished_signal.emit(self.process_name)
-    
+
     def terminate_process(self):
-        if hasattr(self, 'process') and self.process.poll() is None:
+        if self.process and self.process.poll() is None:
             self.process.terminate()
             logging.info(f"Процесс {self.process_name} принудительно завершен.")

@@ -1,10 +1,13 @@
+import logging
 import os
 import platform
 import subprocess
 import sys
-import logging
-import requests
+import winreg
+
 from packaging.version import parse as parse_version
+
+import requests
 
 BASE_FOLDER = os.path.abspath(os.path.dirname(__file__))
 
@@ -25,11 +28,11 @@ GOODBYE_DPI_EXE = os.path.join(BASE_FOLDER, "bin", get_architecture(), "goodbyed
 WIN_DIVERT_COMMAND = ["net", "stop", "WinDivert"]
 GOODBYE_DPI_PROCESS_NAME = "goodbyedpi.exe"
 
-current_version = "1.5" #Версия
+current_version = "1.5.1"  # Версия
 
 SITES = [
-    "youtube.com", "youtu.be", "yt.be", "googlevideo.com", "ytimg.com",
-    "ggpht.com", "gvt1.com", "youtube-nocookie.com", "youtube-ui.l.google.com",
+    "youtube.com", "youtu.be", "yt.be", "discord.com", "gateway.discord.gg",
+    "discord.gg", "discordcdn.com", "youtube-nocookie.com", "youtube-ui.l.google.com",
     "youtubeembeddedplayer.googleapis.com", "youtube.googleapis.com",
     "youtubei.googleapis.com", "yt-video-upload.l.google.com",
     "wide-youtube.l.google.com"
@@ -37,9 +40,9 @@ SITES = [
 
 DISPLAY_NAMES = [
     "Основной сайт YouTube", "Короткие ссылки YouTube",
-    "Альтернатива коротких ссылок YouTube", "Видеохостинг Google",
-    "Изображения YouTube", "Изображения Google Photos",
-    "Сервисы и обновления Google", "YouTube без cookies",
+    "Альтернатива коротких ссылок YouTube", "Основной сайт Discord",
+    "Веб-сокет Discord", "Приглашения на серверы Discord",
+    "CDN сервис Discord по глобальной сети", "YouTube без cookies",
     "Интерфейс YouTube", "Встроенные видео YouTube", "YouTube API",
     "Внутренний API YouTube", "Загрузка видео на YouTube",
     "Служебный домен YouTube"
@@ -65,7 +68,10 @@ def ensure_module_installed(module_name, version=None):
 
 def install_module(module_name, version=None):
     try:
-        cmd = [sys.executable, "-m", "pip", "install", f"{module_name}=={version}" if version else module_name]
+        cmd = [
+            sys.executable, "-m", "pip", "install",
+            f"{module_name}=={version}" if version else module_name
+        ]
         subprocess.check_call(cmd)
         logging.info(f"Модуль {module_name} успешно установлен.")
     except subprocess.CalledProcessError as e:
@@ -90,15 +96,7 @@ SCRIPT_OPTIONS = {
         GOODBYE_DPI_EXE, ["-9", "--blacklist", BLACKLIST_FILES[1]]
     ),
 
-    #"Обход блокировки Discord": (
-    #  GOODBYE_DPI_EXE, ["-9", "--blacklist", BLACKLIST_FILES[2]]
-    #),"
-
-    #"Обход блокировки YouTube и Discord": (
-    #    GOODBYE_DPI_EXE, ["-9", "--blacklist", BLACKLIST_FILES[1], "--blacklist", BLACKLIST_FILES[2]]
-    #),
-
-     "Обход Discord + YouTube": (
+    "Обход Discord + YouTube": (
         os.path.join(ZAPRET_FOLDER, "winws.exe"),
         [
             "--wf-tcp=80,443,50000-65535",
@@ -155,7 +153,93 @@ SCRIPT_OPTIONS = {
         ]
     ),
 
-        "Обход блокировок для всех сайтов": (
+    "Обход блокировок для всех сайтов": (
         GOODBYE_DPI_EXE, ["-9", "--blacklist", BLACKLIST_FILES[0]]
     )
 }
+
+def is_autostart_enabled():
+    try:
+        key = winreg.OpenKey(
+            winreg.HKEY_CURRENT_USER,
+            r"Software\Microsoft\Windows\CurrentVersion\Run",
+            0, winreg.KEY_READ
+        )
+        winreg.QueryValueEx(key, "GoodbyeDPIApp")
+        key.Close()
+        return True
+    except FileNotFoundError:
+        return False
+    except Exception as e:
+        logging.error(f"Error checking autostart: {e}")
+        return False
+
+
+def enable_autostart():
+    try:
+        key = winreg.OpenKey(
+            winreg.HKEY_CURRENT_USER,
+            r"Software\Microsoft\Windows\CurrentVersion\Run",
+            0, winreg.KEY_SET_VALUE
+        )
+        if getattr(sys, 'frozen', False):
+            executable_path = sys.executable
+        else:
+            executable_path = os.path.abspath(__file__)
+            executable_path = f'python "{executable_path}"'
+        winreg.SetValueEx(key, "GoodbyeDPIApp", 0, winreg.REG_SZ, executable_path)
+        key.Close()
+        logging.info("Autostart successfully set.")
+    except Exception as e:
+        logging.error(f"Error setting autostart: {e}")
+        raise
+
+
+def disable_autostart():
+    try:
+        key = winreg.OpenKey(
+            winreg.HKEY_CURRENT_USER,
+            r"Software\Microsoft\Windows\CurrentVersion\Run",
+            0, winreg.KEY_SET_VALUE
+        )
+        winreg.DeleteValue(key, "GoodbyeDPIApp")
+        key.Close()
+        logging.info("Autostart successfully removed.")
+    except FileNotFoundError:
+        pass
+    except Exception as e:
+        logging.error(f"Error removing autostart: {e}")
+        raise
+
+def create_service():
+    try:
+        arch = 'x86_64' if platform.machine().endswith('64') else 'x86'
+        binary_path = f'"{os.path.join(BASE_FOLDER, arch, "goodbyedpi.exe")}"'
+        blacklist_path = f'"{os.path.join(BASE_FOLDER, "russia-blacklist.txt")}"'
+        youtube_blacklist_path = f'"{os.path.join(BASE_FOLDER, "russia-youtube.txt")}"'
+
+        subprocess.run([
+            'sc', 'create', 'GoodbyeDPI',
+            f'binPath= {binary_path} -9 --blacklist {blacklist_path} --blacklist {youtube_blacklist_path}',
+            'start=', 'auto'
+        ], check=True)
+
+        subprocess.run([
+            'sc', 'description', 'GoodbyeDPI',
+            'Passive Deep Packet Inspection blocker and Active DPI circumvention utility'
+        ], check=True)
+
+        logging.info("Служба 'GoodbyeDPI' создана и настроена для автоматического запуска.")
+        return "Служба 'GoodbyeDPI' создана и настроена для автоматического запуска."
+    except subprocess.CalledProcessError:
+        logging.error("Не удалось создать службу.")
+        return "Не удалось создать службу."
+
+def delete_service():
+    try:
+        subprocess.run(['sc', 'delete', 'GoodbyeDPI'], check=True)
+        logging.info("Служба 'GoodbyeDPI' успешно удалена.")
+        return "Служба 'GoodbyeDPI' успешно удалена."
+    except subprocess.CalledProcessError:
+        logging.error("Не удалось удалить службу.")
+        return "Не удалось удалить службу."

@@ -1,9 +1,8 @@
-import logging
 import asyncio
-
-from PyQt5.QtCore import QObject, pyqtSignal
+import logging
 
 import aiohttp
+from PyQt5.QtCore import QObject, pyqtSignal
 
 from utils import DISPLAY_NAMES, get_site_by_name
 
