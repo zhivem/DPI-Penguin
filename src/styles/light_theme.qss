@@ -1,0 +1,108 @@
+/* light_theme.qss */
+
+QWidget {
+    background-color: #f0f0f0;
+    color: #000000;
+    font-family: "Segoe UI", "Helvetica Neue", "Arial";
+    font-size: 10pt;
+}
+
+QTabWidget::pane {
+    border: 1px solid #d3d3d3;
+    background-color: #f0f0f0;
+}
+
+QTabBar::tab {
+    background: #e0e0e0;
+    border: 1px solid #d3d3d3;
+    padding: 5px;
+    margin: 2px;
+}
+
+QTabBar::tab:selected {
+    background: #d0d0d0;
+}
+
+QPushButton {
+    background-color: #e0e0e0;
+    border: 1px solid #b0b0b0;
+    border-radius: 4px;
+    padding: 5px 10px;
+    color: #000000;
+}
+
+QPushButton:hover {
+    background-color: #d0d0d0;
+}
+
+QPushButton:pressed {
+    background-color: #c0c0c0;
+}
+
+QComboBox {
+    background-color: #e0e0e0;
+    border: 1px solid #b0b0b0;
+    border-radius: 4px;
+    padding: 5px;
+    color: #000000;
+}
+
+QLineEdit, QTextEdit {
+    background-color: #e0e0e0;
+    border: 1px solid #b0b0b0;
+    border-radius: 4px;
+    padding: 5px;
+    color: #000000;
+}
+
+QLabel {
+    color: #000000;
+}
+
+QGroupBox {
+    border: 1px solid #b0b0b0;
+    border-radius: 4px;
+    margin-top: 10px;
+    background-color: #f0f0f0;
+    color: #000000;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    padding: 0 3px;
+    color: #000000;
+}
+
+QListView, QTreeView {
+    background-color: #e0e0e0;
+    border: 1px solid #b0b0b0;
+    color: #000000;
+}
+
+/* Existing styles for light theme */
+
+QScrollBar:vertical {
+    border: none;
+    background: #f0f0f0;
+    width: 12px;
+    margin: 0px 0px 0px 0px;
+}
+
+QScrollBar::handle:vertical {
+    background: #b0b0b0;
+    min-height: 20px;
+    border-radius: 1px;
+}
+
+QScrollBar::add-line:vertical {
+    height: 0px;
+    subcontrol-position: bottom;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::sub-line:vertical {
+    height: 0px;
+    subcontrol-position: top;
+    subcontrol-origin: margin;
+}

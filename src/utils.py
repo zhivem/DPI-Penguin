@@ -21,14 +21,17 @@ BLACKLIST_FILES = [
     os.path.join(BLACKLIST_FOLDER, "discord-blacklist.txt")
 ]
 
+
 def get_architecture():
+    """Определяет архитектуру системы."""
     return "x86_64" if platform.architecture()[0] == "64bit" else "x86"
+
 
 GOODBYE_DPI_EXE = os.path.join(BASE_FOLDER, "bin", get_architecture(), "goodbyedpi.exe")
 WIN_DIVERT_COMMAND = ["net", "stop", "WinDivert"]
 GOODBYE_DPI_PROCESS_NAME = "goodbyedpi.exe"
 
-current_version = "1.5.1"  # Версия
+current_version = "1.5.2"  # Версия приложения
 
 SITES = [
     "youtube.com", "youtu.be", "yt.be", "discord.com", "gateway.discord.gg",
@@ -48,14 +51,18 @@ DISPLAY_NAMES = [
     "Служебный домен YouTube"
 ]
 
+
 def get_site_by_name(display_name):
+    """Получает URL сайта по его отображаемому имени."""
     try:
         return SITES[DISPLAY_NAMES.index(display_name)]
     except ValueError:
         logging.error(f"Сайт с именем {display_name} не найден.")
         return ""
 
+
 def ensure_module_installed(module_name, version=None):
+    """Проверяет, установлен ли модуль, и устанавливает его при необходимости."""
     try:
         module = __import__(module_name)
         if version:
@@ -66,7 +73,9 @@ def ensure_module_installed(module_name, version=None):
         logging.warning(f"Модуль {module_name} не найден или версия не соответствует, установка...")
         install_module(module_name, version)
 
+
 def install_module(module_name, version=None):
+    """Устанавливает указанный модуль через pip."""
     try:
         cmd = [
             sys.executable, "-m", "pip", "install",
@@ -77,7 +86,9 @@ def install_module(module_name, version=None):
     except subprocess.CalledProcessError as e:
         logging.error(f"Ошибка установки модуля {module_name}: {e}")
 
+
 def get_latest_version():
+    """Получает последнюю доступную версию приложения с GitHub API."""
     url = 'https://api.github.com/repos/zhivem/GoodByDPI-GUI-by-Zhivem/releases/latest'
     try:
         response = requests.get(url)
@@ -88,12 +99,15 @@ def get_latest_version():
         logging.error(f"Ошибка запроса к GitHub API: {e}")
     return None
 
+
 def is_newer_version(latest, current):
+    """Сравнивает текущую версию с последней доступной."""
     return parse_version(latest) > parse_version(current)
+
 
 SCRIPT_OPTIONS = {
     "Обход блокировок YouTube (Актуальный метод)": (
-        GOODBYE_DPI_EXE, ["-9", "--blacklist", BLACKLIST_FILES[1]]
+        GOODBYE_DPI_EXE, ["-5", "-e1 ", "-q", "--fake-gen","5","--fake-from-hex=160301FFFF01FFFFFF0303594F5552204144564552544953454D454E542048455245202D202431302F6D6F000000000009000000050003000000", "--blacklist", BLACKLIST_FILES[1]]
     ),
 
     "Обход Discord + YouTube": (
@@ -158,7 +172,9 @@ SCRIPT_OPTIONS = {
     )
 }
 
+
 def is_autostart_enabled():
+    """Проверяет, включен ли автозапуск приложения."""
     try:
         key = winreg.OpenKey(
             winreg.HKEY_CURRENT_USER,
@@ -171,11 +187,12 @@ def is_autostart_enabled():
     except FileNotFoundError:
         return False
     except Exception as e:
-        logging.error(f"Error checking autostart: {e}")
+        logging.error(f"Ошибка при проверке автозапуска: {e}")
         return False
 
 
 def enable_autostart():
+    """Включает автозапуск приложения."""
     try:
         key = winreg.OpenKey(
             winreg.HKEY_CURRENT_USER,
@@ -189,13 +206,14 @@ def enable_autostart():
             executable_path = f'python "{executable_path}"'
         winreg.SetValueEx(key, "GoodbyeDPIApp", 0, winreg.REG_SZ, executable_path)
         key.Close()
-        logging.info("Autostart successfully set.")
+        logging.info("Автозапуск успешно настроен.")
     except Exception as e:
-        logging.error(f"Error setting autostart: {e}")
+        logging.error(f"Ошибка при настройке автозапуска: {e}")
         raise
 
 
 def disable_autostart():
+    """Выключает автозапуск приложения."""
     try:
         key = winreg.OpenKey(
             winreg.HKEY_CURRENT_USER,
@@ -204,7 +222,9 @@ def disable_autostart():
         )
         winreg.DeleteValue(key, "GoodbyeDPIApp")
         key.Close()
-        logging.info("Autostart successfully removed.")
+        logging.info("Автозапуск успешно удален.")
+   
+
     except FileNotFoundError:
         pass
     except Exception as e:
@@ -243,3 +263,11 @@ def delete_service():
     except subprocess.CalledProcessError:
         logging.error("Не удалось удалить службу.")
         return "Не удалось удалить службу."
+
+def open_txt_file(file_path):
+     if os.path.exists(file_path):
+        try:
+            subprocess.Popen(['notepad.exe', file_path])
+            return None
+        except Exception as e:
+            return f"Не удалось открыть файл: {e}"

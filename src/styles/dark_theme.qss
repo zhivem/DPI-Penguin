@@ -1,0 +1,115 @@
+/* Общие стили для всех виджетов */
+QWidget {
+    background-color: #2b2b2b;
+    color: #ffffff;
+    font-family: "Segoe UI", "Helvetica Neue", "Arial";
+    font-size: 10pt;
+}
+
+QTabWidget::pane {
+    border: 1px solid #5a5a5a;
+    background-color: #2b2b2b;
+}
+
+QTabBar::tab {
+    background: #3c3c3c;
+    border: 1px solid #5a5a5a;
+    padding: 5px;
+    margin: 2px;
+}
+
+QTabBar::tab:selected {
+    background: #4e4e4e;
+}
+
+QPushButton {
+    background-color: #3c3c3c;
+    border: 1px solid #5a5a5a;
+    border-radius: 4px;
+    padding: 5px 10px;
+    color: #ffffff;
+}
+
+QPushButton:hover {
+    background-color: #4e4e4e;
+}
+
+QPushButton:pressed {
+    background-color: #5a5a5a;
+}
+
+QComboBox {
+    background-color: #3c3c3c;
+    border: 1px solid #5a5a5a;
+    border-radius: 4px;
+    padding: 5px;
+    color: #ffffff;
+}
+
+QLineEdit, QTextEdit {
+    background-color: #3c3c3c;
+    border: 1px solid #5a5a5a;
+    border-radius: 4px;
+    padding: 5px;
+    color: #ffffff;
+}
+
+QLabel {
+    color: #ffffff;
+}
+
+/* Стиль для группы настроек */
+QGroupBox {
+    border: 1px solid #5a5a5a;
+    border-radius: 4px;
+    margin-top: 10px;
+    background-color: #2b2b2b;
+    color: #ffffff;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    padding: 0 3px;
+    color: #ffffff;
+}
+
+/* Текстовые поля и поля ввода */
+QLineEdit, QTextEdit {
+    background-color: #3c3c3c;
+    border: 1px solid #5a5a5a;
+    color: #ffffff;
+}
+
+QListView, QTreeView {
+    background-color: #3c3c3c;
+    border: 1px solid #5a5a5a;
+    color: #ffffff;
+}
+
+/* Existing styles for dark theme */
+
+QScrollBar:vertical {
+    border: none;
+    background: #b0b0b0;
+    width: 12px;
+    margin: 0px 0px 0px 0px;
+}
+
+QScrollBar::handle:vertical {
+    background: #3c3c3c;
+    min-height: 20px;
+    border-radius: 1px;
+}
+
+QScrollBar::add-line:vertical {
+    height: 0px;
+    subcontrol-position: bottom;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::sub-line:vertical {
+    height: 0px;
+    subcontrol-position: top;
+    subcontrol-origin: margin;
+}
