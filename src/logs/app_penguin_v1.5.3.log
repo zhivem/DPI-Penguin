@@ -1,0 +1,260 @@
+2024-10-15 08:24:36,799 - INFO - Логирование настроено.
+2024-10-15 08:24:37,180 - DEBUG - Начало выполнения main()
+2024-10-15 08:24:37,189 - DEBUG - MyApp инициализирован.
+2024-10-15 08:24:37,189 - DEBUG - GoodbyeDPIApp инициализирован.
+2024-10-15 08:24:37,242 - INFO - Применен стиль: light_theme.qss
+2024-10-15 08:24:37,246 - DEBUG - Кнопка 'Запустить' создана и добавлена в макет.
+2024-10-15 08:24:37,247 - DEBUG - Кнопка 'Остановить и закрыть' создана и добавлена в макет.
+2024-10-15 08:24:37,260 - DEBUG - Кнопка 'Открыть Log файл' создана и добавлена в макет.
+2024-10-15 08:24:37,501 - DEBUG - Кнопка 'Создать службу' создана и добавлена в макет.
+2024-10-15 08:24:37,501 - DEBUG - Кнопка 'Удалить службу' создана и добавлена в макет.
+2024-10-15 08:24:37,501 - DEBUG - Кнопка 'Обновить черный список' создана и добавлена в макет.
+2024-10-15 08:24:37,501 - DEBUG - Кнопка 'Проверить обновления' создана и добавлена в макет.
+2024-10-15 08:24:37,511 - DEBUG - Список сайтов создан.
+2024-10-15 08:24:37,542 - DEBUG - Starting new HTTPS connection (1): github.com:443
+2024-10-15 08:24:37,578 - INFO - Приложение запущено.
+2024-10-15 08:24:37,579 - DEBUG - Начата проверка доступности сайтов.
+2024-10-15 08:24:37,580 - DEBUG - Using proactor: IocpProactor
+2024-10-15 08:24:37,581 - DEBUG - Проверка https://youtube.com
+2024-10-15 08:24:37,583 - DEBUG - Проверка https://youtu.be
+2024-10-15 08:24:37,583 - DEBUG - Проверка https://yt.be
+2024-10-15 08:24:37,594 - DEBUG - Проверка https://discord.com
+2024-10-15 08:24:37,594 - DEBUG - Проверка https://gateway.discord.gg
+2024-10-15 08:24:37,594 - DEBUG - Проверка https://discord.gg
+2024-10-15 08:24:37,607 - DEBUG - Проверка https://discordcdn.com
+2024-10-15 08:24:37,608 - DEBUG - Проверка https://youtube-nocookie.com
+2024-10-15 08:24:37,608 - DEBUG - Проверка https://youtube-ui.l.google.com
+2024-10-15 08:24:37,608 - DEBUG - Проверка https://youtubeembeddedplayer.googleapis.com
+2024-10-15 08:24:37,608 - DEBUG - Проверка https://youtube.googleapis.com
+2024-10-15 08:24:37,608 - DEBUG - Проверка https://youtubei.googleapis.com
+2024-10-15 08:24:37,608 - DEBUG - Проверка https://yt-video-upload.l.google.com
+2024-10-15 08:24:37,608 - DEBUG - Проверка https://wide-youtube.l.google.com
+2024-10-15 08:24:37,698 - DEBUG - Сайт YouTube API доступен: red
+2024-10-15 08:24:37,713 - ERROR - Ошибка при проверке https://wide-youtube.l.google.com: Cannot connect to host wide-youtube.l.google.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'wide-youtube.l.google.com'. (_ssl.c:1000)")]
+2024-10-15 08:24:37,713 - DEBUG - Сайт Служебный домен YouTube доступен: red
+2024-10-15 08:24:37,713 - ERROR - Ошибка при проверке https://youtube-ui.l.google.com: Cannot connect to host youtube-ui.l.google.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'youtube-ui.l.google.com'. (_ssl.c:1000)")]
+2024-10-15 08:24:37,713 - DEBUG - Сайт Интерфейс YouTube доступен: red
+2024-10-15 08:24:37,726 - ERROR - Ошибка при проверке https://yt-video-upload.l.google.com: Cannot connect to host yt-video-upload.l.google.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'yt-video-upload.l.google.com'. (_ssl.c:1000)")]
+2024-10-15 08:24:37,726 - DEBUG - Сайт Загрузка видео на YouTube доступен: red
+2024-10-15 08:24:37,780 - DEBUG - Сайт CDN сервис Discord по глобальной сети доступен: red
+2024-10-15 08:24:37,793 - DEBUG - Сайт Встроенные видео YouTube доступен: red
+2024-10-15 08:24:37,820 - DEBUG - https://github.com:443 "GET /zhivem/DPI-Penguin/releases/latest HTTP/11" 302 0
+2024-10-15 08:24:37,820 - DEBUG - Сайт Внутренний API YouTube доступен: red
+2024-10-15 08:24:38,221 - DEBUG - https://github.com:443 "GET /zhivem/DPI-Penguin/releases/tag/1.5.2 HTTP/11" 200 None
+2024-10-15 08:24:38,260 - ERROR - Ошибка запроса к GitHub API: Expecting value: line 8 column 1 (char 7)
+2024-10-15 08:24:38,260 - INFO - Обновления не найдены.
+2024-10-15 08:24:38,260 - INFO - Обновления не найдены.
+2024-10-15 08:24:38,665 - DEBUG - Сайт Короткие ссылки YouTube доступен: green
+2024-10-15 08:24:38,667 - DEBUG - Сайт Основной сайт YouTube доступен: green
+2024-10-15 08:24:38,764 - ERROR - Ошибка при проверке https://youtube-nocookie.com: Cannot connect to host youtube-nocookie.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'youtube-nocookie.com'. (_ssl.c:1000)")]
+2024-10-15 08:24:38,764 - DEBUG - Сайт YouTube без cookies доступен: red
+2024-10-15 08:24:39,570 - DEBUG - Выбранный вариант скрипта: Обход Discord + YouTube
+2024-10-15 08:24:39,570 - DEBUG - Исполняемый файл c:\Users\miste\Desktop\Мой проект\Goodbye DPI Phyton by Zhivem\GoodByDPI-GUI-by-Zhivem\src\zapret\winws.exe доступен для запуска.
+2024-10-15 08:24:39,570 - DEBUG - Команда для запуска: ['c:\\Users\\miste\\Desktop\\Мой проект\\Goodbye DPI Phyton by Zhivem\\GoodByDPI-GUI-by-Zhivem\\src\\zapret\\winws.exe', '--wf-tcp=80,443,50000-65535', '--wf-udp=443,50000-65535', '--filter-udp=443', '--hostlist=c:\\Users\\miste\\Desktop\\Мой проект\\Goodbye DPI Phyton by Zhivem\\GoodByDPI-GUI-by-Zhivem\\src\\black\\discord-blacklist.txt', '--dpi-desync=fake', '--dpi-desync-udplen-increment=10', '--dpi-desync-repeats=6', '--dpi-desync-udplen-pattern=0xDEADBEEF', '--dpi-desync-fake-quic=c:\\Users\\miste\\Desktop\\Мой проект\\Goodbye DPI Phyton by Zhivem\\GoodByDPI-GUI-by-Zhivem\\src\\zapret\\quic_initial_www_google_com.bin', '--new', '--filter-udp=50000-65535', '--dpi-desync=fake,tamper', '--dpi-desync-any-protocol', '--dpi-desync-fake-quic=c:\\Users\\miste\\Desktop\\Мой проект\\Goodbye DPI Phyton by Zhivem\\GoodByDPI-GUI-by-Zhivem\\src\\zapret\\quic_initial_www_google_com.bin', '--new', '--filter-tcp=80', '--dpi-desync=fake,split2', '--dpi-desync-autottl=2', '--dpi-desync-fooling=md5sig', '--dpi-desync-fake-tls=c:\\Users\\miste\\Desktop\\Мой проект\\Goodbye DPI Phyton by Zhivem\\GoodByDPI-GUI-by-Zhivem\\src\\zapret\\tls_clienthello_www_google_com.bin', '--new', '--dpi-desync=fake,disorder2', '--dpi-desync-autottl=2', '--dpi-desync-fooling=md5sig']
+2024-10-15 08:24:39,570 - DEBUG - Консоль очищена с начальным текстом.
+2024-10-15 08:24:39,570 - DEBUG - Кнопка 'Запустить' отключена, 'Остановить и закрыть' включена.
+2024-10-15 08:24:39,570 - INFO - Процесс 'Обход Discord + YouTube' запущен.
+2024-10-15 08:24:39,570 - DEBUG - Запуск команды: c:\Users\miste\Desktop\Мой проект\Goodbye DPI Phyton by Zhivem\GoodByDPI-GUI-by-Zhivem\src\zapret\winws.exe --wf-tcp=80,443,50000-65535 --wf-udp=443,50000-65535 --filter-udp=443 --hostlist=c:\Users\miste\Desktop\Мой проект\Goodbye DPI Phyton by Zhivem\GoodByDPI-GUI-by-Zhivem\src\black\discord-blacklist.txt --dpi-desync=fake --dpi-desync-udplen-increment=10 --dpi-desync-repeats=6 --dpi-desync-udplen-pattern=0xDEADBEEF --dpi-desync-fake-quic=c:\Users\miste\Desktop\Мой проект\Goodbye DPI Phyton by Zhivem\GoodByDPI-GUI-by-Zhivem\src\zapret\quic_initial_www_google_com.bin --new --filter-udp=50000-65535 --dpi-desync=fake,tamper --dpi-desync-any-protocol --dpi-desync-fake-quic=c:\Users\miste\Desktop\Мой проект\Goodbye DPI Phyton by Zhivem\GoodByDPI-GUI-by-Zhivem\src\zapret\quic_initial_www_google_com.bin --new --filter-tcp=80 --dpi-desync=fake,split2 --dpi-desync-autottl=2 --dpi-desync-fooling=md5sig --dpi-desync-fake-tls=c:\Users\miste\Desktop\Мой проект\Goodbye DPI Phyton by Zhivem\GoodByDPI-GUI-by-Zhivem\src\zapret\tls_clienthello_www_google_com.bin --new --dpi-desync=fake,disorder2 --dpi-desync-autottl=2 --dpi-desync-fooling=md5sig
+2024-10-15 08:24:39,727 - DEBUG - Сайт Альтернатива коротких ссылок YouTube доступен: green
+2024-10-15 08:24:43,559 - ERROR - Тайм-аут при проверке https://discord.gg
+2024-10-15 08:24:43,559 - ERROR - Тайм-аут при проверке https://gateway.discord.gg
+2024-10-15 08:24:43,559 - DEBUG - Сайт Приглашения на серверы Discord доступен: red
+2024-10-15 08:24:43,559 - ERROR - Тайм-аут при проверке https://discord.com
+2024-10-15 08:24:43,559 - DEBUG - Сайт Веб-сокет Discord доступен: red
+2024-10-15 08:24:43,559 - DEBUG - Сайт Основной сайт Discord доступен: red
+2024-10-15 08:24:43,559 - INFO - Проверка доступности сайтов завершена.
+2024-10-15 08:25:45,382 - INFO - Приложение свернуто в трей.
+2024-10-15 08:29:44,870 - DEBUG - Приложение развёрнуто из трея.
+2024-10-15 08:29:48,144 - DEBUG - Поведение сворачивания в трей изменено: False
+2024-10-15 08:29:48,783 - INFO - Приложение закрыто пользователем.
+2024-10-15 08:29:48,798 - INFO - Приложение завершило работу.
+2024-10-15 08:33:37,453 - INFO - Логирование настроено.
+2024-10-15 08:33:37,777 - DEBUG - Начало выполнения main()
+2024-10-15 08:33:37,786 - DEBUG - MyApp инициализирован.
+2024-10-15 08:33:37,786 - DEBUG - GoodbyeDPIApp инициализирован.
+2024-10-15 08:33:37,828 - INFO - Применен стиль: light_theme.qss
+2024-10-15 08:33:37,828 - DEBUG - Кнопка 'Запустить' создана и добавлена в макет.
+2024-10-15 08:33:37,828 - DEBUG - Кнопка 'Остановить и закрыть' создана и добавлена в макет.
+2024-10-15 08:33:37,845 - DEBUG - Кнопка 'Открыть Log файл' создана и добавлена в макет.
+2024-10-15 08:33:38,100 - DEBUG - Кнопка 'Создать службу' создана и добавлена в макет.
+2024-10-15 08:33:38,101 - DEBUG - Кнопка 'Удалить службу' создана и добавлена в макет.
+2024-10-15 08:33:38,102 - DEBUG - Кнопка 'Обновить черный список' создана и добавлена в макет.
+2024-10-15 08:33:38,103 - DEBUG - Кнопка 'Проверить обновления' создана и добавлена в макет.
+2024-10-15 08:33:38,104 - DEBUG - Список сайтов создан.
+2024-10-15 08:33:38,134 - DEBUG - Starting new HTTPS connection (1): github.com:443
+2024-10-15 08:33:38,172 - INFO - Приложение запущено.
+2024-10-15 08:33:38,172 - DEBUG - Начата проверка доступности сайтов.
+2024-10-15 08:33:38,172 - DEBUG - Using proactor: IocpProactor
+2024-10-15 08:33:38,172 - DEBUG - Проверка https://youtube.com
+2024-10-15 08:33:38,198 - DEBUG - Проверка https://youtu.be
+2024-10-15 08:33:38,201 - DEBUG - Проверка https://yt.be
+2024-10-15 08:33:38,204 - DEBUG - Проверка https://discord.com
+2024-10-15 08:33:38,207 - DEBUG - Проверка https://gateway.discord.gg
+2024-10-15 08:33:38,207 - DEBUG - Проверка https://discord.gg
+2024-10-15 08:33:38,207 - DEBUG - Проверка https://discordcdn.com
+2024-10-15 08:33:38,208 - DEBUG - Проверка https://youtube-nocookie.com
+2024-10-15 08:33:38,208 - DEBUG - Проверка https://youtube-ui.l.google.com
+2024-10-15 08:33:38,208 - DEBUG - Проверка https://youtubeembeddedplayer.googleapis.com
+2024-10-15 08:33:38,209 - DEBUG - Проверка https://youtube.googleapis.com
+2024-10-15 08:33:38,209 - DEBUG - Проверка https://youtubei.googleapis.com
+2024-10-15 08:33:38,210 - DEBUG - Проверка https://yt-video-upload.l.google.com
+2024-10-15 08:33:38,210 - DEBUG - Проверка https://wide-youtube.l.google.com
+2024-10-15 08:33:38,256 - ERROR - Ошибка при проверке https://youtube-ui.l.google.com: Cannot connect to host youtube-ui.l.google.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'youtube-ui.l.google.com'. (_ssl.c:1000)")]
+2024-10-15 08:33:38,256 - DEBUG - Сайт Интерфейс YouTube доступен: red
+2024-10-15 08:33:38,303 - DEBUG - Сайт YouTube API доступен: red
+2024-10-15 08:33:38,303 - ERROR - Ошибка при проверке https://wide-youtube.l.google.com: Cannot connect to host wide-youtube.l.google.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'wide-youtube.l.google.com'. (_ssl.c:1000)")]
+2024-10-15 08:33:38,303 - DEBUG - Сайт Служебный домен YouTube доступен: red
+2024-10-15 08:33:38,303 - ERROR - Ошибка при проверке https://yt-video-upload.l.google.com: Cannot connect to host yt-video-upload.l.google.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'yt-video-upload.l.google.com'. (_ssl.c:1000)")]
+2024-10-15 08:33:38,303 - DEBUG - Сайт Загрузка видео на YouTube доступен: red
+2024-10-15 08:33:38,366 - ERROR - Ошибка при проверке https://youtube-nocookie.com: Cannot connect to host youtube-nocookie.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'youtube-nocookie.com'. (_ssl.c:1000)")]
+2024-10-15 08:33:38,366 - DEBUG - Сайт YouTube без cookies доступен: red
+2024-10-15 08:33:38,393 - DEBUG - Сайт Встроенные видео YouTube доступен: red
+2024-10-15 08:33:38,396 - DEBUG - Сайт CDN сервис Discord по глобальной сети доступен: red
+2024-10-15 08:33:38,429 - DEBUG - https://github.com:443 "GET /zhivem/DPI-Penguin/releases/latest HTTP/11" 302 0
+2024-10-15 08:33:38,473 - DEBUG - Сайт Внутренний API YouTube доступен: red
+2024-10-15 08:33:38,695 - DEBUG - Сайт Основной сайт YouTube доступен: green
+2024-10-15 08:33:38,803 - DEBUG - https://github.com:443 "GET /zhivem/DPI-Penguin/releases/tag/1.5.2 HTTP/11" 200 None
+2024-10-15 08:33:38,856 - ERROR - Ошибка запроса к GitHub API: Expecting value: line 8 column 1 (char 7)
+2024-10-15 08:33:38,856 - INFO - Обновления не найдены.
+2024-10-15 08:33:38,856 - INFO - Обновления не найдены.
+2024-10-15 08:33:43,562 - ERROR - Тайм-аут при проверке https://yt.be
+2024-10-15 08:33:43,562 - ERROR - Тайм-аут при проверке https://discord.gg
+2024-10-15 08:33:43,562 - ERROR - Тайм-аут при проверке https://gateway.discord.gg
+2024-10-15 08:33:43,562 - ERROR - Тайм-аут при проверке https://discord.com
+2024-10-15 08:33:43,562 - ERROR - Тайм-аут при проверке https://youtu.be
+2024-10-15 08:33:43,562 - DEBUG - Сайт Альтернатива коротких ссылок YouTube доступен: red
+2024-10-15 08:33:43,562 - DEBUG - Сайт Приглашения на серверы Discord доступен: red
+2024-10-15 08:33:43,562 - DEBUG - Сайт Веб-сокет Discord доступен: red
+2024-10-15 08:33:43,562 - DEBUG - Сайт Основной сайт Discord доступен: red
+2024-10-15 08:33:43,562 - DEBUG - Сайт Короткие ссылки YouTube доступен: red
+2024-10-15 08:33:43,562 - INFO - Проверка доступности сайтов завершена.
+2024-10-15 08:33:44,359 - DEBUG - Выбранный вариант скрипта: Обход блокировок YouTube (Актуальный метод)
+2024-10-15 08:33:44,359 - DEBUG - Исполняемый файл c:\Users\miste\Desktop\Мой проект\Goodbye DPI Phyton by Zhivem\GoodByDPI-GUI-by-Zhivem\src\bin\x86_64\goodbyedpi.exe доступен для запуска.
+2024-10-15 08:33:44,359 - DEBUG - Команда для запуска: ['c:\\Users\\miste\\Desktop\\Мой проект\\Goodbye DPI Phyton by Zhivem\\GoodByDPI-GUI-by-Zhivem\\src\\bin\\x86_64\\goodbyedpi.exe', '-9', '--blacklist', 'c:\\Users\\miste\\Desktop\\Мой проект\\Goodbye DPI Phyton by Zhivem\\GoodByDPI-GUI-by-Zhivem\\src\\black\\russia-youtube.txt']
+2024-10-15 08:33:44,359 - DEBUG - Консоль очищена с начальным текстом.
+2024-10-15 08:33:44,359 - DEBUG - Кнопка 'Запустить' отключена, 'Остановить и закрыть' включена.
+2024-10-15 08:33:44,359 - INFO - Процесс 'Обход блокировок YouTube (Актуальный метод)' запущен.
+2024-10-15 08:33:44,359 - DEBUG - Запуск команды: c:\Users\miste\Desktop\Мой проект\Goodbye DPI Phyton by Zhivem\GoodByDPI-GUI-by-Zhivem\src\bin\x86_64\goodbyedpi.exe -9 --blacklist c:\Users\miste\Desktop\Мой проект\Goodbye DPI Phyton by Zhivem\GoodByDPI-GUI-by-Zhivem\src\black\russia-youtube.txt
+2024-10-15 08:33:46,218 - INFO - Приложение свернуто в трей.
+2024-10-15 08:34:08,133 - DEBUG - Приложение развёрнуто из трея.
+2024-10-15 08:36:49,853 - DEBUG - Поведение сворачивания в трей изменено: False
+2024-10-15 08:36:51,187 - INFO - Начата процедура остановки и закрытия процессов.
+2024-10-15 08:36:51,202 - DEBUG - Запуск команды: net stop WinDivert
+2024-10-15 08:36:51,202 - DEBUG - Процесс GoodbyeDPI (PID: 5976) завершён.
+2024-10-15 08:36:51,218 - INFO - Процесс Обход блокировок YouTube (Актуальный метод) завершён.
+2024-10-15 08:36:52,693 - INFO - Приложение закрыто пользователем.
+2024-10-15 08:36:52,708 - INFO - Приложение завершило работу.
+2024-10-15 08:48:07,737 - INFO - Логирование настроено.
+2024-10-15 08:48:08,043 - DEBUG - Начало выполнения main()
+2024-10-15 08:48:08,057 - DEBUG - MyApp инициализирован.
+2024-10-15 08:48:08,057 - DEBUG - GoodbyeDPIApp инициализирован.
+2024-10-15 08:48:08,110 - INFO - Применен стиль: light_theme.qss
+2024-10-15 08:48:08,110 - DEBUG - Кнопка 'Запустить' создана и добавлена в макет.
+2024-10-15 08:48:08,110 - DEBUG - Кнопка 'Остановить и закрыть' создана и добавлена в макет.
+2024-10-15 08:48:08,123 - DEBUG - Кнопка 'Открыть Log файл' создана и добавлена в макет.
+2024-10-15 08:48:08,366 - DEBUG - Кнопка 'Создать службу' создана и добавлена в макет.
+2024-10-15 08:48:08,366 - DEBUG - Кнопка 'Удалить службу' создана и добавлена в макет.
+2024-10-15 08:48:08,366 - DEBUG - Кнопка 'Обновить черный список' создана и добавлена в макет.
+2024-10-15 08:48:08,366 - DEBUG - Кнопка 'Проверить обновления' создана и добавлена в макет.
+2024-10-15 08:48:08,366 - DEBUG - Список сайтов создан.
+2024-10-15 08:48:08,391 - DEBUG - Starting new HTTPS connection (1): github.com:443
+2024-10-15 08:48:08,437 - INFO - Приложение запущено.
+2024-10-15 08:48:08,438 - DEBUG - Начата проверка доступности сайтов.
+2024-10-15 08:48:08,438 - DEBUG - Using proactor: IocpProactor
+2024-10-15 08:48:08,439 - DEBUG - Проверка https://youtube.com
+2024-10-15 08:48:08,441 - DEBUG - Проверка https://youtu.be
+2024-10-15 08:48:08,442 - DEBUG - Проверка https://yt.be
+2024-10-15 08:48:08,466 - DEBUG - Проверка https://discord.com
+2024-10-15 08:48:08,466 - DEBUG - Проверка https://gateway.discord.gg
+2024-10-15 08:48:08,467 - DEBUG - Проверка https://discord.gg
+2024-10-15 08:48:08,467 - DEBUG - Проверка https://discordcdn.com
+2024-10-15 08:48:08,469 - DEBUG - Проверка https://youtube-nocookie.com
+2024-10-15 08:48:08,470 - DEBUG - Проверка https://youtube-ui.l.google.com
+2024-10-15 08:48:08,471 - DEBUG - Проверка https://youtubeembeddedplayer.googleapis.com
+2024-10-15 08:48:08,471 - DEBUG - Проверка https://youtube.googleapis.com
+2024-10-15 08:48:08,471 - DEBUG - Проверка https://youtubei.googleapis.com
+2024-10-15 08:48:08,471 - DEBUG - Проверка https://yt-video-upload.l.google.com
+2024-10-15 08:48:08,471 - DEBUG - Проверка https://wide-youtube.l.google.com
+2024-10-15 08:48:08,537 - ERROR - Ошибка при проверке https://youtube-ui.l.google.com: Cannot connect to host youtube-ui.l.google.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'youtube-ui.l.google.com'. (_ssl.c:1000)")]
+2024-10-15 08:48:08,537 - DEBUG - Сайт Интерфейс YouTube доступен: red
+2024-10-15 08:48:08,552 - ERROR - Ошибка при проверке https://wide-youtube.l.google.com: Cannot connect to host wide-youtube.l.google.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'wide-youtube.l.google.com'. (_ssl.c:1000)")]
+2024-10-15 08:48:08,552 - DEBUG - Сайт Служебный домен YouTube доступен: red
+2024-10-15 08:48:08,599 - ERROR - Ошибка при проверке https://yt-video-upload.l.google.com: Cannot connect to host yt-video-upload.l.google.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'yt-video-upload.l.google.com'. (_ssl.c:1000)")]
+2024-10-15 08:48:08,599 - DEBUG - Сайт Загрузка видео на YouTube доступен: red
+2024-10-15 08:48:08,632 - DEBUG - Сайт YouTube API доступен: red
+2024-10-15 08:48:08,663 - ERROR - Ошибка при проверке https://youtube-nocookie.com: Cannot connect to host youtube-nocookie.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'youtube-nocookie.com'. (_ssl.c:1000)")]
+2024-10-15 08:48:08,663 - DEBUG - Сайт YouTube без cookies доступен: red
+2024-10-15 08:48:08,663 - DEBUG - Сайт CDN сервис Discord по глобальной сети доступен: red
+2024-10-15 08:48:08,663 - DEBUG - https://github.com:443 "GET /zhivem/DPI-Penguin/releases/latest HTTP/11" 302 0
+2024-10-15 08:48:08,679 - DEBUG - Сайт Встроенные видео YouTube доступен: red
+2024-10-15 08:48:08,726 - DEBUG - Сайт Внутренний API YouTube доступен: red
+2024-10-15 08:48:09,033 - DEBUG - https://github.com:443 "GET /zhivem/DPI-Penguin/releases/tag/1.5.2 HTTP/11" 200 None
+2024-10-15 08:48:09,080 - ERROR - Ошибка запроса к GitHub API: Expecting value: line 8 column 1 (char 7)
+2024-10-15 08:48:09,080 - INFO - Обновления не найдены.
+2024-10-15 08:48:09,080 - INFO - Обновления не найдены.
+2024-10-15 08:48:10,294 - DEBUG - Сайт Основной сайт YouTube доступен: green
+2024-10-15 08:48:10,544 - DEBUG - Сайт Короткие ссылки YouTube доступен: green
+2024-10-15 08:48:13,559 - ERROR - Тайм-аут при проверке https://discord.gg
+2024-10-15 08:48:13,559 - ERROR - Тайм-аут при проверке https://yt.be
+2024-10-15 08:48:13,559 - ERROR - Тайм-аут при проверке https://gateway.discord.gg
+2024-10-15 08:48:13,559 - ERROR - Тайм-аут при проверке https://discord.com
+2024-10-15 08:48:13,559 - DEBUG - Сайт Приглашения на серверы Discord доступен: red
+2024-10-15 08:48:13,559 - DEBUG - Сайт Альтернатива коротких ссылок YouTube доступен: red
+2024-10-15 08:48:13,559 - DEBUG - Сайт Веб-сокет Discord доступен: red
+2024-10-15 08:48:13,559 - DEBUG - Сайт Основной сайт Discord доступен: red
+2024-10-15 08:48:13,559 - INFO - Проверка доступности сайтов завершена.
+2024-10-15 08:48:48,751 - DEBUG - Поведение сворачивания в трей изменено: False
+2024-10-15 08:48:49,414 - INFO - Приложение закрыто пользователем.
+2024-10-15 08:48:49,430 - INFO - Приложение завершило работу.
+2024-10-15 09:04:10,498 - INFO - Логирование настроено.
+2024-10-15 09:04:10,819 - DEBUG - Начало выполнения main()
+2024-10-15 09:04:10,823 - DEBUG - MyApp инициализирован.
+2024-10-15 09:04:10,823 - DEBUG - GoodbyeDPIApp инициализирован.
+2024-10-15 09:04:10,876 - INFO - Применен стиль: light_theme.qss
+2024-10-15 09:04:10,876 - DEBUG - Кнопка 'Запустить' создана и добавлена в макет.
+2024-10-15 09:04:10,876 - DEBUG - Кнопка 'Остановить и закрыть' создана и добавлена в макет.
+2024-10-15 09:04:10,897 - DEBUG - Кнопка 'Открыть Log файл' создана и добавлена в макет.
+2024-10-15 09:04:11,135 - DEBUG - Кнопка 'Создать службу' создана и добавлена в макет.
+2024-10-15 09:04:11,136 - DEBUG - Кнопка 'Удалить службу' создана и добавлена в макет.
+2024-10-15 09:04:11,137 - DEBUG - Кнопка 'Обновить черный список' создана и добавлена в макет.
+2024-10-15 09:04:11,139 - DEBUG - Кнопка 'Проверить обновления' создана и добавлена в макет.
+2024-10-15 09:04:11,139 - DEBUG - Список сайтов создан.
+2024-10-15 09:04:11,156 - DEBUG - Starting new HTTPS connection (1): github.com:443
+2024-10-15 09:04:11,203 - INFO - Приложение запущено.
+2024-10-15 09:04:11,204 - DEBUG - Начата проверка доступности сайтов.
+2024-10-15 09:04:11,204 - DEBUG - Using proactor: IocpProactor
+2024-10-15 09:04:11,205 - DEBUG - Проверка https://youtube.com
+2024-10-15 09:04:11,207 - DEBUG - Проверка https://youtu.be
+2024-10-15 09:04:11,208 - DEBUG - Проверка https://yt.be
+2024-10-15 09:04:11,209 - DEBUG - Проверка https://discord.com
+2024-10-15 09:04:11,232 - DEBUG - Проверка https://gateway.discord.gg
+2024-10-15 09:04:11,232 - DEBUG - Проверка https://discord.gg
+2024-10-15 09:04:11,232 - DEBUG - Проверка https://discordcdn.com
+2024-10-15 09:04:11,233 - DEBUG - Проверка https://youtube-nocookie.com
+2024-10-15 09:04:11,233 - DEBUG - Проверка https://youtube-ui.l.google.com
+2024-10-15 09:04:11,235 - DEBUG - Проверка https://youtubeembeddedplayer.googleapis.com
+2024-10-15 09:04:11,236 - DEBUG - Проверка https://youtube.googleapis.com
+2024-10-15 09:04:11,236 - DEBUG - Проверка https://youtubei.googleapis.com
+2024-10-15 09:04:11,238 - DEBUG - Проверка https://yt-video-upload.l.google.com
+2024-10-15 09:04:11,238 - DEBUG - Проверка https://wide-youtube.l.google.com
+2024-10-15 09:04:11,290 - ERROR - Ошибка при проверке https://youtube-ui.l.google.com: Cannot connect to host youtube-ui.l.google.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'youtube-ui.l.google.com'. (_ssl.c:1000)")]
+2024-10-15 09:04:11,290 - DEBUG - Сайт Интерфейс YouTube доступен: red
+2024-10-15 09:04:11,303 - ERROR - Ошибка при проверке https://wide-youtube.l.google.com: Cannot connect to host wide-youtube.l.google.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'wide-youtube.l.google.com'. (_ssl.c:1000)")]
+2024-10-15 09:04:11,303 - DEBUG - Сайт Служебный домен YouTube доступен: red
+2024-10-15 09:04:11,303 - DEBUG - Сайт Встроенные видео YouTube доступен: red
+2024-10-15 09:04:11,330 - DEBUG - Сайт YouTube API доступен: red
+2024-10-15 09:04:11,343 - ERROR - Ошибка при проверке https://youtube-nocookie.com: Cannot connect to host youtube-nocookie.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'youtube-nocookie.com'. (_ssl.c:1000)")]
+2024-10-15 09:04:11,343 - DEBUG - Сайт YouTube без cookies доступен: red
+2024-10-15 09:04:11,358 - ERROR - Ошибка при проверке https://yt-video-upload.l.google.com: Cannot connect to host yt-video-upload.l.google.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'yt-video-upload.l.google.com'. (_ssl.c:1000)")]
+2024-10-15 09:04:11,358 - DEBUG - Сайт Загрузка видео на YouTube доступен: red
+2024-10-15 09:04:11,423 - DEBUG - Сайт CDN сервис Discord по глобальной сети доступен: red
+2024-10-15 09:04:11,467 - DEBUG - https://github.com:443 "GET /zhivem/DPI-Penguin/releases/latest HTTP/11" 302 0
+2024-10-15 09:04:11,851 - DEBUG - https://github.com:443 "GET /zhivem/DPI-Penguin/releases/tag/1.5.3 HTTP/11" 200 None
+2024-10-15 09:04:11,903 - ERROR - Ошибка запроса к GitHub API: Expecting value: line 8 column 1 (char 7)
+2024-10-15 09:04:11,903 - INFO - Обновления не найдены.
+2024-10-15 09:04:11,903 - INFO - Обновления не найдены.
+2024-10-15 09:04:11,930 - DEBUG - Сайт Внутренний API YouTube доступен: red
+2024-10-15 09:04:12,045 - DEBUG - Сайт Альтернатива коротких ссылок YouTube доступен: green
+2024-10-15 09:04:12,724 - DEBUG - Поведение сворачивания в трей изменено: False
+2024-10-15 09:04:13,264 - INFO - Приложение закрыто пользователем.
+2024-10-15 09:04:13,282 - INFO - Приложение завершило работу.

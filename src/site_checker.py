@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from typing import Optional, List
 
 import aiohttp
 from PyQt5.QtCore import QObject, pyqtSignal
@@ -9,63 +10,82 @@ from utils import DISPLAY_NAMES, get_site_by_name
 
 class SiteCheckerWorker(QObject):
     """
-    Класс для асинхронной проверки доступности сайтов.
-
-    Сигналы:
-        site_checked (str, str): Передает имя сайта и цвет статуса.
-        finished (): Уведомляет об окончании проверки.
+    Класс для проверки доступности сайтов в отдельном потоке.
     """
-
     site_checked = pyqtSignal(str, str)
     finished = pyqtSignal()
+    error_signal = pyqtSignal(str)
 
-    def __init__(self, sites=None, retries=3):
+    def __init__(self, sites: Optional[List[str]] = None):
+        """
+        Инициализация SiteCheckerWorker.
+
+        Args:
+            sites (Optional[List[str]], optional): Список имен сайтов для проверки.
+                Если None, используется DISPLAY_NAMES из utils.
+        """
         super().__init__()
-        self.sites = list(sites) if sites is not None else DISPLAY_NAMES
-        self.retries = retries  # Количество попыток при неудачной проверке
+        self.sites = sites if sites is not None else DISPLAY_NAMES
 
-    def run(self):
-        """Запускает асинхронную проверку сайтов."""
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(self.check_sites())
-        loop.close()
+    def run(self) -> None:
+        """
+        Запускает проверку сайтов.
+        """
+        try:
+            asyncio.run(self.check_sites())
+        except Exception as e:
+            logging.critical(f"Неожиданная ошибка при запуске проверки сайтов: {e}", exc_info=True)
+            self.error_signal.emit(f"Неожиданная ошибка: {e}")
+            self.finished.emit()
 
-    async def check_sites(self):
-        """Асинхронно проверяет доступность сайтов."""
+    async def check_sites(self) -> None:
+        """
+        Асинхронно проверяет доступность всех сайтов.
+        """
         async with aiohttp.ClientSession() as session:
             tasks = [
                 self.check_site(session, site_name, self.get_site_url(site_name))
                 for site_name in self.sites
             ]
-            await asyncio.gather(*tasks)
+            await asyncio.gather(*tasks, return_exceptions=True)
         self.finished.emit()
 
-    async def check_site(self, session, site_name, url):
-        """Проверяет доступность одного сайта с ретраем."""
-        for attempt in range(self.retries):
-            try:
-                logging.debug(f"Проверка {url}, попытка {attempt + 1}")
-                async with session.get(url, timeout=5) as response:
-                    if response.status == 200:
-                        color = 'green'
-                    else:
-                        color = 'red'
-                    break  # Успешная проверка, прерываем попытки
-            except aiohttp.ClientError as e:
-                logging.error(f"Ошибка при проверке {url}: {e}")
-                color = 'red'
-            except asyncio.TimeoutError:
-                logging.error(f"Тайм-аут при проверке {url}")
-                color = 'red'
-            except Exception as e:
-                logging.critical(f"Неожиданная ошибка при проверке {url}: {e}", exc_info=True)
-                color = 'red'
-            else:
-                break  # Успешная проверка, выход из цикла
+    async def check_site(self, session: aiohttp.ClientSession, site_name: str, url: str) -> None:
+        """
+        Асинхронно проверяет доступность одного сайта.
+
+        Args:
+            session (aiohttp.ClientSession): Сессия для выполнения HTTP-запроса.
+            site_name (str): Имя сайта.
+            url (str): URL сайта.
+        """
+        try:
+            logging.debug(f"Проверка {url}")
+            async with session.get(url, timeout=5) as response:
+                if response.status == 200:
+                    color = 'green'
+                else:
+                    color = 'red'
+        except aiohttp.ClientError as e:
+            logging.error(f"Ошибка при проверке {url}: {e}")
+            color = 'red'
+        except asyncio.TimeoutError:
+            logging.error(f"Тайм-аут при проверке {url}")
+            color = 'red'
+        except Exception as e:
+            logging.critical(f"Неожиданная ошибка при проверке {url}: {e}", exc_info=True)
+            color = 'red'
         self.site_checked.emit(site_name, color)
 
-    def get_site_url(self, site_name):
-        """Получает полный URL сайта по его имени."""
+    def get_site_url(self, site_name: str) -> str:
+        """
+        Возвращает URL сайта по его имени.
+
+        Args:
+            site_name (str): Имя сайта.
+
+        Returns:
+            str: Полный URL сайта.
+        """
         site = get_site_by_name(site_name)
         return site if site.startswith("http") else f"https://{site}"
