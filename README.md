@@ -58,7 +58,7 @@
 1. Клонируйте репозиторий:
 
     ```bash
-    git clone https://github.com/zhivem/GoodByDPI-GUI-by-zhivem.git
+    git clone https://github.com/zhivem/DPI-Penguin.git 
     ```
 
 2. Установите зависимости:
