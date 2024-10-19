@@ -12,3 +12,6 @@ env/
 # Расширения для IDE
 .idea/
 .vscode/
+
+# Логи
+Logs/
