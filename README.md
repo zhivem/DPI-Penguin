@@ -109,12 +109,10 @@ args =
     python main.py
     ```
 
-## Использование
+## Благодарности*
+- **GoodbyeDPI:** Основа для работы YouTube. Разработчик: ValdikSS. [Репозиторий](https://github.com/ValdikSS/GoodbyeDPI)
+- **Zapret:** Основа для работы Discord и YouTube. Разработчик: bol-van. [Репозиторий](https://github.com/bol-van/zapret)
 
-Программа предлагает удобный графический интерфейс для запуска, управления и обновления утилиты GoodByeDPI. Просто выберите нужный сценарий, нажмите "Запустить", и программа выполнит необходимые действия.
+## Лицензия 
+Этот проект лицензирован под [Apache License, Version 2.0.](https://raw.githubusercontent.com/zhivem/DPI-Penguin/refs/heads/main/LICENSE)
 
-# Похожие проекты
-
-- **[GoodbyeDPI UI](https://github.com/Storik4pro/goodbyeDPI-UI)** by @Storik4pro
-- **[Launcher for GoodbyeDPI](https://topersoft.com/programs/launchergdpi)** by @TOPERSOFT
-- **[Zapret](https://github.com/bol-van/zapret)** by @bol-van
