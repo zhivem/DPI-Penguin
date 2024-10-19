@@ -4,64 +4,63 @@ import os
 import sys
 import webbrowser
 import ctypes
+import atexit
+import winerror
 
-# Константы
-UPDATE_URL = "https://github.com/zhivem/DPI-Penguin"
+# Импорт стандартных библиотек для Windows
+if os.name == 'nt':
+    import win32event
+    import win32api
+    import win32con
 
-# Импорт утилит, необходимых для логирования
-from utils import BASE_FOLDER, ensure_module_installed, current_version
-
-# Конфигурация логирования с ротацией файлов и перезаписью при запуске
-import os
-import logging
-from logging.handlers import RotatingFileHandler
-
-def setup_logging():
-    # Указание директории для логов
-    log_dir = os.path.join(BASE_FOLDER, "logs")
-    os.makedirs(log_dir, exist_ok=True)
-
-    # Создание файла логов с текущей версией
-    log_file = os.path.join(log_dir, f"app_penguin_v{current_version}.log")
-
-    # Настройка ротации файлов
-    handler = RotatingFileHandler(
-        log_file,
-        mode='w',  
-        maxBytes=5 * 1024 * 1024,  
-        backupCount=3  
-    )
-
-    # Формат логирования
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-
-    # Настройка логирования с заданными параметрами
-    logging.basicConfig(
-        handlers=[handler],
-        level=logging.DEBUG,  # Уровень логирования DEBUG для подробного вывода
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        force=True  # Принудительное изменение существующих настроек логирования
-    )
-
-    logging.info("Логирование настроено.")
-
-# Настройка логирования перед импортом других модулей
-setup_logging()
-
-# Импорт после настройки логирования
+# Импорт сторонних библиотек
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 
-from gui import GoodbyeDPIApp
-from updater import Updater
+# Импорт локальных модулей
+from gui.gui import GoodbyeDPIApp
+from utils.updater import Updater
+from utils.utils import (
+    BASE_FOLDER,
+    CURRENT_VERSION,
+    ensure_module_installed,
+)
+
+# Константы
+UPDATE_URL = "https://github.com/zhivem/DPI-Penguin/releases"
+MUTEX_NAME = "ru.github.dpipenguin.mutex"
+LOG_FILENAME = os.path.join(BASE_FOLDER, "logs", f"app_penguin_v{CURRENT_VERSION}.log")
+
+def setup_logging():
+    """
+    Настройка логирования с использованием RotatingFileHandler.
+    """
+    os.makedirs(os.path.dirname(LOG_FILENAME), exist_ok=True)
+    
+    handler = RotatingFileHandler(
+        LOG_FILENAME,
+        maxBytes=1 * 1024 * 1024,  # 1 MB
+        backupCount=3  # Количество резервных копий логов
+    )
+    
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    
+    logging.basicConfig(
+        handlers=[handler],
+        level=logging.DEBUG,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        force=True
+    )
+    
+    logging.info("Логирование настроено.")
 
 def is_admin() -> bool:
     """
     Проверяет, запущено ли приложение с правами администратора.
-
+    
     Returns:
-        bool: True, если запущено с правами администратора, иначе False.
+        bool: True, если приложение запущено как администратор, иначе False.
     """
     if os.name == 'nt':
         try:
@@ -73,6 +72,42 @@ def is_admin() -> bool:
         return os.geteuid() == 0
     return False
 
+def run_as_admin(argv=None):
+    """
+    Перезапускает программу с правами администратора.
+    
+    Args:
+        argv (list, optional): Аргументы командной строки. По умолчанию None.
+    """
+    shell32 = ctypes.windll.shell32
+    if argv is None:
+        argv = sys.argv
+    executable = sys.executable
+    params = ' '.join([f'"{arg}"' for arg in argv])
+    show_cmd = win32con.SW_NORMAL
+    ret = shell32.ShellExecuteW(None, "runas", executable, params, None, show_cmd)
+    if int(ret) <= 32:
+        logging.error("Не удалось перезапустить программу с правами администратора.")
+        sys.exit(1)
+    sys.exit(0)
+
+def ensure_single_instance():
+    """
+    Обеспечивает однократный запуск приложения.
+    """
+    if os.name == 'nt':
+        handle = win32event.CreateMutex(None, False, MUTEX_NAME)
+        last_error = win32api.GetLastError()
+        if last_error == winerror.ERROR_ALREADY_EXISTS:
+            logging.info("Приложение уже запущено. Завершение новой копии.")
+            QMessageBox.warning(None, "Предупреждение", "Приложение уже запущено.")
+            sys.exit(0)
+        # Релиз мьютекса при выходе
+        atexit.register(win32api.CloseHandle, handle)
+    else:
+        # Для POSIX систем можно использовать файлы блокировки или другие механизмы
+        pass
+
 class MyApp(QtWidgets.QApplication):
     """
     Класс приложения, наследующий от QtWidgets.QApplication.
@@ -81,19 +116,12 @@ class MyApp(QtWidgets.QApplication):
     def __init__(self, sys_argv):
         super().__init__(sys_argv)
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.logger.debug("MyApp инициализирован.")
+        self.logger.debug("Главное окно инициализировано.")
         self.ex = GoodbyeDPIApp()
 
     def notify(self, receiver, event):
         """
         Переопределяет метод notify для глобальной обработки исключений.
-
-        Args:
-            receiver: Объект-получатель события.
-            event: Событие.
-
-        Returns:
-            bool: Результат обработки события.
         """
         try:
             return super().notify(receiver, event)
@@ -105,21 +133,21 @@ class MyApp(QtWidgets.QApplication):
 def check_for_updates_on_startup(updater: Updater):
     """
     Проверяет наличие обновлений при запуске приложения.
-
+    
     Args:
         updater (Updater): Экземпляр класса Updater.
     """
     updater.update_available.connect(prompt_update)
     updater.no_update.connect(lambda: logging.info("Обновления не найдены."))
-    updater.update_error.connect(lambda error_message: logging.error(f"Ошибка проверки обновлений: {error_message}"))
+    updater.update_error.connect(lambda msg: logging.error(f"Ошибка проверки обновлений: {msg}"))
     updater.start()
 
 def prompt_update(latest_version: str):
     """
     Запрашивает у пользователя обновление приложения.
-
+    
     Args:
-        latest_version (str): Последняя доступная версия.
+        latest_version (str): Доступная последняя версия.
     """
     reply = QMessageBox.question(
         None,
@@ -136,34 +164,35 @@ def main():
     Основная функция запуска приложения.
     """
     logging.debug("Начало выполнения main()")
-
-    # Убедиться, что необходимый модуль установлен
-    ensure_module_installed('packaging')
-
-    # Инициализация приложения
-    app = MyApp(sys.argv)
-
+    
+    # Обеспечить однократный запуск
+    ensure_single_instance()
+    
     # Проверка прав администратора
     if not is_admin():
-        logging.error("Программа должна быть запущена с правами администратора.")
-        QMessageBox.critical(None, "Ошибка", "Программа должна быть запущена с правами администратора.")
-        sys.exit(1)
-
+        logging.info("Перезапуск программы с правами администратора.")
+        run_as_admin()
+    
+    # Убедимся, что необходимый модуль установлен
+    ensure_module_installed('packaging')
+    
+    # Инициализация приложения
+    app = MyApp(sys.argv)
+    
     # Инициализация и проверка обновлений
     updater = Updater()
     check_for_updates_on_startup(updater)
-
+    
     try:
         app.ex.show()
-        logging.info("Приложение запущено.")
         result = app.exec_()
     except Exception as e:
         logging.critical(f"Неожиданная ошибка: {e}", exc_info=True)
         QMessageBox.critical(None, "Ошибка", f"Произошла ошибка: {e}")
     finally:
         updater.wait()
-        logging.info("Приложение завершило работу.")
         sys.exit(result)
 
 if __name__ == '__main__':
+    setup_logging()
     main()

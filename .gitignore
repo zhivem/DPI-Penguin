@@ -3,17 +3,12 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Virtual environment
+# Виртуальные окружения
 venv/
 env/
-ENV/
 .venv/
+.env/
 
-# Распределение / упаковка
-build/
-dist/
-*.egg-info/
-
-# IDE
+# Расширения для IDE
 .idea/
 .vscode/

@@ -1,0 +1,402 @@
+2024-10-19 07:30:47,846 - INFO - Логирование настроено.
+2024-10-19 07:30:47,846 - DEBUG - Начало выполнения main()
+2024-10-19 07:30:47,853 - DEBUG - Главное окно инициализировано.
+2024-10-19 07:30:47,855 - INFO - SCRIPT_OPTIONS загружены: {'Обход блокировки YouTube': ('c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\winws.exe', ['--wf-tcp=80,443', '--wf-udp=443,50000-65535', '--filter-udp=443', '--hostlist=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\black\\russia-youtube.txt', '--dpi-desync=fake', '--dpi-desync-udplen-increment=10', '--dpi-desync-repeats=6', '--dpi-desync-udplen-pattern=0xDEADBEEF', '--dpi-desync-fake-quic=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\quic_initial_www_google_com.bin', '--new', '--filter-udp=50000-65535', '--dpi-desync=fake', '--dpi-desync-any-protocol', '--dpi-desync-cutoff=d3', '--dpi-desync-repeats=6', '--dpi-desync-fake-quic=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\quic_initial_www_google_com.bin', '--new', '--filter-tcp=80', '--hostlist=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\black\\russia-youtube.txt', '--dpi-desync=fake,split2', '--dpi-desync-autottl=2', '--dpi-desync-fooling=md5sig', '--new', '--filter-tcp=443', '--hostlist=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\black\\russia-youtube.txt', '--dpi-desync=fake,split', '--dpi-desync-autottl=2', '--dpi-desync-repeats=6', '--dpi-desync-fooling=badseq', '--dpi-desync-fake-tls=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\tls_clienthello_www_google_com.bin']), 'Обход Discord + YouTube': ('c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\winws.exe', ['--wf-tcp=80,443,50000-65535', '--wf-udp=443,50000-65535', '--filter-udp=443', '--hostlist=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\black\\disk-yotube.txt', '--dpi-desync=fake', '--dpi-desync-udplen-increment=10', '--dpi-desync-repeats=6', '--dpi-desync-udplen-pattern=0xDEADBEEF', '--dpi-desync-fake-quic=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\quic_initial_www_google_com.bin', '--new', '--filter-udp=50000-65535', '--dpi-desync=fake,tamper', '--dpi-desync-any-protocol', '--dpi-desync-fake-quic=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\quic_initial_www_google_com.bin', '--new', '--filter-tcp=80', '--dpi-desync=fake,split2', '--dpi-desync-autottl=2', '--dpi-desync-fooling=md5sig', '--dpi-desync-fake-tls=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\tls_clienthello_www_google_com.bin', '--new', '--dpi-desync=fake,disorder2', '--dpi-desync-autottl=2', '--dpi-desync-fooling=md5sig']), 'Обход блокировки Discord': ('c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\winws.exe', ['--wf-tcp=443', '--wf-udp=443,50000-65535', '--filter-udp=443', '--hostlist=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\black\\discord-blacklist.txt', '--dpi-desync=fake', '--dpi-desync-udplen-increment=10', '--dpi-desync-repeats=6', '--dpi-desync-udplen-pattern=0xDEADBEEF', '--dpi-desync-fake-quic=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\quic_initial_www_google_com.bin', '--new', '--filter-udp=50000-65535', '--dpi-desync=fake,tamper', '--dpi-desync-any-protocol', '--dpi-desync-fake-quic=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\quic_initial_www_google_com.bin', '--new', '--filter-tcp=443', '--hostlist=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\black\\discord-blacklist.txt', '--dpi-desync=fake,split2', '--dpi-desync-autottl=2', '--dpi-desync-fooling=md5sig', '--dpi-desync-fake-tls=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\tls_clienthello_www_google_com.bin']), 'Обход блокировок для всех сайтов': ('c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\bin\\x86_64\\goodbyedpi.exe', ['-9', '--blacklist=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\black\\russia-blacklist.txt'])}
+2024-10-19 07:30:47,907 - INFO - Применен стиль: light_theme.qss
+2024-10-19 07:30:47,907 - INFO - Тема 'light' применена.
+2024-10-19 07:30:47,925 - DEBUG - Текст кнопки переключения темы обновлён на 'Переключиться на тёмную тему'.
+2024-10-19 07:30:48,497 - DEBUG - Начата проверка наличия обновлений.
+2024-10-19 07:30:48,498 - DEBUG - Starting new HTTPS connection (1): api.github.com:443
+2024-10-19 07:30:48,532 - DEBUG - Начата проверка доступности сайтов.
+2024-10-19 07:30:48,533 - DEBUG - Запуск проверки сайтов.
+2024-10-19 07:30:48,533 - DEBUG - Using proactor: IocpProactor
+2024-10-19 07:30:48,533 - DEBUG - Добавлен префикс 'https://' к URL: https://youtube.com
+2024-10-19 07:30:48,533 - DEBUG - Добавлен префикс 'https://' к URL: https://youtu.be
+2024-10-19 07:30:48,534 - DEBUG - Добавлен префикс 'https://' к URL: https://yt.be
+2024-10-19 07:30:48,534 - DEBUG - Добавлен префикс 'https://' к URL: https://discord.com
+2024-10-19 07:30:48,534 - DEBUG - Добавлен префикс 'https://' к URL: https://gateway.discord.gg
+2024-10-19 07:30:48,534 - DEBUG - Добавлен префикс 'https://' к URL: https://discord.gg
+2024-10-19 07:30:48,534 - DEBUG - Добавлен префикс 'https://' к URL: https://discordcdn.com
+2024-10-19 07:30:48,534 - DEBUG - Добавлен префикс 'https://' к URL: https://youtube-nocookie.com
+2024-10-19 07:30:48,534 - DEBUG - Добавлен префикс 'https://' к URL: https://youtube-ui.l.google.com
+2024-10-19 07:30:48,534 - DEBUG - Добавлен префикс 'https://' к URL: https://youtubeembeddedplayer.googleapis.com
+2024-10-19 07:30:48,534 - DEBUG - Добавлен префикс 'https://' к URL: https://youtube.googleapis.com
+2024-10-19 07:30:48,534 - DEBUG - Добавлен префикс 'https://' к URL: https://youtubei.googleapis.com
+2024-10-19 07:30:48,534 - DEBUG - Добавлен префикс 'https://' к URL: https://yt-video-upload.l.google.com
+2024-10-19 07:30:48,534 - DEBUG - Добавлен префикс 'https://' к URL: https://wide-youtube.l.google.com
+2024-10-19 07:30:48,534 - DEBUG - Запуск 14 задач проверки сайтов.
+2024-10-19 07:30:48,535 - DEBUG - Проверка доступности сайта: https://youtube.com
+2024-10-19 07:30:48,547 - DEBUG - Проверка доступности сайта: https://youtu.be
+2024-10-19 07:30:48,548 - DEBUG - Проверка доступности сайта: https://yt.be
+2024-10-19 07:30:48,550 - DEBUG - Проверка доступности сайта: https://discord.com
+2024-10-19 07:30:48,557 - DEBUG - Проверка доступности сайта: https://gateway.discord.gg
+2024-10-19 07:30:48,558 - DEBUG - Проверка доступности сайта: https://discord.gg
+2024-10-19 07:30:48,559 - DEBUG - Проверка доступности сайта: https://discordcdn.com
+2024-10-19 07:30:48,559 - DEBUG - Проверка доступности сайта: https://youtube-nocookie.com
+2024-10-19 07:30:48,560 - DEBUG - Проверка доступности сайта: https://youtube-ui.l.google.com
+2024-10-19 07:30:48,560 - DEBUG - Проверка доступности сайта: https://youtubeembeddedplayer.googleapis.com
+2024-10-19 07:30:48,564 - DEBUG - Проверка доступности сайта: https://youtube.googleapis.com
+2024-10-19 07:30:48,564 - DEBUG - Проверка доступности сайта: https://youtubei.googleapis.com
+2024-10-19 07:30:48,567 - DEBUG - Проверка доступности сайта: https://yt-video-upload.l.google.com
+2024-10-19 07:30:48,567 - DEBUG - Проверка доступности сайта: https://wide-youtube.l.google.com
+2024-10-19 07:30:48,663 - ERROR - Ошибка при проверке https://yt-video-upload.l.google.com: Cannot connect to host yt-video-upload.l.google.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'yt-video-upload.l.google.com'. (_ssl.c:1000)")]
+2024-10-19 07:30:48,664 - DEBUG - Сайт Загрузка видео на YouTube доступен: red
+2024-10-19 07:30:48,674 - ERROR - Ошибка при проверке https://wide-youtube.l.google.com: Cannot connect to host wide-youtube.l.google.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'wide-youtube.l.google.com'. (_ssl.c:1000)")]
+2024-10-19 07:30:48,674 - DEBUG - Сайт Служебный домен YouTube доступен: red
+2024-10-19 07:30:48,748 - ERROR - Ошибка при проверке https://youtube-nocookie.com: Cannot connect to host youtube-nocookie.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'youtube-nocookie.com'. (_ssl.c:1000)")]
+2024-10-19 07:30:48,748 - DEBUG - Сайт YouTube без cookies доступен: red
+2024-10-19 07:30:48,748 - WARNING - Сайт https://discordcdn.com недоступен. Статус: 403
+2024-10-19 07:30:48,749 - DEBUG - Сайт CDN сервис Discord по глобальной сети доступен: red
+2024-10-19 07:30:48,753 - WARNING - Сайт https://youtube.googleapis.com недоступен. Статус: 404
+2024-10-19 07:30:48,753 - DEBUG - Сайт YouTube API доступен: red
+2024-10-19 07:30:48,773 - WARNING - Сайт https://youtubeembeddedplayer.googleapis.com недоступен. Статус: 404
+2024-10-19 07:30:48,775 - DEBUG - Сайт Встроенные видео YouTube доступен: red
+2024-10-19 07:30:48,807 - ERROR - Ошибка при проверке https://youtube-ui.l.google.com: Cannot connect to host youtube-ui.l.google.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'youtube-ui.l.google.com'. (_ssl.c:1000)")]
+2024-10-19 07:30:48,808 - DEBUG - Сайт Интерфейс YouTube доступен: red
+2024-10-19 07:30:48,865 - DEBUG - https://api.github.com:443 "GET /repos/zhivem/DPI-Penguin/releases/latest HTTP/11" 200 1257
+2024-10-19 07:30:48,866 - DEBUG - Получена последняя версия: 1.5.3
+2024-10-19 07:30:48,866 - INFO - Обновления не найдены.
+2024-10-19 07:30:48,866 - INFO - Обновления не найдены.
+2024-10-19 07:30:49,374 - WARNING - Сайт https://youtubei.googleapis.com недоступен. Статус: 405
+2024-10-19 07:30:49,374 - DEBUG - Сайт Внутренний API YouTube доступен: red
+2024-10-19 07:30:49,936 - DEBUG - Сайт https://youtu.be доступен.
+2024-10-19 07:30:49,936 - DEBUG - Сайт Короткие ссылки YouTube доступен: green
+2024-10-19 07:30:50,026 - DEBUG - Сайт https://yt.be доступен.
+2024-10-19 07:30:50,026 - DEBUG - Сайт Альтернатива коротких ссылок YouTube доступен: green
+2024-10-19 07:30:54,295 - ERROR - Тайм-аут при проверке https://youtube.com
+2024-10-19 07:30:54,295 - ERROR - Тайм-аут при проверке https://discord.com
+2024-10-19 07:30:54,295 - DEBUG - Сайт Основной сайт YouTube доступен: red
+2024-10-19 07:30:54,295 - ERROR - Тайм-аут при проверке https://discord.gg
+2024-10-19 07:30:54,295 - DEBUG - Сайт Основной сайт Discord доступен: red
+2024-10-19 07:30:54,295 - ERROR - Тайм-аут при проверке https://gateway.discord.gg
+2024-10-19 07:30:54,295 - DEBUG - Сайт Приглашения на серверы Discord доступен: red
+2024-10-19 07:30:54,296 - DEBUG - Сайт Веб-сокет Discord доступен: red
+2024-10-19 07:30:54,296 - DEBUG - Проверка сайтов завершена.
+2024-10-19 07:30:54,297 - INFO - Проверка доступности сайтов завершена.
+2024-10-19 07:31:09,898 - INFO - Логирование настроено.
+2024-10-19 07:31:09,898 - DEBUG - Начало выполнения main()
+2024-10-19 07:31:09,908 - DEBUG - Главное окно инициализировано.
+2024-10-19 07:31:09,909 - INFO - SCRIPT_OPTIONS загружены: {'Обход блокировки YouTube': ('c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\winws.exe', ['--wf-tcp=80,443', '--wf-udp=443,50000-65535', '--filter-udp=443', '--hostlist=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\black\\russia-youtube.txt', '--dpi-desync=fake', '--dpi-desync-udplen-increment=10', '--dpi-desync-repeats=6', '--dpi-desync-udplen-pattern=0xDEADBEEF', '--dpi-desync-fake-quic=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\quic_initial_www_google_com.bin', '--new', '--filter-udp=50000-65535', '--dpi-desync=fake', '--dpi-desync-any-protocol', '--dpi-desync-cutoff=d3', '--dpi-desync-repeats=6', '--dpi-desync-fake-quic=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\quic_initial_www_google_com.bin', '--new', '--filter-tcp=80', '--hostlist=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\black\\russia-youtube.txt', '--dpi-desync=fake,split2', '--dpi-desync-autottl=2', '--dpi-desync-fooling=md5sig', '--new', '--filter-tcp=443', '--hostlist=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\black\\russia-youtube.txt', '--dpi-desync=fake,split', '--dpi-desync-autottl=2', '--dpi-desync-repeats=6', '--dpi-desync-fooling=badseq', '--dpi-desync-fake-tls=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\tls_clienthello_www_google_com.bin']), 'Обход Discord + YouTube': ('c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\winws.exe', ['--wf-tcp=80,443,50000-65535', '--wf-udp=443,50000-65535', '--filter-udp=443', '--hostlist=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\black\\disk-yotube.txt', '--dpi-desync=fake', '--dpi-desync-udplen-increment=10', '--dpi-desync-repeats=6', '--dpi-desync-udplen-pattern=0xDEADBEEF', '--dpi-desync-fake-quic=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\quic_initial_www_google_com.bin', '--new', '--filter-udp=50000-65535', '--dpi-desync=fake,tamper', '--dpi-desync-any-protocol', '--dpi-desync-fake-quic=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\quic_initial_www_google_com.bin', '--new', '--filter-tcp=80', '--dpi-desync=fake,split2', '--dpi-desync-autottl=2', '--dpi-desync-fooling=md5sig', '--dpi-desync-fake-tls=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\tls_clienthello_www_google_com.bin', '--new', '--dpi-desync=fake,disorder2', '--dpi-desync-autottl=2', '--dpi-desync-fooling=md5sig']), 'Обход блокировки Discord': ('c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\winws.exe', ['--wf-tcp=443', '--wf-udp=443,50000-65535', '--filter-udp=443', '--hostlist=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\black\\discord-blacklist.txt', '--dpi-desync=fake', '--dpi-desync-udplen-increment=10', '--dpi-desync-repeats=6', '--dpi-desync-udplen-pattern=0xDEADBEEF', '--dpi-desync-fake-quic=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\quic_initial_www_google_com.bin', '--new', '--filter-udp=50000-65535', '--dpi-desync=fake,tamper', '--dpi-desync-any-protocol', '--dpi-desync-fake-quic=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\quic_initial_www_google_com.bin', '--new', '--filter-tcp=443', '--hostlist=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\black\\discord-blacklist.txt', '--dpi-desync=fake,split2', '--dpi-desync-autottl=2', '--dpi-desync-fooling=md5sig', '--dpi-desync-fake-tls=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\tls_clienthello_www_google_com.bin']), 'Обход блокировок для всех сайтов': ('c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\bin\\x86_64\\goodbyedpi.exe', ['-9', '--blacklist=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\black\\russia-blacklist.txt'])}
+2024-10-19 07:31:09,961 - INFO - Применен стиль: light_theme.qss
+2024-10-19 07:31:09,962 - INFO - Тема 'light' применена.
+2024-10-19 07:31:09,981 - DEBUG - Текст кнопки переключения темы обновлён на 'Переключиться на тёмную тему'.
+2024-10-19 07:31:10,573 - DEBUG - Начата проверка наличия обновлений.
+2024-10-19 07:31:10,574 - DEBUG - Starting new HTTPS connection (1): api.github.com:443
+2024-10-19 07:31:10,608 - DEBUG - Начата проверка доступности сайтов.
+2024-10-19 07:31:10,608 - DEBUG - Запуск проверки сайтов.
+2024-10-19 07:31:10,609 - DEBUG - Using proactor: IocpProactor
+2024-10-19 07:31:10,609 - DEBUG - Добавлен префикс 'https://' к URL: https://youtube.com
+2024-10-19 07:31:10,609 - DEBUG - Добавлен префикс 'https://' к URL: https://youtu.be
+2024-10-19 07:31:10,610 - DEBUG - Добавлен префикс 'https://' к URL: https://yt.be
+2024-10-19 07:31:10,610 - DEBUG - Добавлен префикс 'https://' к URL: https://discord.com
+2024-10-19 07:31:10,610 - DEBUG - Добавлен префикс 'https://' к URL: https://gateway.discord.gg
+2024-10-19 07:31:10,610 - DEBUG - Добавлен префикс 'https://' к URL: https://discord.gg
+2024-10-19 07:31:10,610 - DEBUG - Добавлен префикс 'https://' к URL: https://discordcdn.com
+2024-10-19 07:31:10,610 - DEBUG - Добавлен префикс 'https://' к URL: https://youtube-nocookie.com
+2024-10-19 07:31:10,610 - DEBUG - Добавлен префикс 'https://' к URL: https://youtube-ui.l.google.com
+2024-10-19 07:31:10,610 - DEBUG - Добавлен префикс 'https://' к URL: https://youtubeembeddedplayer.googleapis.com
+2024-10-19 07:31:10,610 - DEBUG - Добавлен префикс 'https://' к URL: https://youtube.googleapis.com
+2024-10-19 07:31:10,610 - DEBUG - Добавлен префикс 'https://' к URL: https://youtubei.googleapis.com
+2024-10-19 07:31:10,610 - DEBUG - Добавлен префикс 'https://' к URL: https://yt-video-upload.l.google.com
+2024-10-19 07:31:10,610 - DEBUG - Добавлен префикс 'https://' к URL: https://wide-youtube.l.google.com
+2024-10-19 07:31:10,610 - DEBUG - Запуск 14 задач проверки сайтов.
+2024-10-19 07:31:10,611 - DEBUG - Проверка доступности сайта: https://youtube.com
+2024-10-19 07:31:10,612 - DEBUG - Проверка доступности сайта: https://youtu.be
+2024-10-19 07:31:10,625 - DEBUG - Проверка доступности сайта: https://yt.be
+2024-10-19 07:31:10,625 - DEBUG - Проверка доступности сайта: https://discord.com
+2024-10-19 07:31:10,626 - DEBUG - Проверка доступности сайта: https://gateway.discord.gg
+2024-10-19 07:31:10,630 - DEBUG - Проверка доступности сайта: https://discord.gg
+2024-10-19 07:31:10,632 - DEBUG - Проверка доступности сайта: https://discordcdn.com
+2024-10-19 07:31:10,632 - DEBUG - Проверка доступности сайта: https://youtube-nocookie.com
+2024-10-19 07:31:10,635 - DEBUG - Проверка доступности сайта: https://youtube-ui.l.google.com
+2024-10-19 07:31:10,639 - DEBUG - Проверка доступности сайта: https://youtubeembeddedplayer.googleapis.com
+2024-10-19 07:31:10,640 - DEBUG - Проверка доступности сайта: https://youtube.googleapis.com
+2024-10-19 07:31:10,640 - DEBUG - Проверка доступности сайта: https://youtubei.googleapis.com
+2024-10-19 07:31:10,640 - DEBUG - Проверка доступности сайта: https://yt-video-upload.l.google.com
+2024-10-19 07:31:10,640 - DEBUG - Проверка доступности сайта: https://wide-youtube.l.google.com
+2024-10-19 07:31:10,738 - ERROR - Ошибка при проверке https://yt-video-upload.l.google.com: Cannot connect to host yt-video-upload.l.google.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'yt-video-upload.l.google.com'. (_ssl.c:1000)")]
+2024-10-19 07:31:10,738 - DEBUG - Сайт Загрузка видео на YouTube доступен: red
+2024-10-19 07:31:10,740 - ERROR - Ошибка при проверке https://wide-youtube.l.google.com: Cannot connect to host wide-youtube.l.google.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'wide-youtube.l.google.com'. (_ssl.c:1000)")]
+2024-10-19 07:31:10,740 - DEBUG - Сайт Служебный домен YouTube доступен: red
+2024-10-19 07:31:10,809 - WARNING - Сайт https://youtubeembeddedplayer.googleapis.com недоступен. Статус: 404
+2024-10-19 07:31:10,810 - DEBUG - Сайт Встроенные видео YouTube доступен: red
+2024-10-19 07:31:10,821 - WARNING - Сайт https://discordcdn.com недоступен. Статус: 403
+2024-10-19 07:31:10,822 - DEBUG - Сайт CDN сервис Discord по глобальной сети доступен: red
+2024-10-19 07:31:10,822 - WARNING - Сайт https://youtube.googleapis.com недоступен. Статус: 404
+2024-10-19 07:31:10,822 - DEBUG - Сайт YouTube API доступен: red
+2024-10-19 07:31:10,832 - ERROR - Ошибка при проверке https://youtube-nocookie.com: Cannot connect to host youtube-nocookie.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'youtube-nocookie.com'. (_ssl.c:1000)")]
+2024-10-19 07:31:10,833 - DEBUG - Сайт YouTube без cookies доступен: red
+2024-10-19 07:31:10,866 - DEBUG - https://api.github.com:443 "GET /repos/zhivem/DPI-Penguin/releases/latest HTTP/11" 200 1257
+2024-10-19 07:31:10,867 - DEBUG - Получена последняя версия: 1.5.3
+2024-10-19 07:31:10,867 - INFO - Обновления не найдены.
+2024-10-19 07:31:10,867 - INFO - Обновления не найдены.
+2024-10-19 07:31:10,879 - ERROR - Ошибка при проверке https://youtube-ui.l.google.com: Cannot connect to host youtube-ui.l.google.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'youtube-ui.l.google.com'. (_ssl.c:1000)")]
+2024-10-19 07:31:10,880 - DEBUG - Сайт Интерфейс YouTube доступен: red
+2024-10-19 07:31:12,868 - DEBUG - Сайт https://youtube.com доступен.
+2024-10-19 07:31:12,868 - DEBUG - Сайт Основной сайт YouTube доступен: green
+2024-10-19 07:31:12,972 - WARNING - Сайт https://youtubei.googleapis.com недоступен. Статус: 405
+2024-10-19 07:31:12,972 - DEBUG - Сайт Внутренний API YouTube доступен: red
+2024-10-19 07:31:14,820 - DEBUG - Сайт https://yt.be доступен.
+2024-10-19 07:31:14,820 - DEBUG - Сайт Альтернатива коротких ссылок YouTube доступен: green
+2024-10-19 07:31:16,293 - ERROR - Тайм-аут при проверке https://discord.gg
+2024-10-19 07:31:16,293 - ERROR - Тайм-аут при проверке https://gateway.discord.gg
+2024-10-19 07:31:16,293 - ERROR - Тайм-аут при проверке https://discord.com
+2024-10-19 07:31:16,293 - ERROR - Тайм-аут при проверке https://youtu.be
+2024-10-19 07:31:16,293 - DEBUG - Сайт Приглашения на серверы Discord доступен: red
+2024-10-19 07:31:16,294 - DEBUG - Сайт Веб-сокет Discord доступен: red
+2024-10-19 07:31:16,294 - DEBUG - Проверка сайтов завершена.
+2024-10-19 07:31:16,294 - DEBUG - Сайт Основной сайт Discord доступен: red
+2024-10-19 07:31:16,294 - DEBUG - Сайт Короткие ссылки YouTube доступен: red
+2024-10-19 07:31:16,296 - INFO - Проверка доступности сайтов завершена.
+2024-10-19 07:31:18,144 - INFO - Autostart успешно установлен.
+2024-10-19 07:31:18,144 - INFO - Автозапуск включен.
+2024-10-19 07:31:18,626 - INFO - Autostart успешно отключен.
+2024-10-19 07:31:18,626 - INFO - Автозапуск отключен.
+2024-10-19 07:31:19,465 - INFO - Служба создана и настроена для автоматического запуска.
+2024-10-19 07:31:20,932 - INFO - Служба успешно удалена.
+2024-10-19 07:31:22,005 - ERROR - Не удалось удалить службу.
+2024-10-19 07:31:23,053 - INFO - Служба создана и настроена для автоматического запуска.
+2024-10-19 07:31:24,742 - ERROR - Не удалось создать службу.
+2024-10-19 07:31:25,732 - INFO - Служба успешно удалена.
+2024-10-19 07:31:26,899 - ERROR - Не удалось удалить службу.
+2024-10-19 07:31:28,286 - DEBUG - Начата процедура обновления черного списка.
+2024-10-19 07:31:28,286 - INFO - Начало загрузки черного списка с https://p.thenewone.lol/domains-export.txt
+2024-10-19 07:31:28,286 - DEBUG - Starting new HTTPS connection (1): p.thenewone.lol:443
+2024-10-19 07:31:28,598 - DEBUG - https://p.thenewone.lol:443 "GET /domains-export.txt HTTP/11" 200 None
+2024-10-19 07:31:29,199 - INFO - Загрузка черного списка успешно завершена.
+2024-10-19 07:31:30,301 - DEBUG - Начата проверка наличия обновлений.
+2024-10-19 07:31:30,302 - DEBUG - Starting new HTTPS connection (1): api.github.com:443
+2024-10-19 07:31:30,445 - DEBUG - https://api.github.com:443 "GET /repos/zhivem/DPI-Penguin/releases/latest HTTP/11" 200 1257
+2024-10-19 07:31:30,445 - DEBUG - Получена последняя версия: 1.5.3
+2024-10-19 07:31:30,446 - INFO - Обновления не найдены.
+2024-10-19 07:31:31,725 - DEBUG - Начата проверка наличия обновлений.
+2024-10-19 07:31:31,726 - DEBUG - Starting new HTTPS connection (1): api.github.com:443
+2024-10-19 07:31:31,890 - DEBUG - https://api.github.com:443 "GET /repos/zhivem/DPI-Penguin/releases/latest HTTP/11" 200 1257
+2024-10-19 07:31:31,891 - DEBUG - Получена последняя версия: 1.5.3
+2024-10-19 07:31:31,891 - INFO - Обновления не найдены.
+2024-10-19 07:31:34,437 - DEBUG - Начата проверка доступности сайтов.
+2024-10-19 07:31:34,437 - DEBUG - Запуск проверки сайтов.
+2024-10-19 07:31:34,437 - DEBUG - Using proactor: IocpProactor
+2024-10-19 07:31:34,438 - DEBUG - Добавлен префикс 'https://' к URL: https://youtube.com
+2024-10-19 07:31:34,438 - DEBUG - Добавлен префикс 'https://' к URL: https://youtu.be
+2024-10-19 07:31:34,438 - DEBUG - Добавлен префикс 'https://' к URL: https://yt.be
+2024-10-19 07:31:34,438 - DEBUG - Добавлен префикс 'https://' к URL: https://discord.com
+2024-10-19 07:31:34,438 - DEBUG - Добавлен префикс 'https://' к URL: https://gateway.discord.gg
+2024-10-19 07:31:34,438 - DEBUG - Добавлен префикс 'https://' к URL: https://discord.gg
+2024-10-19 07:31:34,438 - DEBUG - Добавлен префикс 'https://' к URL: https://discordcdn.com
+2024-10-19 07:31:34,438 - DEBUG - Добавлен префикс 'https://' к URL: https://youtube-nocookie.com
+2024-10-19 07:31:34,438 - DEBUG - Добавлен префикс 'https://' к URL: https://youtube-ui.l.google.com
+2024-10-19 07:31:34,438 - DEBUG - Добавлен префикс 'https://' к URL: https://youtubeembeddedplayer.googleapis.com
+2024-10-19 07:31:34,438 - DEBUG - Добавлен префикс 'https://' к URL: https://youtube.googleapis.com
+2024-10-19 07:31:34,438 - DEBUG - Добавлен префикс 'https://' к URL: https://youtubei.googleapis.com
+2024-10-19 07:31:34,438 - DEBUG - Добавлен префикс 'https://' к URL: https://yt-video-upload.l.google.com
+2024-10-19 07:31:34,439 - DEBUG - Добавлен префикс 'https://' к URL: https://wide-youtube.l.google.com
+2024-10-19 07:31:34,439 - DEBUG - Запуск 14 задач проверки сайтов.
+2024-10-19 07:31:34,439 - DEBUG - Проверка доступности сайта: https://youtube.com
+2024-10-19 07:31:34,440 - DEBUG - Проверка доступности сайта: https://youtu.be
+2024-10-19 07:31:34,440 - DEBUG - Проверка доступности сайта: https://yt.be
+2024-10-19 07:31:34,441 - DEBUG - Проверка доступности сайта: https://discord.com
+2024-10-19 07:31:34,442 - DEBUG - Проверка доступности сайта: https://gateway.discord.gg
+2024-10-19 07:31:34,442 - DEBUG - Проверка доступности сайта: https://discord.gg
+2024-10-19 07:31:34,442 - DEBUG - Проверка доступности сайта: https://discordcdn.com
+2024-10-19 07:31:34,443 - DEBUG - Проверка доступности сайта: https://youtube-nocookie.com
+2024-10-19 07:31:34,443 - DEBUG - Проверка доступности сайта: https://youtube-ui.l.google.com
+2024-10-19 07:31:34,443 - DEBUG - Проверка доступности сайта: https://youtubeembeddedplayer.googleapis.com
+2024-10-19 07:31:34,443 - DEBUG - Проверка доступности сайта: https://youtube.googleapis.com
+2024-10-19 07:31:34,444 - DEBUG - Проверка доступности сайта: https://youtubei.googleapis.com
+2024-10-19 07:31:34,444 - DEBUG - Проверка доступности сайта: https://yt-video-upload.l.google.com
+2024-10-19 07:31:34,444 - DEBUG - Проверка доступности сайта: https://wide-youtube.l.google.com
+2024-10-19 07:31:34,531 - ERROR - Ошибка при проверке https://yt-video-upload.l.google.com: Cannot connect to host yt-video-upload.l.google.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'yt-video-upload.l.google.com'. (_ssl.c:1000)")]
+2024-10-19 07:31:34,531 - DEBUG - Сайт Загрузка видео на YouTube доступен: red
+2024-10-19 07:31:34,544 - ERROR - Ошибка при проверке https://wide-youtube.l.google.com: Cannot connect to host wide-youtube.l.google.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'wide-youtube.l.google.com'. (_ssl.c:1000)")]
+2024-10-19 07:31:34,545 - DEBUG - Сайт Служебный домен YouTube доступен: red
+2024-10-19 07:31:34,611 - WARNING - Сайт https://youtubeembeddedplayer.googleapis.com недоступен. Статус: 404
+2024-10-19 07:31:34,611 - DEBUG - Сайт Встроенные видео YouTube доступен: red
+2024-10-19 07:31:34,622 - WARNING - Сайт https://youtube.googleapis.com недоступен. Статус: 404
+2024-10-19 07:31:34,622 - DEBUG - Сайт YouTube API доступен: red
+2024-10-19 07:31:34,629 - ERROR - Ошибка при проверке https://youtube-nocookie.com: Cannot connect to host youtube-nocookie.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'youtube-nocookie.com'. (_ssl.c:1000)")]
+2024-10-19 07:31:34,630 - DEBUG - Сайт YouTube без cookies доступен: red
+2024-10-19 07:31:34,682 - ERROR - Ошибка при проверке https://youtube-ui.l.google.com: Cannot connect to host youtube-ui.l.google.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'youtube-ui.l.google.com'. (_ssl.c:1000)")]
+2024-10-19 07:31:34,682 - DEBUG - Сайт Интерфейс YouTube доступен: red
+2024-10-19 07:31:34,742 - WARNING - Сайт https://discordcdn.com недоступен. Статус: 403
+2024-10-19 07:31:34,742 - DEBUG - Сайт CDN сервис Discord по глобальной сети доступен: red
+2024-10-19 07:31:34,896 - WARNING - Сайт https://youtubei.googleapis.com недоступен. Статус: 405
+2024-10-19 07:31:34,897 - DEBUG - Сайт Внутренний API YouTube доступен: red
+2024-10-19 07:31:35,214 - DEBUG - Сайт https://yt.be доступен.
+2024-10-19 07:31:35,214 - DEBUG - Сайт Альтернатива коротких ссылок YouTube доступен: green
+2024-10-19 07:31:36,307 - DEBUG - Сайт https://youtube.com доступен.
+2024-10-19 07:31:36,307 - DEBUG - Сайт Основной сайт YouTube доступен: green
+2024-10-19 07:31:40,287 - ERROR - Тайм-аут при проверке https://discord.com
+2024-10-19 07:31:40,287 - ERROR - Тайм-аут при проверке https://discord.gg
+2024-10-19 07:31:40,287 - DEBUG - Сайт Основной сайт Discord доступен: red
+2024-10-19 07:31:40,287 - ERROR - Тайм-аут при проверке https://gateway.discord.gg
+2024-10-19 07:31:40,288 - ERROR - Тайм-аут при проверке https://youtu.be
+2024-10-19 07:31:40,288 - DEBUG - Проверка сайтов завершена.
+2024-10-19 07:31:40,289 - DEBUG - Сайт Приглашения на серверы Discord доступен: red
+2024-10-19 07:31:40,289 - DEBUG - Сайт Веб-сокет Discord доступен: red
+2024-10-19 07:31:40,289 - DEBUG - Сайт Короткие ссылки YouTube доступен: red
+2024-10-19 07:31:40,289 - INFO - Проверка доступности сайтов завершена.
+2024-10-19 07:31:43,784 - DEBUG - Исполняемый файл c:\Users\miste\Desktop\Мой проект\DPI-Penguin\zapret\winws.exe доступен для запуска.
+2024-10-19 07:31:43,784 - DEBUG - Команда для запуска: ['c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\winws.exe', '--wf-tcp=80,443', '--wf-udp=443,50000-65535', '--filter-udp=443', '--hostlist=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\black\\russia-youtube.txt', '--dpi-desync=fake', '--dpi-desync-udplen-increment=10', '--dpi-desync-repeats=6', '--dpi-desync-udplen-pattern=0xDEADBEEF', '--dpi-desync-fake-quic=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\quic_initial_www_google_com.bin', '--new', '--filter-udp=50000-65535', '--dpi-desync=fake', '--dpi-desync-any-protocol', '--dpi-desync-cutoff=d3', '--dpi-desync-repeats=6', '--dpi-desync-fake-quic=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\quic_initial_www_google_com.bin', '--new', '--filter-tcp=80', '--hostlist=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\black\\russia-youtube.txt', '--dpi-desync=fake,split2', '--dpi-desync-autottl=2', '--dpi-desync-fooling=md5sig', '--new', '--filter-tcp=443', '--hostlist=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\black\\russia-youtube.txt', '--dpi-desync=fake,split', '--dpi-desync-autottl=2', '--dpi-desync-repeats=6', '--dpi-desync-fooling=badseq', '--dpi-desync-fake-tls=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\tls_clienthello_www_google_com.bin']
+2024-10-19 07:31:43,785 - INFO - Процесс 'Обход блокировки YouTube' запущен.
+2024-10-19 07:31:43,785 - DEBUG - Запуск команды: c:\Users\miste\Desktop\Мой проект\DPI-Penguin\zapret\winws.exe --wf-tcp=80,443 --wf-udp=443,50000-65535 --filter-udp=443 --hostlist=c:\Users\miste\Desktop\Мой проект\DPI-Penguin\black\russia-youtube.txt --dpi-desync=fake --dpi-desync-udplen-increment=10 --dpi-desync-repeats=6 --dpi-desync-udplen-pattern=0xDEADBEEF --dpi-desync-fake-quic=c:\Users\miste\Desktop\Мой проект\DPI-Penguin\zapret\quic_initial_www_google_com.bin --new --filter-udp=50000-65535 --dpi-desync=fake --dpi-desync-any-protocol --dpi-desync-cutoff=d3 --dpi-desync-repeats=6 --dpi-desync-fake-quic=c:\Users\miste\Desktop\Мой проект\DPI-Penguin\zapret\quic_initial_www_google_com.bin --new --filter-tcp=80 --hostlist=c:\Users\miste\Desktop\Мой проект\DPI-Penguin\black\russia-youtube.txt --dpi-desync=fake,split2 --dpi-desync-autottl=2 --dpi-desync-fooling=md5sig --new --filter-tcp=443 --hostlist=c:\Users\miste\Desktop\Мой проект\DPI-Penguin\black\russia-youtube.txt --dpi-desync=fake,split --dpi-desync-autottl=2 --dpi-desync-repeats=6 --dpi-desync-fooling=badseq --dpi-desync-fake-tls=c:\Users\miste\Desktop\Мой проект\DPI-Penguin\zapret\tls_clienthello_www_google_com.bin
+2024-10-19 07:31:53,524 - INFO - Начата процедура остановки и закрытия процессов.
+2024-10-19 07:31:53,539 - DEBUG - Процесс winws.exe (PID: 7964) завершён.
+2024-10-19 07:31:53,540 - DEBUG - Запуск команды: net stop WinDivert
+2024-10-19 07:40:20,906 - INFO - Логирование настроено.
+2024-10-19 07:40:20,907 - DEBUG - Начало выполнения main()
+2024-10-19 07:40:20,907 - INFO - Приложение уже запущено. Завершение новой копии.
+2024-10-19 07:40:32,159 - INFO - Логирование настроено.
+2024-10-19 07:40:32,159 - DEBUG - Начало выполнения main()
+2024-10-19 07:40:32,168 - DEBUG - Главное окно инициализировано.
+2024-10-19 07:40:32,169 - INFO - SCRIPT_OPTIONS загружены: {'Обход блокировки YouTube': ('c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\winws.exe', ['--wf-tcp=80,443', '--wf-udp=443,50000-65535', '--filter-udp=443', '--hostlist=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\black\\russia-youtube.txt', '--dpi-desync=fake', '--dpi-desync-udplen-increment=10', '--dpi-desync-repeats=6', '--dpi-desync-udplen-pattern=0xDEADBEEF', '--dpi-desync-fake-quic=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\quic_initial_www_google_com.bin', '--new', '--filter-udp=50000-65535', '--dpi-desync=fake', '--dpi-desync-any-protocol', '--dpi-desync-cutoff=d3', '--dpi-desync-repeats=6', '--dpi-desync-fake-quic=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\quic_initial_www_google_com.bin', '--new', '--filter-tcp=80', '--hostlist=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\black\\russia-youtube.txt', '--dpi-desync=fake,split2', '--dpi-desync-autottl=2', '--dpi-desync-fooling=md5sig', '--new', '--filter-tcp=443', '--hostlist=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\black\\russia-youtube.txt', '--dpi-desync=fake,split', '--dpi-desync-autottl=2', '--dpi-desync-repeats=6', '--dpi-desync-fooling=badseq', '--dpi-desync-fake-tls=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\tls_clienthello_www_google_com.bin']), 'Обход Discord + YouTube': ('c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\winws.exe', ['--wf-tcp=80,443,50000-65535', '--wf-udp=443,50000-65535', '--filter-udp=443', '--hostlist=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\black\\disk-yotube.txt', '--dpi-desync=fake', '--dpi-desync-udplen-increment=10', '--dpi-desync-repeats=6', '--dpi-desync-udplen-pattern=0xDEADBEEF', '--dpi-desync-fake-quic=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\quic_initial_www_google_com.bin', '--new', '--filter-udp=50000-65535', '--dpi-desync=fake,tamper', '--dpi-desync-any-protocol', '--dpi-desync-fake-quic=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\quic_initial_www_google_com.bin', '--new', '--filter-tcp=80', '--dpi-desync=fake,split2', '--dpi-desync-autottl=2', '--dpi-desync-fooling=md5sig', '--dpi-desync-fake-tls=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\tls_clienthello_www_google_com.bin', '--new', '--dpi-desync=fake,disorder2', '--dpi-desync-autottl=2', '--dpi-desync-fooling=md5sig']), 'Обход блокировки Discord': ('c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\winws.exe', ['--wf-tcp=443', '--wf-udp=443,50000-65535', '--filter-udp=443', '--hostlist=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\black\\discord-blacklist.txt', '--dpi-desync=fake', '--dpi-desync-udplen-increment=10', '--dpi-desync-repeats=6', '--dpi-desync-udplen-pattern=0xDEADBEEF', '--dpi-desync-fake-quic=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\quic_initial_www_google_com.bin', '--new', '--filter-udp=50000-65535', '--dpi-desync=fake,tamper', '--dpi-desync-any-protocol', '--dpi-desync-fake-quic=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\quic_initial_www_google_com.bin', '--new', '--filter-tcp=443', '--hostlist=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\black\\discord-blacklist.txt', '--dpi-desync=fake,split2', '--dpi-desync-autottl=2', '--dpi-desync-fooling=md5sig', '--dpi-desync-fake-tls=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\tls_clienthello_www_google_com.bin']), 'Обход блокировок для всех сайтов': ('c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\bin\\x86_64\\goodbyedpi.exe', ['-9', '--blacklist=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\black\\russia-blacklist.txt'])}
+2024-10-19 07:40:32,217 - INFO - Применен стиль: light_theme.qss
+2024-10-19 07:40:32,217 - INFO - Тема 'light' применена.
+2024-10-19 07:40:32,236 - DEBUG - Текст кнопки переключения темы обновлён на 'Переключиться на тёмную тему'.
+2024-10-19 07:40:32,824 - DEBUG - Начата проверка наличия обновлений.
+2024-10-19 07:40:32,825 - DEBUG - Starting new HTTPS connection (1): api.github.com:443
+2024-10-19 07:40:32,858 - DEBUG - Начата проверка доступности сайтов.
+2024-10-19 07:40:32,858 - DEBUG - Запуск проверки сайтов.
+2024-10-19 07:40:32,858 - DEBUG - Using proactor: IocpProactor
+2024-10-19 07:40:32,859 - DEBUG - Добавлен префикс 'https://' к URL: https://youtube.com
+2024-10-19 07:40:32,859 - DEBUG - Добавлен префикс 'https://' к URL: https://youtu.be
+2024-10-19 07:40:32,859 - DEBUG - Добавлен префикс 'https://' к URL: https://yt.be
+2024-10-19 07:40:32,859 - DEBUG - Добавлен префикс 'https://' к URL: https://discord.com
+2024-10-19 07:40:32,859 - DEBUG - Добавлен префикс 'https://' к URL: https://gateway.discord.gg
+2024-10-19 07:40:32,859 - DEBUG - Добавлен префикс 'https://' к URL: https://discord.gg
+2024-10-19 07:40:32,859 - DEBUG - Добавлен префикс 'https://' к URL: https://discordcdn.com
+2024-10-19 07:40:32,859 - DEBUG - Добавлен префикс 'https://' к URL: https://youtube-nocookie.com
+2024-10-19 07:40:32,859 - DEBUG - Добавлен префикс 'https://' к URL: https://youtube-ui.l.google.com
+2024-10-19 07:40:32,859 - DEBUG - Добавлен префикс 'https://' к URL: https://youtubeembeddedplayer.googleapis.com
+2024-10-19 07:40:32,859 - DEBUG - Добавлен префикс 'https://' к URL: https://youtube.googleapis.com
+2024-10-19 07:40:32,860 - DEBUG - Добавлен префикс 'https://' к URL: https://youtubei.googleapis.com
+2024-10-19 07:40:32,860 - DEBUG - Добавлен префикс 'https://' к URL: https://yt-video-upload.l.google.com
+2024-10-19 07:40:32,860 - DEBUG - Добавлен префикс 'https://' к URL: https://wide-youtube.l.google.com
+2024-10-19 07:40:32,860 - DEBUG - Запуск 14 задач проверки сайтов.
+2024-10-19 07:40:32,860 - DEBUG - Проверка доступности сайта: https://youtube.com
+2024-10-19 07:40:32,862 - DEBUG - Проверка доступности сайта: https://youtu.be
+2024-10-19 07:40:32,862 - DEBUG - Проверка доступности сайта: https://yt.be
+2024-10-19 07:40:32,863 - DEBUG - Проверка доступности сайта: https://discord.com
+2024-10-19 07:40:32,876 - DEBUG - Проверка доступности сайта: https://gateway.discord.gg
+2024-10-19 07:40:32,877 - DEBUG - Проверка доступности сайта: https://discord.gg
+2024-10-19 07:40:32,877 - DEBUG - Проверка доступности сайта: https://discordcdn.com
+2024-10-19 07:40:32,877 - DEBUG - Проверка доступности сайта: https://youtube-nocookie.com
+2024-10-19 07:40:32,884 - DEBUG - Проверка доступности сайта: https://youtube-ui.l.google.com
+2024-10-19 07:40:32,886 - DEBUG - Проверка доступности сайта: https://youtubeembeddedplayer.googleapis.com
+2024-10-19 07:40:32,886 - DEBUG - Проверка доступности сайта: https://youtube.googleapis.com
+2024-10-19 07:40:32,886 - DEBUG - Проверка доступности сайта: https://youtubei.googleapis.com
+2024-10-19 07:40:32,888 - DEBUG - Проверка доступности сайта: https://yt-video-upload.l.google.com
+2024-10-19 07:40:32,888 - DEBUG - Проверка доступности сайта: https://wide-youtube.l.google.com
+2024-10-19 07:40:33,002 - ERROR - Ошибка при проверке https://youtube-nocookie.com: Cannot connect to host youtube-nocookie.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'youtube-nocookie.com'. (_ssl.c:1000)")]
+2024-10-19 07:40:33,002 - DEBUG - Сайт YouTube без cookies доступен: red
+2024-10-19 07:40:33,005 - ERROR - Ошибка при проверке https://yt-video-upload.l.google.com: Cannot connect to host yt-video-upload.l.google.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'yt-video-upload.l.google.com'. (_ssl.c:1000)")]
+2024-10-19 07:40:33,005 - DEBUG - Сайт Загрузка видео на YouTube доступен: red
+2024-10-19 07:40:33,063 - WARNING - Сайт https://youtubeembeddedplayer.googleapis.com недоступен. Статус: 404
+2024-10-19 07:40:33,063 - DEBUG - Сайт Встроенные видео YouTube доступен: red
+2024-10-19 07:40:33,066 - WARNING - Сайт https://discordcdn.com недоступен. Статус: 403
+2024-10-19 07:40:33,066 - DEBUG - Сайт CDN сервис Discord по глобальной сети доступен: red
+2024-10-19 07:40:33,071 - WARNING - Сайт https://youtube.googleapis.com недоступен. Статус: 404
+2024-10-19 07:40:33,072 - DEBUG - Сайт YouTube API доступен: red
+2024-10-19 07:40:33,124 - DEBUG - https://api.github.com:443 "GET /repos/zhivem/DPI-Penguin/releases/latest HTTP/11" 200 571
+2024-10-19 07:40:33,125 - DEBUG - Получена последняя версия: 1.7
+2024-10-19 07:40:33,125 - INFO - Доступна новая версия: 1.7
+2024-10-19 07:40:33,141 - ERROR - Ошибка при проверке https://wide-youtube.l.google.com: Cannot connect to host wide-youtube.l.google.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'wide-youtube.l.google.com'. (_ssl.c:1000)")]
+2024-10-19 07:40:33,141 - ERROR - Ошибка при проверке https://youtube-ui.l.google.com: Cannot connect to host youtube-ui.l.google.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'youtube-ui.l.google.com'. (_ssl.c:1000)")]
+2024-10-19 07:40:33,144 - DEBUG - Сайт Служебный домен YouTube доступен: red
+2024-10-19 07:40:33,144 - DEBUG - Сайт Интерфейс YouTube доступен: red
+2024-10-19 07:40:33,350 - WARNING - Сайт https://youtubei.googleapis.com недоступен. Статус: 405
+2024-10-19 07:40:33,350 - DEBUG - Сайт Внутренний API YouTube доступен: red
+2024-10-19 07:40:34,042 - DEBUG - Сайт https://yt.be доступен.
+2024-10-19 07:40:34,042 - DEBUG - Сайт Альтернатива коротких ссылок YouTube доступен: green
+2024-10-19 07:40:34,479 - DEBUG - Сайт https://youtu.be доступен.
+2024-10-19 07:40:34,479 - DEBUG - Сайт Короткие ссылки YouTube доступен: green
+2024-10-19 07:40:35,717 - DEBUG - Сайт https://youtube.com доступен.
+2024-10-19 07:40:35,717 - DEBUG - Сайт Основной сайт YouTube доступен: green
+2024-10-19 07:40:38,286 - ERROR - Тайм-аут при проверке https://discord.gg
+2024-10-19 07:40:38,286 - ERROR - Тайм-аут при проверке https://gateway.discord.gg
+2024-10-19 07:40:38,286 - DEBUG - Сайт Приглашения на серверы Discord доступен: red
+2024-10-19 07:40:38,286 - ERROR - Тайм-аут при проверке https://discord.com
+2024-10-19 07:40:38,286 - DEBUG - Сайт Веб-сокет Discord доступен: red
+2024-10-19 07:40:38,287 - DEBUG - Сайт Основной сайт Discord доступен: red
+2024-10-19 07:40:38,287 - DEBUG - Проверка сайтов завершена.
+2024-10-19 07:40:38,287 - INFO - Проверка доступности сайтов завершена.
+2024-10-19 07:40:49,625 - INFO - Логирование настроено.
+2024-10-19 07:40:49,626 - DEBUG - Начало выполнения main()
+2024-10-19 07:40:49,633 - DEBUG - Главное окно инициализировано.
+2024-10-19 07:40:49,635 - INFO - SCRIPT_OPTIONS загружены: {'Обход блокировки YouTube': ('c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\winws.exe', ['--wf-tcp=80,443', '--wf-udp=443,50000-65535', '--filter-udp=443', '--hostlist=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\black\\russia-youtube.txt', '--dpi-desync=fake', '--dpi-desync-udplen-increment=10', '--dpi-desync-repeats=6', '--dpi-desync-udplen-pattern=0xDEADBEEF', '--dpi-desync-fake-quic=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\quic_initial_www_google_com.bin', '--new', '--filter-udp=50000-65535', '--dpi-desync=fake', '--dpi-desync-any-protocol', '--dpi-desync-cutoff=d3', '--dpi-desync-repeats=6', '--dpi-desync-fake-quic=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\quic_initial_www_google_com.bin', '--new', '--filter-tcp=80', '--hostlist=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\black\\russia-youtube.txt', '--dpi-desync=fake,split2', '--dpi-desync-autottl=2', '--dpi-desync-fooling=md5sig', '--new', '--filter-tcp=443', '--hostlist=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\black\\russia-youtube.txt', '--dpi-desync=fake,split', '--dpi-desync-autottl=2', '--dpi-desync-repeats=6', '--dpi-desync-fooling=badseq', '--dpi-desync-fake-tls=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\tls_clienthello_www_google_com.bin']), 'Обход Discord + YouTube': ('c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\winws.exe', ['--wf-tcp=80,443,50000-65535', '--wf-udp=443,50000-65535', '--filter-udp=443', '--hostlist=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\black\\disk-yotube.txt', '--dpi-desync=fake', '--dpi-desync-udplen-increment=10', '--dpi-desync-repeats=6', '--dpi-desync-udplen-pattern=0xDEADBEEF', '--dpi-desync-fake-quic=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\quic_initial_www_google_com.bin', '--new', '--filter-udp=50000-65535', '--dpi-desync=fake,tamper', '--dpi-desync-any-protocol', '--dpi-desync-fake-quic=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\quic_initial_www_google_com.bin', '--new', '--filter-tcp=80', '--dpi-desync=fake,split2', '--dpi-desync-autottl=2', '--dpi-desync-fooling=md5sig', '--dpi-desync-fake-tls=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\tls_clienthello_www_google_com.bin', '--new', '--dpi-desync=fake,disorder2', '--dpi-desync-autottl=2', '--dpi-desync-fooling=md5sig']), 'Обход блокировки Discord': ('c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\winws.exe', ['--wf-tcp=443', '--wf-udp=443,50000-65535', '--filter-udp=443', '--hostlist=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\black\\discord-blacklist.txt', '--dpi-desync=fake', '--dpi-desync-udplen-increment=10', '--dpi-desync-repeats=6', '--dpi-desync-udplen-pattern=0xDEADBEEF', '--dpi-desync-fake-quic=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\quic_initial_www_google_com.bin', '--new', '--filter-udp=50000-65535', '--dpi-desync=fake,tamper', '--dpi-desync-any-protocol', '--dpi-desync-fake-quic=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\quic_initial_www_google_com.bin', '--new', '--filter-tcp=443', '--hostlist=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\black\\discord-blacklist.txt', '--dpi-desync=fake,split2', '--dpi-desync-autottl=2', '--dpi-desync-fooling=md5sig', '--dpi-desync-fake-tls=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\zapret\\tls_clienthello_www_google_com.bin']), 'Обход блокировок для всех сайтов': ('c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\bin\\x86_64\\goodbyedpi.exe', ['-9', '--blacklist=c:\\Users\\miste\\Desktop\\Мой проект\\DPI-Penguin\\black\\russia-blacklist.txt'])}
+2024-10-19 07:40:49,694 - INFO - Применен стиль: light_theme.qss
+2024-10-19 07:40:49,694 - INFO - Тема 'light' применена.
+2024-10-19 07:40:49,719 - DEBUG - Текст кнопки переключения темы обновлён на 'Переключиться на тёмную тему'.
+2024-10-19 07:40:50,358 - DEBUG - Начата проверка наличия обновлений.
+2024-10-19 07:40:50,358 - DEBUG - Starting new HTTPS connection (1): api.github.com:443
+2024-10-19 07:40:50,391 - DEBUG - Начата проверка доступности сайтов.
+2024-10-19 07:40:50,392 - DEBUG - Запуск проверки сайтов.
+2024-10-19 07:40:50,392 - DEBUG - Using proactor: IocpProactor
+2024-10-19 07:40:50,393 - DEBUG - Добавлен префикс 'https://' к URL: https://youtube.com
+2024-10-19 07:40:50,393 - DEBUG - Добавлен префикс 'https://' к URL: https://youtu.be
+2024-10-19 07:40:50,393 - DEBUG - Добавлен префикс 'https://' к URL: https://yt.be
+2024-10-19 07:40:50,393 - DEBUG - Добавлен префикс 'https://' к URL: https://discord.com
+2024-10-19 07:40:50,393 - DEBUG - Добавлен префикс 'https://' к URL: https://gateway.discord.gg
+2024-10-19 07:40:50,393 - DEBUG - Добавлен префикс 'https://' к URL: https://discord.gg
+2024-10-19 07:40:50,394 - DEBUG - Добавлен префикс 'https://' к URL: https://discordcdn.com
+2024-10-19 07:40:50,394 - DEBUG - Добавлен префикс 'https://' к URL: https://youtube-nocookie.com
+2024-10-19 07:40:50,394 - DEBUG - Добавлен префикс 'https://' к URL: https://youtube-ui.l.google.com
+2024-10-19 07:40:50,394 - DEBUG - Добавлен префикс 'https://' к URL: https://youtubeembeddedplayer.googleapis.com
+2024-10-19 07:40:50,394 - DEBUG - Добавлен префикс 'https://' к URL: https://youtube.googleapis.com
+2024-10-19 07:40:50,394 - DEBUG - Добавлен префикс 'https://' к URL: https://youtubei.googleapis.com
+2024-10-19 07:40:50,394 - DEBUG - Добавлен префикс 'https://' к URL: https://yt-video-upload.l.google.com
+2024-10-19 07:40:50,394 - DEBUG - Добавлен префикс 'https://' к URL: https://wide-youtube.l.google.com
+2024-10-19 07:40:50,394 - DEBUG - Запуск 14 задач проверки сайтов.
+2024-10-19 07:40:50,394 - DEBUG - Проверка доступности сайта: https://youtube.com
+2024-10-19 07:40:50,397 - DEBUG - Проверка доступности сайта: https://youtu.be
+2024-10-19 07:40:50,412 - DEBUG - Проверка доступности сайта: https://yt.be
+2024-10-19 07:40:50,413 - DEBUG - Проверка доступности сайта: https://discord.com
+2024-10-19 07:40:50,413 - DEBUG - Проверка доступности сайта: https://gateway.discord.gg
+2024-10-19 07:40:50,417 - DEBUG - Проверка доступности сайта: https://discord.gg
+2024-10-19 07:40:50,419 - DEBUG - Проверка доступности сайта: https://discordcdn.com
+2024-10-19 07:40:50,420 - DEBUG - Проверка доступности сайта: https://youtube-nocookie.com
+2024-10-19 07:40:50,420 - DEBUG - Проверка доступности сайта: https://youtube-ui.l.google.com
+2024-10-19 07:40:50,420 - DEBUG - Проверка доступности сайта: https://youtubeembeddedplayer.googleapis.com
+2024-10-19 07:40:50,421 - DEBUG - Проверка доступности сайта: https://youtube.googleapis.com
+2024-10-19 07:40:50,421 - DEBUG - Проверка доступности сайта: https://youtubei.googleapis.com
+2024-10-19 07:40:50,422 - DEBUG - Проверка доступности сайта: https://yt-video-upload.l.google.com
+2024-10-19 07:40:50,423 - DEBUG - Проверка доступности сайта: https://wide-youtube.l.google.com
+2024-10-19 07:40:50,507 - DEBUG - https://api.github.com:443 "GET /repos/zhivem/DPI-Penguin/releases/latest HTTP/11" 200 571
+2024-10-19 07:40:50,507 - DEBUG - Получена последняя версия: 1.7
+2024-10-19 07:40:50,508 - INFO - Доступна новая версия: 1.7
+2024-10-19 07:40:50,509 - WARNING - Сайт https://youtubeembeddedplayer.googleapis.com недоступен. Статус: 404
+2024-10-19 07:40:50,526 - DEBUG - Сайт Встроенные видео YouTube доступен: red
+2024-10-19 07:40:50,541 - ERROR - Ошибка при проверке https://youtube-nocookie.com: Cannot connect to host youtube-nocookie.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'youtube-nocookie.com'. (_ssl.c:1000)")]
+2024-10-19 07:40:50,541 - ERROR - Ошибка при проверке https://yt-video-upload.l.google.com: Cannot connect to host yt-video-upload.l.google.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'yt-video-upload.l.google.com'. (_ssl.c:1000)")]
+2024-10-19 07:40:50,545 - DEBUG - Сайт YouTube без cookies доступен: red
+2024-10-19 07:40:50,545 - DEBUG - Сайт Загрузка видео на YouTube доступен: red
+2024-10-19 07:40:50,607 - WARNING - Сайт https://youtube.googleapis.com недоступен. Статус: 404
+2024-10-19 07:40:50,608 - DEBUG - Сайт YouTube API доступен: red
+2024-10-19 07:40:50,611 - WARNING - Сайт https://discordcdn.com недоступен. Статус: 403
+2024-10-19 07:40:50,611 - DEBUG - Сайт CDN сервис Discord по глобальной сети доступен: red
+2024-10-19 07:40:50,668 - ERROR - Ошибка при проверке https://youtube-ui.l.google.com: Cannot connect to host youtube-ui.l.google.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'youtube-ui.l.google.com'. (_ssl.c:1000)")]
+2024-10-19 07:40:50,668 - DEBUG - Сайт Интерфейс YouTube доступен: red
+2024-10-19 07:40:50,675 - ERROR - Ошибка при проверке https://wide-youtube.l.google.com: Cannot connect to host wide-youtube.l.google.com:443 ssl:True [SSLCertVerificationError: (1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'wide-youtube.l.google.com'. (_ssl.c:1000)")]
+2024-10-19 07:40:50,675 - DEBUG - Сайт Служебный домен YouTube доступен: red
+2024-10-19 07:40:51,275 - WARNING - Сайт https://youtubei.googleapis.com недоступен. Статус: 405
+2024-10-19 07:40:51,275 - DEBUG - Сайт Внутренний API YouTube доступен: red
+2024-10-19 07:40:51,538 - DEBUG - Сайт https://yt.be доступен.
+2024-10-19 07:40:51,539 - DEBUG - Сайт Альтернатива коротких ссылок YouTube доступен: green
+2024-10-19 07:40:52,642 - DEBUG - Сайт https://youtube.com доступен.
+2024-10-19 07:40:52,643 - DEBUG - Сайт Основной сайт YouTube доступен: green
+2024-10-19 07:40:52,715 - DEBUG - Начата проверка наличия обновлений.
+2024-10-19 07:40:52,715 - DEBUG - Starting new HTTPS connection (1): api.github.com:443
+2024-10-19 07:40:52,877 - DEBUG - https://api.github.com:443 "GET /repos/zhivem/DPI-Penguin/releases/latest HTTP/11" 200 571
+2024-10-19 07:40:52,877 - DEBUG - Получена последняя версия: 1.7
+2024-10-19 07:40:52,877 - INFO - Доступна новая версия: 1.7
+2024-10-19 07:40:52,877 - INFO - Доступна новая версия: 1.7
+2024-10-19 07:40:56,282 - ERROR - Тайм-аут при проверке https://discord.gg
+2024-10-19 07:40:56,282 - ERROR - Тайм-аут при проверке https://gateway.discord.gg
+2024-10-19 07:40:56,282 - ERROR - Тайм-аут при проверке https://youtu.be
+2024-10-19 07:40:56,282 - DEBUG - Сайт Приглашения на серверы Discord доступен: red
+2024-10-19 07:40:56,282 - ERROR - Тайм-аут при проверке https://discord.com
+2024-10-19 07:40:56,283 - DEBUG - Сайт Веб-сокет Discord доступен: red
+2024-10-19 07:40:56,283 - DEBUG - Проверка сайтов завершена.
+2024-10-19 07:40:56,284 - DEBUG - Сайт Короткие ссылки YouTube доступен: red
+2024-10-19 07:40:56,284 - DEBUG - Сайт Основной сайт Discord доступен: red
+2024-10-19 07:40:56,284 - INFO - Проверка доступности сайтов завершена.
