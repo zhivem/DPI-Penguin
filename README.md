@@ -43,7 +43,7 @@
 
 ```py
 [DiscordFix]  | Название секции, называйте как хотите
-executable = {ZAPRET_FOLDER}\winws.exe  | Путь к исполняемому файлу для обхода блокировок
+executable = {ZAPRET_FOLDER}\winws.exe либо goodbyedpi.exe  | Путь к исполняемому файлу для обхода блокировок
 args = 
     --wf-tcp=443;  | Открыть порт TCP 443 (HTTPS)
     --wf-udp=443,50000-65535;  | Открыть порты UDP 443 и диапазон 50000-65535 для использования
