@@ -15,7 +15,13 @@ class WorkerThread(QtCore.QThread):
     finished_signal = QtCore.pyqtSignal(str)
     error_signal = QtCore.pyqtSignal(str)
 
-    def __init__(self, command: List[str], process_name: str, encoding: Optional[str] = None, capture_output: bool = True):
+    def __init__(
+        self,
+        command: List[str],
+        process_name: str,
+        encoding: Optional[str] = None,
+        capture_output: bool = True
+    ):
         """
         Инициализация рабочего потока.
 
@@ -31,55 +37,56 @@ class WorkerThread(QtCore.QThread):
         self.encoding = encoding or locale.getpreferredencoding()
         self.capture_output = capture_output
         self.process = None
+        self._is_terminated = False
+        self.logger = logging.getLogger(self.__class__.__name__)
 
     def run(self) -> None:
         """
         Метод, выполняемый при запуске потока. Запускает процесс и обрабатывает его вывод.
         """
         try:
-            logging.debug(f"Запуск команды: {' '.join(self.command)}")
-
+            self.logger.debug(f"Запуск команды: {' '.join(self.command)}")
             popen_params = {
                 'args': self.command,
                 'text': True,
                 'encoding': self.encoding,
-                'creationflags': subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
+                'creationflags': subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0,
+                'stdout': subprocess.PIPE if self.capture_output else subprocess.DEVNULL,
+                'stderr': subprocess.STDOUT if self.capture_output else subprocess.DEVNULL
             }
-
-            if self.capture_output:
-                popen_params.update({
-                    'stdout': subprocess.PIPE,
-                    'stderr': subprocess.STDOUT
-                })
-            else:
-                popen_params.update({
-                    'stdout': subprocess.DEVNULL,
-                    'stderr': subprocess.DEVNULL
-                })
 
             self.process = subprocess.Popen(**popen_params)
 
             if self.capture_output and self.process.stdout:
                 for output in self.process.stdout:
-                    if output.strip():
-                        self.output_signal.emit(output.strip())
+                    if self._is_terminated:
+                        break
+                    output = output.strip()
+                    if output:
+                        self.output_signal.emit(output)
+                        self.logger.debug(f"[{self.process_name}] {output}")
 
             self.process.wait()
+            self.logger.info(f"Процесс {self.process_name} завершён с кодом {self.process.returncode}")
         except subprocess.SubprocessError as e:
             error_message = f"Ошибка запуска процесса {self.process_name}: {e}"
-            logging.error(error_message)
+            self.logger.error(error_message)
             self.error_signal.emit(error_message)
         except Exception as e:
             error_message = f"Неожиданная ошибка в WorkerThread {self.process_name}: {e}"
-            logging.critical(error_message, exc_info=True)
+            self.logger.critical(error_message, exc_info=True)
             self.error_signal.emit(error_message)
         finally:
             self.finished_signal.emit(self.process_name)
 
     def terminate_process(self) -> None:
         """
-        Принудительно завершает процесс, если он еще выполняется.
+        Принудительно завершает процесс, если он ещё выполняется.
         """
         if self.process and self.process.poll() is None:
-            self.process.terminate()
-            logging.info(f"Процесс {self.process_name} принудительно завершен.")
+            try:
+                self.process.terminate()
+                self._is_terminated = True
+                self.logger.info(f"Процесс {self.process_name} принудительно завершён.")
+            except Exception as e:
+                self.logger.error(f"Не удалось завершить процесс {self.process_name}: {e}")

@@ -1,17 +1,20 @@
 import logging
 import os
-from typing import Optional
 
 import requests
 from PyQt5.QtCore import QThread, pyqtSignal
 
-from utils import (
+from utils.utils import (
     BASE_FOLDER,
-    current_version,
+    CURRENT_VERSION,
     get_latest_version,
     is_newer_version
 )
 
+# Константы
+UPDATE_BLACKLIST_URL = "https://p.thenewone.lol/domains-export.txt"
+BLACKLIST_OUTPUT_FILE = os.path.join(BASE_FOLDER, "black", "russia-blacklist.txt")
+UPDATE_TIMEOUT = 10  # секунд
 
 class Updater(QThread):
     """
@@ -29,6 +32,7 @@ class Updater(QThread):
         Инициализация Updater.
         """
         super().__init__()
+        self.logger = logging.getLogger(self.__class__.__name__)
 
     def run(self) -> None:
         """
@@ -42,16 +46,25 @@ class Updater(QThread):
         в зависимости от результата проверки.
         """
         try:
+            self.logger.debug("Начата проверка наличия обновлений.")
             latest_version = get_latest_version()
-            if latest_version and is_newer_version(latest_version, current_version):
-                logging.info(f"Доступна новая версия: {latest_version}")
-                self.update_available.emit(latest_version)
+            if latest_version:
+                if is_newer_version(latest_version, CURRENT_VERSION):
+                    self.logger.info(f"Доступна новая версия: {latest_version}")
+                    self.update_available.emit(latest_version)
+                else:
+                    self.logger.info("Обновления не найдены.")
+                    self.no_update.emit()
             else:
-                logging.info("Обновления не найдены.")
+                self.logger.warning("Не удалось получить последнюю версию.")
                 self.no_update.emit()
         except requests.RequestException as e:
             error_message = "Не удалось проверить обновления. Пожалуйста, проверьте подключение к сети."
-            logging.error(f"{error_message} Ошибка: {e}")
+            self.logger.error(f"{error_message} Ошибка: {e}")
+            self.update_error.emit(error_message)
+        except Exception as e:
+            error_message = f"Неизвестная ошибка при проверке обновлений: {e}"
+            self.logger.critical(error_message, exc_info=True)
             self.update_error.emit(error_message)
 
     def update_blacklist(self) -> None:
@@ -59,23 +72,20 @@ class Updater(QThread):
         Загружает и обновляет черный список из указанного URL. Эмитирует соответствующие
         сигналы в зависимости от результата загрузки.
         """
-        url = "https://p.thenewone.lol/domains-export.txt"
-        output_file = os.path.join(BASE_FOLDER, "black", "russia-blacklist.txt")
-
         try:
-            logging.info(f"Начало загрузки черного списка с {url}")
-            response = requests.get(url, timeout=10)
+            self.logger.info(f"Начало загрузки черного списка с {UPDATE_BLACKLIST_URL}")
+            response = requests.get(UPDATE_BLACKLIST_URL, timeout=UPDATE_TIMEOUT)
             response.raise_for_status()
-            os.makedirs(os.path.dirname(output_file), exist_ok=True)
-            with open(output_file, 'wb') as file:
+            os.makedirs(os.path.dirname(BLACKLIST_OUTPUT_FILE), exist_ok=True)
+            with open(BLACKLIST_OUTPUT_FILE, 'wb') as file:
                 file.write(response.content)
-            logging.info("Загрузка черного списка успешно завершена.")
+            self.logger.info("Загрузка черного списка успешно завершена.")
             self.blacklist_updated.emit()
         except requests.RequestException as e:
             error_message = f"Ошибка обновления черного списка: {str(e)}"
-            logging.error(error_message)
+            self.logger.error(error_message)
             self.blacklist_update_error.emit(error_message)
         except Exception as e:
             error_message = f"Неизвестная ошибка при обновлении черного списка: {str(e)}"
-            logging.critical(error_message, exc_info=True)
+            self.logger.critical(error_message, exc_info=True)
             self.blacklist_update_error.emit(error_message)
