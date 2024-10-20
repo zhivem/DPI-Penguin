@@ -12,8 +12,8 @@ if os.name == 'nt':
     import win32api
     import win32con
 
-from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QMessageBox
+from PyQt6 import QtWidgets
+from PyQt6.QtWidgets import QMessageBox
 
 from gui.gui import GoodbyeDPIApp
 from utils.updater import Updater
@@ -45,7 +45,7 @@ def setup_logging():
         format='%(asctime)s - %(levelname)s - %(message)s',
         force=True
     )
-    
+
     logging.info("Логирование настроено.")
 
 def is_admin() -> bool:
@@ -95,10 +95,10 @@ def prompt_update(latest_version: str):
         None,
         "Обновление",
         f"Доступна новая версия {latest_version}. Хотите перейти на страницу загрузки?",
-        QMessageBox.Yes | QMessageBox.No,
-        QMessageBox.No
+        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        QMessageBox.StandardButton.No
     )
-    if reply == QMessageBox.Yes:
+    if reply == QMessageBox.StandardButton.Yes:
         webbrowser.open(UPDATE_URL)
 
 def main():
@@ -123,10 +123,11 @@ def main():
     window.show()
     
     try:
-        result = app.exec_()
+        result = app.exec()
     except Exception as e:
         logging.critical(f"Неожиданная ошибка: {e}", exc_info=True)
         QMessageBox.critical(None, "Ошибка", f"Произошла ошибка: {e}")
+        result = 1 
     finally:
         updater.wait()
         sys.exit(result)
