@@ -70,7 +70,7 @@ args =
     --dpi-desync-fake-tls={ZAPRET_FOLDER}\tls_clienthello_www_google_com.bin;  // Использование поддельного TLS трафика
 ```
 ### Дополнительные файлы конфигурации
-```py
+```ini
     Default.ini — основной конфигурационный файл. 
     DiscordFix(MGTS).ini — фикс для работы Discord с провайдером МГТС.
     FixDisc+YouTube (Билайн, Ростелеком, Инфолинк).ini — фикс для Discord и YouTube для провайдеров Билайн, Ростелеком, Инфолинк.
