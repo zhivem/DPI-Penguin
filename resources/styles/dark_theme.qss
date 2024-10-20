@@ -87,8 +87,38 @@ QListView, QTreeView {
     color: #ffffff;
 }
 
-/* Existing styles for dark theme */
+/* Стили для QCheckBox */
+QCheckBox {
+    spacing: 5px;
+    color: #ffffff; /* Цвет текста */
+}
 
+/* Стиль для индикатора (галочки) */
+QCheckBox::indicator {
+    width: 15px;
+    height: 15px;
+    border: 1px solid #5a5a5a;  /* Цвет границы галочки */
+    background-color: #3c3c3c;  /* Фон галочки */
+}
+
+QCheckBox::indicator:unchecked {
+    background-color: #3c3c3c;  /* Фон в состоянии "не отмечено" */
+}
+
+QCheckBox::indicator:checked {
+    background-color: #0078d7;  /* Синий фон для отмеченной галочки */
+    border: 1px solid #005a9e;  /* Цвет границы для отмеченной галочки */
+}
+
+QCheckBox::indicator:unchecked:hover {
+    background-color: #4e4e4e;  /* Цвет при наведении, если не отмечено */
+}
+
+QCheckBox::indicator:checked:hover {
+    background-color: #005a9e;  /* Цвет при наведении, если отмечено */
+}
+
+/* Стили для вертикального скроллбара */
 QScrollBar:vertical {
     border: none;
     background: #b0b0b0;

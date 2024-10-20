@@ -3,9 +3,9 @@ import logging
 from typing import List, Optional
 
 import aiohttp
-from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt6.QtCore import QObject, pyqtSignal
 
-from utils.utils import DISPLAY_NAMES, get_site_by_name, create_status_icon
+from utils.utils import DISPLAY_NAMES, get_site_by_name
 
 DEFAULT_TIMEOUT = 5
 SUCCESS_STATUS = 200
@@ -27,7 +27,10 @@ class SiteCheckerWorker(QObject):
     def run(self) -> None:
         try:
             self.logger.debug("Запуск проверки сайтов.")
-            asyncio.run(self.check_sites())
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(self.check_sites())
+            loop.close()
         except Exception as e:
             error_message = f"Неожиданная ошибка при запуске проверки сайтов: {e}"
             self.logger.critical(error_message, exc_info=True)
@@ -52,6 +55,7 @@ class SiteCheckerWorker(QObject):
             self.logger.debug("Проверка сайтов завершена.")
 
     async def check_site(self, session: aiohttp.ClientSession, site_name: str, url: str) -> None:
+        color = RED_COLOR
         try:
             self.logger.debug(f"Проверка доступности сайта: {url}")
             async with session.get(url, timeout=DEFAULT_TIMEOUT) as response:
@@ -59,18 +63,15 @@ class SiteCheckerWorker(QObject):
                     color = GREEN_COLOR
                     self.logger.debug(f"Сайт {url} доступен.")
                 else:
-                    color = RED_COLOR
                     self.logger.warning(f"Сайт {url} недоступен. Статус: {response.status}")
         except aiohttp.ClientError as e:
-            color = RED_COLOR
             self.logger.error(f"Ошибка при проверке {url}: {e}")
         except asyncio.TimeoutError:
-            color = RED_COLOR
             self.logger.error(f"Тайм-аут при проверке {url}")
         except Exception as e:
-            color = RED_COLOR
             self.logger.critical(f"Неожиданная ошибка при проверке {url}: {e}", exc_info=True)
-        self.site_checked.emit(site_name, color)
+        finally:
+            self.site_checked.emit(site_name, color)
 
     def get_site_url(self, site_name: str) -> str:
         site = get_site_by_name(site_name)

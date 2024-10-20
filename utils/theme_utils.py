@@ -2,8 +2,9 @@ import logging
 import os
 from typing import Any, Optional
 
-from PyQt5.QtWidgets import QApplication
-from qfluentwidgets import Theme, setTheme
+from PyQt6.QtWidgets import QApplication, QWidget
+from PyQt6.QtCore import QSettings
+from qfluentwidgets import Theme, setTheme, PushButton
 import pywinstyles
 
 DARK_THEME_NAME = "dark"
@@ -17,14 +18,14 @@ ICON_FOLDER = "resources/icon"
 def apply_theme(
     app_instance: QApplication,
     theme_name: str,
-    settings: Any, 
+    settings: QSettings,
     base_folder: str
 ) -> None:
     """
     Применяет выбранную тему к приложению.
 
     Args:
-        app_instance (QApplication): Экземпляр приложения PyQt5.
+        app_instance (QApplication): Экземпляр приложения PyQt6.
         theme_name (str): Название темы ("dark" или "light").
         settings (Any): Экземпляр QSettings для сохранения настроек.
         base_folder (str): Базовая папка приложения для поиска файлов стилей.
@@ -52,7 +53,7 @@ def apply_stylesheet(
     Применяет файл стилей к приложению.
 
     Args:
-        app_instance (QApplication): Экземпляр приложения PyQt5.
+        app_instance (QApplication): Экземпляр приложения PyQt6.
         stylesheet_name (str): Имя файла стилей (например, "dark_theme.qss").
         base_folder (str): Базовая папка приложения для поиска файлов стилей.
     """
@@ -69,18 +70,11 @@ def apply_stylesheet(
 
 
 def update_theme_button_text(
-    app_instance: Any,  
-    settings: Any
+    app_instance: QWidget,
+    settings: QSettings
 ) -> None:
-    """
-    Обновляет текст и подсказку кнопки переключения темы в зависимости от текущей темы.
-
-    Args:
-        app_instance (Any): Экземпляр главного окна приложения с кнопкой `theme_toggle_button`.
-        settings (Any): Экземпляр QSettings для получения текущей темы.
-    """
     current_theme = settings.value("theme", LIGHT_THEME_NAME)
-    theme_button = getattr(app_instance, "theme_toggle_button", None)
+    theme_button: PushButton = getattr(app_instance, "theme_toggle_button", None)
 
     if not theme_button:
         logging.warning("Кнопка 'theme_toggle_button' не найдена в app_instance.")
@@ -105,7 +99,7 @@ def toggle_theme(
     Переключает тему приложения между тёмной и светлой.
 
     Args:
-        app_instance (Any): Экземпляр приложения PyQt5.
+        app_instance (Any): Экземпляр приложения PyQt6.
         settings (Any): Экземпляр QSettings для сохранения текущей темы.
         base_folder (str): Базовая папка приложения для поиска файлов стилей.
     """
@@ -131,7 +125,6 @@ def get_stylesheet_path(base_folder: str, stylesheet_name: str) -> str:
 
 
 def get_stylesheet(
-    app_instance: QApplication,
     stylesheet_name: str,
     base_folder: str
 ) -> Optional[str]:
@@ -139,7 +132,6 @@ def get_stylesheet(
     Получает содержимое файла стилей.
 
     Args:
-        app_instance (QApplication): Экземпляр приложения PyQt5.
         stylesheet_name (str): Имя файла стилей.
         base_folder (str): Базовая папка приложения.
 
@@ -155,3 +147,4 @@ def get_stylesheet(
     except Exception as e:
         logging.error(f"Не удалось загрузить файл стилей {style_path}: {e}")
     return None
+

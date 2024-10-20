@@ -10,13 +10,12 @@ from typing import Optional, List, Dict, Tuple
 from packaging.version import parse as parse_version
 import requests
 
-from PyQt5.QtGui import QColor, QIcon, QPixmap
-from PyQt5.QtCore import QSize
+from PyQt6.QtGui import QColor, QIcon, QPixmap
 
 BASE_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 ZAPRET_FOLDER = os.path.join(BASE_FOLDER, "zapret")
 CONFIG_PATH = os.path.join(BASE_FOLDER, "config", 'config.ini')
-CURRENT_VERSION: str = "1.6.1"
+CURRENT_VERSION: str = "1.6.2"
 
 BLACKLIST_FOLDER = os.path.join(BASE_FOLDER, "black")
 ICON_FOLDER = os.path.join(BASE_FOLDER, "resources", "icon")
@@ -26,7 +25,7 @@ BLACKLIST_FILES: List[str] = [
     os.path.join(BLACKLIST_FOLDER, "russia-blacklist.txt"),
     os.path.join(BLACKLIST_FOLDER, "russia-youtube.txt"),
     os.path.join(BLACKLIST_FOLDER, "discord-blacklist.txt"),
-    os.path.join(BLACKLIST_FOLDER, "disk-yotube.txt")
+    os.path.join(BLACKLIST_FOLDER, "disk-youtube.txt")
 ]
 
 SITES: List[str] = [
@@ -103,9 +102,9 @@ def open_path(path: str) -> Optional[str]:
     try:
         if platform.system() == "Windows":
             os.startfile(path)
-        elif platform.system() == "Darwin":  # macOS
+        elif platform.system() == "Darwin": 
             subprocess.Popen(["open", path])
-        else:  # Linux и другие
+        else: 
             subprocess.Popen(["xdg-open", path])
         logging.info(f"Путь '{path}' открыт.")
         return None
@@ -234,7 +233,7 @@ def enable_autostart() -> None:
         ) as key:
             executable_path = get_executable_path()
             winreg.SetValueEx(key, "GoodbyeDPIApp", 0, winreg.REG_SZ, executable_path)
-            logging.info("Autostart успешно установлен.")
+            logging.info("Автозапуск успешно установлен.")
     except Exception as e:
         logging.error(f"Ошибка при установке автозапуска: {e}")
         raise
@@ -250,9 +249,9 @@ def disable_autostart() -> None:
             0, winreg.KEY_SET_VALUE
         ) as key:
             winreg.DeleteValue(key, "GoodbyeDPIApp")
-            logging.info("Autostart успешно отключен.")
+            logging.info("Автозапуск успешно отключен.")
     except FileNotFoundError:
-        logging.info("Autostart уже отключен.")
+        logging.info("Автозапуск уже отключен.")
     except Exception as e:
         logging.error(f"Ошибка при отключении автозапуска: {e}")
         raise
@@ -336,7 +335,7 @@ def load_script_options(config_path: str) -> Tuple[Optional[Dict[str, Tuple[str,
             - Сообщение об ошибке, если дублирующиеся разделы найдены, иначе None.
     """
     config = configparser.ConfigParser()
-    config.optionxform = str  # Сохраняет регистр ключей
+    config.optionxform = str
     try:
         config.read(config_path, encoding='utf-8')
     except configparser.Error as e:

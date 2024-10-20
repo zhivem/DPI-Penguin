@@ -2,7 +2,7 @@ import logging
 import os
 
 import requests
-from PyQt5.QtCore import QThread, pyqtSignal
+from PyQt6.QtCore import QThread, pyqtSignal
 
 from utils.utils import (
     BASE_FOLDER,
@@ -23,9 +23,9 @@ BLACKLISTS = [
         "output_file": os.path.join(BASE_FOLDER, "black", "discord-blacklist.txt")
     },
     {
-        "name": "disk-yotube",
-        "url": "https://raw.githubusercontent.com/zhivem/DPI-Penguin/refs/heads/main/black/disk-yotube.txt",
-        "output_file": os.path.join(BASE_FOLDER, "black", "disk-yotube.txt")
+        "name": "disk-youtube", 
+        "url": "https://raw.githubusercontent.com/zhivem/DPI-Penguin/refs/heads/main/black/disk-youtube.txt",
+        "output_file": os.path.join(BASE_FOLDER, "black", "disk-youtube.txt")
     },
     {
         "name": "russia-youtube",
@@ -40,10 +40,6 @@ CONFIG_OUTPUT_FILE = os.path.join(BASE_FOLDER, "config", "default.ini")
 UPDATE_TIMEOUT = 10
 
 class Updater(QThread):
-    """
-    Класс Updater для проверки и загрузки обновлений приложения и черных списков.
-    Наследуется от QThread для выполнения задач в отдельном потоке.
-    """
     update_available = pyqtSignal(str)
     no_update = pyqtSignal()
     update_error = pyqtSignal(str)
@@ -52,24 +48,22 @@ class Updater(QThread):
     config_updated = pyqtSignal()
     config_update_error = pyqtSignal(str)
 
-    def __init__(self) -> None:
-        """
-        Инициализация Updater.
-        """
+    def __init__(self, operation: str = 'check_updates') -> None:
         super().__init__()
+        self.operation = operation
         self.logger = logging.getLogger(self.__class__.__name__)
 
     def run(self) -> None:
-        """
-        Метод, выполняемый при запуске потока. Запускает проверку обновлений.
-        """
-        self.check_for_updates()
+        if self.operation == 'check_updates':
+            self.check_for_updates()
+        elif self.operation == 'update_blacklist':
+            self.update_blacklist()
+        elif self.operation == 'update_config':
+            self.update_config()
+        else:
+            self.logger.error(f"Неизвестная операция: {self.operation}")
 
     def check_for_updates(self) -> None:
-        """
-        Проверяет наличие обновлений приложения. Эмитирует соответствующие сигналы
-        в зависимости от результата проверки.
-        """
         try:
             self.logger.debug("Начата проверка наличия обновлений.")
             latest_version = get_latest_version()
@@ -93,10 +87,6 @@ class Updater(QThread):
             self.update_error.emit(error_message)
 
     def update_blacklist(self) -> None:
-        """
-        Загружает и обновляет черные списки из указанных URL. Эмитирует соответствующие
-        сигналы в зависимости от результата загрузки.
-        """
         success = True
 
         for blacklist in BLACKLISTS:
@@ -127,10 +117,6 @@ class Updater(QThread):
             self.blacklist_updated.emit()
 
     def update_config(self) -> None:
-        """
-        Загружает и обновляет конфигурационный файл default.ini из указанного URL.
-        Эмитирует соответствующие сигналы в зависимости от результата загрузки.
-        """
         try:
             self.logger.info(f"Начало загрузки конфигурационного файла с {CONFIG_UPDATE_URL}")
             response = requests.get(CONFIG_UPDATE_URL, timeout=UPDATE_TIMEOUT)

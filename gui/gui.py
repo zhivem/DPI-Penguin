@@ -1,16 +1,12 @@
 import logging
 import os
-import subprocess
-import platform
 import configparser
-import sys
 
 import psutil
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QSettings, Qt, pyqtSignal, pyqtSlot
-from PyQt5.QtGui import QColor, QIcon, QPixmap
-from PyQt5.QtWidgets import (
-    QAction,
+from PyQt6 import QtCore, QtGui, QtWidgets
+from PyQt6.QtCore import QSettings, pyqtSignal, pyqtSlot
+from PyQt6.QtGui import QIcon, QAction
+from PyQt6.QtWidgets import (
     QCheckBox,
     QGroupBox,
     QMenu,
@@ -49,7 +45,7 @@ LOG_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "log.png")
 INI_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "ini.png")
 
 
-class GoodbyeDPIApp(QtWidgets.QWidget):
+class GoodbyeDPIApp(QtWidgets.QMainWindow):
     site_status_updated = pyqtSignal(str, str)
     sites_check_finished = pyqtSignal()
 
@@ -57,8 +53,10 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
         super().__init__()
         self.logger = logging.getLogger(self.__class__.__name__)
 
-        self.settings = QSettings("Zhivem", "GoodbyeDPIApp")
+        self.settings = QSettings("Zhivem", "DPI Penguin")
         self.ensure_logs_folder_exists()
+
+        self.minimize_to_tray = self.settings.value("minimize_to_tray", True, type=bool)
 
         self.script_options, self.config_error = load_script_options(
             os.path.join(BASE_FOLDER, "config", "default.ini")
@@ -71,8 +69,6 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
 
         self.init_tray_icon()
         self.connect_signals()
-
-        self.minimize_to_tray = True
 
         if self.config_error:
             self.console_output.append(self.config_error)
@@ -109,7 +105,9 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
         saved_theme = self.settings.value("theme", "light")
         utils.theme_utils.apply_theme(self, saved_theme, self.settings, BASE_FOLDER)
 
-        layout = QtWidgets.QVBoxLayout(self)
+        central_widget = QtWidgets.QWidget()
+        self.setCentralWidget(central_widget)
+        layout = QtWidgets.QVBoxLayout(central_widget)
         tab_widget = self.create_tabs()
         layout.addWidget(tab_widget)
 
@@ -156,7 +154,7 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
             self.tray_icon.showMessage(
                 "DPI Penguin by Zhivem",
                 "Приложение свернуто в трей. Для восстановления, нажмите на иконку в трее.",
-                QSystemTrayIcon.Information,
+                QSystemTrayIcon.MessageIcon.Information,
                 1000
             )
         else:
@@ -164,20 +162,21 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
             event.accept()
 
     def restore_from_tray(self):
-        self.show()
-        self.tray_icon.hide()
+        self.showNormal()      
+        self.raise_()              
+        self.activateWindow()      
+        self.tray_icon.hide()       
 
     def on_tray_icon_activated(self, reason):
-        if reason == QSystemTrayIcon.Trigger:
+        if reason == QSystemTrayIcon.ActivationReason.Trigger:
             if self.isHidden():
                 self.restore_from_tray()
             else:
                 self.hide()
-                self.tray_icon.show()
                 self.tray_icon.showMessage(
                     "DPI Penguin by Zhivem",
                     "Приложение свернуто в трей. Для восстановления, нажмите на иконку в трее.",
-                    QSystemTrayIcon.Information,
+                    QSystemTrayIcon.MessageIcon.Information,
                     1000
                 )
 
@@ -202,13 +201,13 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
         self.selected_script = QFComboBox()
         if not self.config_error:
             self.selected_script.addItems(self.script_options.keys())
-        self.selected_script.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+        self.selected_script.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Preferred)
         script_layout.addWidget(self.selected_script)
 
         self.update_config_button = PushButton("📁", self)
         self.update_config_button.setToolTip("Загрузить другую конфигурацию")
         self.update_config_button.clicked.connect(self.load_config_via_dialog)
-        self.update_config_button.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        self.update_config_button.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
         self.update_config_button.setFixedWidth(40)
         script_layout.addWidget(self.update_config_button)
 
@@ -290,17 +289,17 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
         self.check_blacklist_on_startup_checkbox = QCheckBox("Проверять обновления черных списков при запуске")
         check_blacklist_on_startup = self.settings.value("check_blacklist_on_startup", True, type=bool)
         self.check_blacklist_on_startup_checkbox.setChecked(check_blacklist_on_startup)
-        self.check_blacklist_on_startup_checkbox.stateChanged.connect(self.toggle_blacklist_on_startup)
+        self.check_blacklist_on_startup_checkbox.toggled.connect(self.toggle_blacklist_on_startup)
         autostart_layout.addWidget(self.check_blacklist_on_startup_checkbox)
 
         self.tray_checkbox = QCheckBox("Сворачивать в трей при закрытии приложения")
-        self.tray_checkbox.setChecked(True)
-        self.tray_checkbox.stateChanged.connect(self.toggle_tray_behavior)
+        self.tray_checkbox.setChecked(self.minimize_to_tray)
+        self.tray_checkbox.toggled.connect(self.toggle_tray_behavior)
         autostart_layout.addWidget(self.tray_checkbox)
 
         self.autostart_checkbox = QCheckBox("Запускать программу при старте системы")
         self.autostart_checkbox.setChecked(is_autostart_enabled())
-        self.autostart_checkbox.stateChanged.connect(self.toggle_autostart)
+        self.autostart_checkbox.toggled.connect(self.toggle_autostart)
         autostart_layout.addWidget(self.autostart_checkbox)
 
         font = self.tray_checkbox.font()
@@ -366,7 +365,7 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
             "Разработчик": "Zhivem",
             "Репозиторий на GitHub": "<a href='https://github.com/zhivem/DPI-Penguin'>DPI Penguin</a>",
             "Версии": "<a href='https://github.com/zhivem/DPI-Penguin/releases'>Releases</a>",
-            "Лицензия": "© 2024 Zhivem. License: Apache License, Version 2.0."
+            "Лицензия": "© 2024 Zhivem. License: Apache"
         }
 
         widgets = {
@@ -403,7 +402,7 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
             {
                 "title": "Zapret",
                 "description": "Основа для работы Discord и YouTube",
-                "version": "v.64",
+                "version": "v.65",
                 "developer": "bol-van",
                 "links": [
                     "https://github.com/bol-van/zapret",
@@ -434,11 +433,17 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
 
         return section
 
-    def toggle_tray_behavior(self, state):
-        self.minimize_to_tray = state == Qt.Checked
+    def toggle_tray_behavior(self, checked):
+        self.minimize_to_tray = checked
+        self.settings.setValue("minimize_to_tray", self.minimize_to_tray)
+        self.logger.debug(f"Флажок 'Сворачивать в трей' изменен: {self.minimize_to_tray}")
 
-    def toggle_autostart(self, state):
-        if state == Qt.Checked:
+        if not checked and self.tray_icon.isVisible():
+            self.tray_icon.hide()
+            self.logger.debug("Иконка в трее скрыта, так как минимизация в трей отключена.")
+
+    def toggle_autostart(self, checked):
+        if checked:
             enable_autostart()
             self.logger.info("Автозапуск включен.")
         else:
@@ -583,22 +588,22 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
             "loading plain text list",
             "loaded",
         ]
-        
+
         text_lower = text.lower()
-        
+
         if "windivert initialized. capture is started." in text_lower:
             self.console_output.append("Ваша конфигурация выполняется.")
         elif any(keyword in text_lower for keyword in ignore_keywords):
             return
         else:
             self.console_output.append(text)
-        
+
         max_lines = 100
         document = self.console_output.document()
         while document.blockCount() > max_lines:
             cursor = self.console_output.textCursor()
-            cursor.movePosition(QtGui.QTextCursor.Start)
-            cursor.select(QtGui.QTextCursor.BlockUnderCursor)
+            cursor.movePosition(QtGui.QTextCursor.MoveOperation.Start)
+            cursor.select(QtGui.QTextCursor.SelectionType.BlockUnderCursor)
             cursor.removeSelectedText()
             cursor.deleteChar()
 
@@ -607,18 +612,18 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
             self.run_button.setEnabled(True)
             self.stop_close_button.setEnabled(False)
             self.logger.info(f"Процесс {process_name} завершён.")
-            self.console_output.append(f"Обход блокировки завершен.")  
-            self.worker_thread = None 
+            self.console_output.append(f"Обход блокировки завершен.")
+            self.worker_thread = None
 
     def stop_and_close(self):
         self.logger.info("Начата процедура остановки и закрытия процессов.")
-        
+
         if hasattr(self, 'worker_thread') and self.worker_thread is not None:
             self.logger.info("Завершение работы WorkerThread.")
             self.worker_thread.terminate_process()
             self.worker_thread.wait()
             self.worker_thread = None
-        
+
         self.start_process(WIN_DIVERT_COMMAND, "WinDivert", capture_output=False)
         self.close_process(GOODBYE_DPI_PROCESS_NAME, "GoodbyeDPI")
         self.close_process("winws.exe", "winws.exe")
@@ -648,10 +653,10 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
             self,
             "Обновление конфигурации",
             "Вы уверены, что хотите обновить конфигурационный файл на актуальный?",
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
         )
-        if reply == QMessageBox.Yes:
+        if reply == QMessageBox.StandardButton.Yes:
             self.logger.info("Начато обновление конфигурационного файла.")
             self.updater.update_config()
         else:
@@ -660,13 +665,14 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
     def check_for_updates(self):
         self.update_button.setEnabled(False)
         self.updater.start()
-    
+
     def no_update(self):
         QMessageBox.information(self, "Обновление", "Обновлений не найдено.")
 
     def on_update_finished(self):
         self.update_button.setEnabled(True)
 
+    @pyqtSlot()
     def on_blacklist_updated(self):
         if self.updating_blacklist_on_startup:
             self.logger.info("Черный список обновлен автоматически при запуске. Уведомление не отображается.")
@@ -675,6 +681,7 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
             QMessageBox.information(self, "Обновление черного списка", "Черный список успешно обновлен.")
             self.logger.info("Черный список обновлен вручную. Уведомление отображено через QMessageBox.")
 
+    @pyqtSlot(str)
     def on_blacklist_update_error(self, error_message):
         self.console_output.append(error_message)
         QMessageBox.warning(self, "Ошибка обновления черного списка", error_message)
@@ -700,7 +707,7 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
             self,
             "Доступно обновление",
             f'Доступна новая версия {latest_version}. <a href="https://github.com/zhivem/DPI-Penguin/releases">Перейдите на страницу загрузки</a>.',
-            QMessageBox.Ok
+            QMessageBox.StandardButton.Ok
         )
 
     def clear_console(self, initial_text=""):
@@ -738,24 +745,25 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
         self.logger.info("Проверка доступности сайтов завершена.")
 
     def load_config_via_dialog(self):
-        options = QFileDialog.Options()
-        options |= QFileDialog.ReadOnly
-        file_path, _ = QFileDialog.getOpenFileName(
+        dialog = QFileDialog(self)
+        dialog.setOption(QFileDialog.Option.ReadOnly, True)
+
+        file_path, _ = dialog.getOpenFileName(
             self,
             "Выберите файл конфигурации",
             "",
-            "INI Files (*.ini)",
-            options=options
+            "INI Files (*.ini)"
         )
+
         if file_path:
             self.logger.info(f"Выбран файл конфигурации: {file_path}")
-            
+
             if hasattr(self, 'worker_thread') and self.worker_thread is not None:
                 self.logger.info("Завершение работы WorkerThread перед загрузкой нового конфига.")
                 self.worker_thread.terminate_process()
                 self.worker_thread.wait()
                 self.worker_thread = None
-            
+
             validation_error = self.validate_config_file(file_path)
             if validation_error:
                 self.console_output.append(validation_error)
@@ -812,19 +820,12 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
 
         return None
 
-    def toggle_blacklist_on_startup(self, state):
-        is_checked = state == Qt.Checked
-        self.settings.setValue("check_blacklist_on_startup", is_checked)
-        self.logger.info(f"Проверка обновлений черных списков при запуске {'включена' if is_checked else 'отключена'}.")
+    def toggle_blacklist_on_startup(self, checked):
+        self.settings.setValue("check_blacklist_on_startup", checked)
 
-    def on_blacklist_updated(self):
-        if self.updating_blacklist_on_startup:
-            self.logger.info("Черный список обновлен автоматически при запуске. Уведомление не отображается.")
-            self.updating_blacklist_on_startup = False
-        else:
-            QMessageBox.information(self, "Обновление черного списка", "Черный список успешно обновлен.")
-            self.logger.info("Черный список обновлен вручную. Уведомление отображено через QMessageBox.")
+    def toggle_tray_behavior(self, checked):
+        self.minimize_to_tray = checked
+        self.settings.setValue("minimize_to_tray", self.minimize_to_tray)
 
-    def on_blacklist_update_error(self, error_message):
-        self.console_output.append(error_message)
-        QMessageBox.warning(self, "Ошибка обновления черного списка", error_message)
+        if not checked and self.tray_icon.isVisible():
+            self.tray_icon.hide()

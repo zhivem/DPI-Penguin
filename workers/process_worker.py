@@ -4,7 +4,7 @@ import os
 import subprocess
 from typing import List, Optional
 
-from PyQt5 import QtCore
+from PyQt6 import QtCore
 
 
 class WorkerThread(QtCore.QThread):
