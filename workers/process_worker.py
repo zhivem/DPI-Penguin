@@ -8,9 +8,6 @@ from PyQt5 import QtCore
 
 
 class WorkerThread(QtCore.QThread):
-    """
-    Класс WorkerThread для выполнения команд в отдельном потоке и передачи вывода через сигналы.
-    """
     output_signal = QtCore.pyqtSignal(str)
     finished_signal = QtCore.pyqtSignal(str)
     error_signal = QtCore.pyqtSignal(str)
@@ -22,15 +19,6 @@ class WorkerThread(QtCore.QThread):
         encoding: Optional[str] = None,
         capture_output: bool = True
     ):
-        """
-        Инициализация рабочего потока.
-
-        Args:
-            command (List[str]): Команда для выполнения.
-            process_name (str): Имя процесса.
-            encoding (Optional[str], optional): Кодировка. По умолчанию используется системная.
-            capture_output (bool, optional): Флаг захвата вывода. По умолчанию True.
-        """
         super().__init__()
         self.command = command
         self.process_name = process_name
@@ -41,9 +29,6 @@ class WorkerThread(QtCore.QThread):
         self.logger = logging.getLogger(self.__class__.__name__)
 
     def run(self) -> None:
-        """
-        Метод, выполняемый при запуске потока. Запускает процесс и обрабатывает его вывод.
-        """
         try:
             self.logger.debug(f"Запуск команды: {' '.join(self.command)}")
             popen_params = {
@@ -78,11 +63,9 @@ class WorkerThread(QtCore.QThread):
             self.error_signal.emit(error_message)
         finally:
             self.finished_signal.emit(self.process_name)
+            self.process = None
 
     def terminate_process(self) -> None:
-        """
-        Принудительно завершает процесс, если он ещё выполняется.
-        """
         if self.process and self.process.poll() is None:
             try:
                 self.process.terminate()

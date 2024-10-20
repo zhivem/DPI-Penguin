@@ -5,10 +5,9 @@ from typing import List, Optional
 import aiohttp
 from PyQt5.QtCore import QObject, pyqtSignal
 
-from utils.utils import DISPLAY_NAMES, get_site_by_name
+from utils.utils import DISPLAY_NAMES, get_site_by_name, create_status_icon
 
-# Константы
-DEFAULT_TIMEOUT = 5  # секунд
+DEFAULT_TIMEOUT = 5
 SUCCESS_STATUS = 200
 GREEN_COLOR = 'green'
 RED_COLOR = 'red'
@@ -16,29 +15,16 @@ HTTP_PREFIX = "http"
 
 
 class SiteCheckerWorker(QObject):
-    """
-    Класс для проверки доступности сайтов в отдельном потоке.
-    """
     site_checked = pyqtSignal(str, str)
     finished = pyqtSignal()
     error_signal = pyqtSignal(str)
 
     def __init__(self, sites: Optional[List[str]] = None) -> None:
-        """
-        Инициализация SiteCheckerWorker.
-
-        Args:
-            sites (Optional[List[str]], optional): Список имен сайтов для проверки.
-                Если None, используется DISPLAY_NAMES из utils.
-        """
         super().__init__()
         self.sites = sites if sites is not None else DISPLAY_NAMES
         self.logger = logging.getLogger(self.__class__.__name__)
 
     def run(self) -> None:
-        """
-        Запускает проверку сайтов.
-        """
         try:
             self.logger.debug("Запуск проверки сайтов.")
             asyncio.run(self.check_sites())
@@ -49,9 +35,6 @@ class SiteCheckerWorker(QObject):
             self.finished.emit()
 
     async def check_sites(self) -> None:
-        """
-        Асинхронно проверяет доступность всех сайтов.
-        """
         try:
             async with aiohttp.ClientSession() as session:
                 tasks = [
@@ -69,14 +52,6 @@ class SiteCheckerWorker(QObject):
             self.logger.debug("Проверка сайтов завершена.")
 
     async def check_site(self, session: aiohttp.ClientSession, site_name: str, url: str) -> None:
-        """
-        Асинхронно проверяет доступность одного сайта.
-
-        Args:
-            session (aiohttp.ClientSession): Сессия для выполнения HTTP-запроса.
-            site_name (str): Имя сайта.
-            url (str): URL сайта.
-        """
         try:
             self.logger.debug(f"Проверка доступности сайта: {url}")
             async with session.get(url, timeout=DEFAULT_TIMEOUT) as response:
@@ -98,15 +73,6 @@ class SiteCheckerWorker(QObject):
         self.site_checked.emit(site_name, color)
 
     def get_site_url(self, site_name: str) -> str:
-        """
-        Возвращает URL сайта по его имени.
-
-        Args:
-            site_name (str): Имя сайта.
-
-        Returns:
-            str: Полный URL сайта.
-        """
         site = get_site_by_name(site_name)
         if not site.startswith(HTTP_PREFIX):
             site = f"https://{site}"

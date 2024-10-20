@@ -3,6 +3,7 @@ import os
 import subprocess
 import platform
 import configparser
+import sys
 
 import psutil
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -37,14 +38,16 @@ from utils.utils import (
     enable_autostart,
     is_autostart_enabled,
     load_script_options,
+    open_path,
+    create_status_icon,
 )
 import utils.theme_utils
 
-# Константы для путей к иконкам
 TRAY_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "newicon.ico")
 THEME_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "themes.png")
 LOG_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "log.png")
 INI_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "ini.png")
+
 
 class GoodbyeDPIApp(QtWidgets.QWidget):
     site_status_updated = pyqtSignal(str, str)
@@ -57,13 +60,11 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
         self.settings = QSettings("Zhivem", "GoodbyeDPIApp")
         self.ensure_logs_folder_exists()
 
-        # Загрузка SCRIPT_OPTIONS с обработкой ошибок
         self.script_options, self.config_error = load_script_options(
             os.path.join(BASE_FOLDER, "config", "default.ini")
         )
         self.current_config_path = os.path.join(BASE_FOLDER, "config", "default.ini")
 
-        # Инициализация пользовательского интерфейса
         self.init_ui()
 
         self.updater = Updater()
@@ -74,16 +75,22 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
         self.minimize_to_tray = True
 
         if self.config_error:
-            # Отображаем ошибку в консольном выводе
             self.console_output.append(self.config_error)
             self.logger.error(self.config_error)
-            # Отключаем элементы интерфейса, связанные со скриптами
             self.selected_script.setEnabled(False)
             self.run_button.setEnabled(False)
             self.stop_close_button.setEnabled(False)
-            self.update_config_button.setEnabled(False)  # Отключаем кнопку обновления при ошибках
+            self.update_config_button.setEnabled(True)
 
         QtCore.QTimer.singleShot(0, self.check_sites_status)
+
+        self.updating_blacklist_on_startup = False
+
+        check_blacklist_on_startup = self.settings.value("check_blacklist_on_startup", True, type=bool)
+        if check_blacklist_on_startup:
+            self.logger.info("Проверка обновлений черных списков при запуске включена. Начинаем обновление...")
+            self.updating_blacklist_on_startup = True
+            self.updater.update_blacklist()
 
     def ensure_logs_folder_exists(self):
         logs_folder = os.path.join(BASE_FOLDER, "logs")
@@ -99,7 +106,6 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
         self.setFixedSize(420, 585)
         self.set_window_icon(TRAY_ICON_PATH)
 
-        # Применение темы
         saved_theme = self.settings.value("theme", "light")
         utils.theme_utils.apply_theme(self, saved_theme, self.settings, BASE_FOLDER)
 
@@ -133,6 +139,15 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
         self.site_status_updated.connect(self.update_site_status)
         self.sites_check_finished.connect(self.finish_check_sites)
 
+        self.updater.blacklist_updated.connect(self.on_blacklist_updated)
+        self.updater.blacklist_update_error.connect(self.on_blacklist_update_error)
+        self.updater.config_updated.connect(self.on_config_updated)
+        self.updater.config_update_error.connect(self.on_config_update_error)
+        self.updater.update_available.connect(self.notify_update)
+        self.updater.no_update.connect(self.no_update)
+        self.updater.update_error.connect(self.on_update_error)
+        self.updater.finished.connect(self.on_update_finished)
+
     def closeEvent(self, event):
         if self.minimize_to_tray:
             event.ignore()
@@ -145,6 +160,7 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
                 1000
             )
         else:
+            self.stop_and_close()
             event.accept()
 
     def restore_from_tray(self):
@@ -181,17 +197,14 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
         process_tab = QtWidgets.QWidget()
         process_layout = QtWidgets.QVBoxLayout(process_tab)
 
-        # Горизонтальный макет для комбобокса и кнопки загрузки
         script_layout = QtWidgets.QHBoxLayout()
 
-        # Выбор скрипта
         self.selected_script = QFComboBox()
         if not self.config_error:
             self.selected_script.addItems(self.script_options.keys())
         self.selected_script.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
         script_layout.addWidget(self.selected_script)
 
-        # Кнопка загрузки конфигурации с текстом
         self.update_config_button = PushButton("📁", self)
         self.update_config_button.setToolTip("Загрузить другую конфигурацию")
         self.update_config_button.clicked.connect(self.load_config_via_dialog)
@@ -199,12 +212,11 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
         self.update_config_button.setFixedWidth(40)
         script_layout.addWidget(self.update_config_button)
 
-        script_layout.setStretch(0, 1)  # QFComboBox
-        script_layout.setStretch(1, 0)  # Кнопка загрузки
+        script_layout.setStretch(0, 1)
+        script_layout.setStretch(1, 0)
 
         process_layout.addLayout(script_layout)
 
-        # Кнопки запуска и остановки
         buttons_layout = QtWidgets.QHBoxLayout()
         self.run_button = self.create_button("Запустить", self.run_exe, buttons_layout)
         self.stop_close_button = self.create_button(
@@ -215,17 +227,15 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
         )
         process_layout.addLayout(buttons_layout)
 
-        # Консольный вывод
         self.console_output = TextEdit(self)
         self.console_output.setReadOnly(True)
         process_layout.addWidget(self.console_output)
 
-        # Горизонтальный макет для кнопок логов и конфигурации
         log_and_config_layout = QtWidgets.QHBoxLayout()
 
         self.open_logs_button = self.create_button(
             text="Открыть папку Log",
-            func=lambda: self.open_path(os.path.join(BASE_FOLDER, "logs")),
+            func=lambda: self.handle_open_path(os.path.join(BASE_FOLDER, "logs")),
             layout=None,
             icon_path=LOG_ICON_PATH,
             icon_size=(16, 16),
@@ -235,7 +245,7 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
 
         self.open_config_button = self.create_button(
             text="Открыть configs",
-            func=lambda: self.open_path(os.path.join(BASE_FOLDER, "config")),
+            func=lambda: self.handle_open_path(os.path.join(BASE_FOLDER, "config")),
             layout=None,
             icon_path=INI_ICON_PATH,
             icon_size=(16, 16),
@@ -245,7 +255,6 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
 
         process_layout.addLayout(log_and_config_layout)
 
-        # Кнопка переключения темы
         self.theme_toggle_button = PushButton()
         utils.theme_utils.update_theme_button_text(self, self.settings)
         self.set_button_icon(self.theme_toggle_button, THEME_ICON_PATH, (16, 16))
@@ -253,6 +262,11 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
         process_layout.addWidget(self.theme_toggle_button)
 
         return process_tab
+
+    def handle_open_path(self, path: str):
+        error = open_path(path)
+        if error:
+            QMessageBox.warning(self, "Ошибка", error)
 
     def set_button_icon(self, button, icon_path, icon_size):
         if not os.path.exists(icon_path):
@@ -269,10 +283,15 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
         settings_tab = QtWidgets.QWidget()
         settings_layout = QtWidgets.QVBoxLayout(settings_tab)
 
-        # Группа автозапуска
         autostart_group = QGroupBox("Автозапуск")
         autostart_layout = QtWidgets.QVBoxLayout()
         autostart_group.setLayout(autostart_layout)
+
+        self.check_blacklist_on_startup_checkbox = QCheckBox("Проверять обновления черных списков при запуске")
+        check_blacklist_on_startup = self.settings.value("check_blacklist_on_startup", True, type=bool)
+        self.check_blacklist_on_startup_checkbox.setChecked(check_blacklist_on_startup)
+        self.check_blacklist_on_startup_checkbox.stateChanged.connect(self.toggle_blacklist_on_startup)
+        autostart_layout.addWidget(self.check_blacklist_on_startup_checkbox)
 
         self.tray_checkbox = QCheckBox("Сворачивать в трей при закрытии приложения")
         self.tray_checkbox.setChecked(True)
@@ -284,15 +303,14 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
         self.autostart_checkbox.stateChanged.connect(self.toggle_autostart)
         autostart_layout.addWidget(self.autostart_checkbox)
 
-        # Настройка шрифта
         font = self.tray_checkbox.font()
         font.setPointSize(9)
         self.tray_checkbox.setFont(font)
         self.autostart_checkbox.setFont(font)
+        self.check_blacklist_on_startup_checkbox.setFont(font)
 
         settings_layout.addWidget(autostart_group)
 
-        # Группа служб
         services_group = QGroupBox("Службы")
         services_layout = QtWidgets.QVBoxLayout()
         services_group.setLayout(services_layout)
@@ -302,15 +320,16 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
 
         settings_layout.addWidget(services_group)
 
-        # Группа обновлений
         updates_group = QGroupBox("Обновления")
         updates_layout = QtWidgets.QVBoxLayout()
         updates_group.setLayout(updates_layout)
-        self.create_button("Обновить черный список", self.update_blacklist, updates_layout)
+
+        self.create_button("Обновить черные списки", self.update_blacklist, updates_layout)
+        self.update_config_settings_button = self.create_button("Обновить конфигурацию", self.update_config, updates_layout)
         self.update_button = self.create_button("Проверить обновления", self.check_for_updates, updates_layout)
+
         settings_layout.addWidget(updates_group)
 
-        # Группа основных сайтов YouTube
         sites_group = QGroupBox("Основные сайты YouTube")
         sites_layout = QtWidgets.QVBoxLayout()
         sites_group.setLayout(sites_layout)
@@ -329,11 +348,9 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
         info_tab = QtWidgets.QWidget()
         info_layout = QtWidgets.QVBoxLayout(info_tab)
 
-        # Подробности
         details_group = self.create_details_group()
         info_layout.addWidget(details_group)
 
-        # Благодарности
         acknowledgements_group = self.create_acknowledgements_group()
         info_layout.addWidget(acknowledgements_group)
 
@@ -344,7 +361,6 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
         group = QGroupBox("Подробности")
         layout = QtWidgets.QGridLayout(group)
 
-        # Заголовки и данные
         labels = {
             "Версия": f"v{CURRENT_VERSION}",
             "Разработчик": "Zhivem",
@@ -353,7 +369,6 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
             "Лицензия": "© 2024 Zhivem. License: Apache License, Version 2.0."
         }
 
-        # Создание виджетов
         widgets = {
             "Версия": QtWidgets.QLabel(labels["Версия"]),
             "Разработчик": QtWidgets.QLabel(labels["Разработчик"]),
@@ -407,13 +422,11 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
         section = QtWidgets.QWidget()
         layout = QtWidgets.QGridLayout(section)
 
-        # Заголовки и данные
         layout.addWidget(QtWidgets.QLabel(f"<b>{title}</b>"), 0, 0, 1, 2)
         layout.addWidget(QtWidgets.QLabel(f"Описание: {description}"), 1, 0, 1, 2)
         layout.addWidget(QtWidgets.QLabel(f"Version: {version}"), 2, 0)
         layout.addWidget(QtWidgets.QLabel(f"Developer: {developer}"), 2, 1)
 
-        # Ссылки
         for i, link in enumerate(links, start=3):
             link_label = QtWidgets.QLabel(f"<a href='{link}'>{link}</a>")
             link_label.setOpenExternalLinks(True)
@@ -434,22 +447,17 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
 
     def create_sites_list(self, sites):
         list_widget = QListWidget()
-        list_widget.setFixedHeight(150)
+        list_widget.setFixedHeight(95)
 
         self.site_status = {}
         for site in sites:
             item = QListWidgetItem(site)
-            icon = self.create_status_icon('gray')
+            icon = create_status_icon('gray')
             item.setIcon(icon)
             list_widget.addItem(item)
             self.site_status[site] = item
 
         return list_widget
-
-    def create_status_icon(self, color):
-        pixmap = QPixmap(12, 12)
-        pixmap.fill(QColor(color))
-        return QIcon(pixmap)
 
     def create_button(self, text, func, layout, enabled=True, icon_path=None, icon_size=(24, 24), tooltip=None):
         button = PushButton(text, self)
@@ -530,7 +538,8 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
             required_files = [
                 os.path.join(BASE_FOLDER, "black", BLACKLIST_FILES[2]),
                 os.path.join(BASE_FOLDER, "zapret", "quic_initial_www_google_com.bin"),
-                os.path.join(BASE_FOLDER, "zapret", "tls_clienthello_www_google_com.bin")
+                os.path.join(BASE_FOLDER, "zapret", "tls_clienthello_www_google_com.bin"),
+                os.path.join(BASE_FOLDER, "zapret", "tls_clienthello_iana_org.bin")
             ]
             missing_files = [f for f in required_files if not os.path.exists(f)]
             if missing_files:
@@ -566,29 +575,24 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
             self.console_output.append(f"Ошибка при запуске потока: {e}")
 
     def update_output(self, text):
-        # Список ключевых слов для игнорирования (в нижнем регистре)
         ignore_keywords = [
             "loading hostlist",
             "we have",
             "desync profile(s)",
             "loaded hosts",
             "loading plain text list",
-            "loaded",  # Можно обобщить для всех сообщений, содержащих "loaded"
+            "loaded",
         ]
         
         text_lower = text.lower()
         
         if "windivert initialized. capture is started." in text_lower:
-            # Если WinDivert запущен, выводим сообщение "Запущено"
             self.console_output.append("Ваша конфигурация выполняется.")
         elif any(keyword in text_lower for keyword in ignore_keywords):
-            # Игнорируем повторяющиеся или ненужные логи
             return
         else:
-            # Для всего остального выводим текст как есть
             self.console_output.append(text)
         
-        # Ограничиваем количество строк в консоли
         max_lines = 100
         document = self.console_output.document()
         while document.blockCount() > max_lines:
@@ -603,9 +607,18 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
             self.run_button.setEnabled(True)
             self.stop_close_button.setEnabled(False)
             self.logger.info(f"Процесс {process_name} завершён.")
+            self.console_output.append(f"Обход блокировки завершен.")  
+            self.worker_thread = None 
 
     def stop_and_close(self):
         self.logger.info("Начата процедура остановки и закрытия процессов.")
+        
+        if hasattr(self, 'worker_thread') and self.worker_thread is not None:
+            self.logger.info("Завершение работы WorkerThread.")
+            self.worker_thread.terminate_process()
+            self.worker_thread.wait()
+            self.worker_thread = None
+        
         self.start_process(WIN_DIVERT_COMMAND, "WinDivert", capture_output=False)
         self.close_process(GOODBYE_DPI_PROCESS_NAME, "GoodbyeDPI")
         self.close_process("winws.exe", "winws.exe")
@@ -628,18 +641,26 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
 
     def update_blacklist(self):
         self.logger.debug("Начата процедура обновления черного списка.")
-        self.updater.blacklist_updated.connect(self.on_blacklist_updated)
-        self.updater.update_error.connect(self.on_update_error)
         self.updater.update_blacklist()
+
+    def update_config(self):
+        reply = QMessageBox.question(
+            self,
+            "Обновление конфигурации",
+            "Вы уверены, что хотите обновить конфигурационный файл на актуальный?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+        if reply == QMessageBox.Yes:
+            self.logger.info("Начато обновление конфигурационного файла.")
+            self.updater.update_config()
+        else:
+            self.logger.info("Обновление конфигурационного файла отменено пользователем.")
 
     def check_for_updates(self):
         self.update_button.setEnabled(False)
-        self.updater.update_available.connect(self.notify_update)
-        self.updater.no_update.connect(self.no_update)
-        self.updater.update_error.connect(self.on_update_error)
-        self.updater.finished.connect(self.on_update_finished)
         self.updater.start()
-
+    
     def no_update(self):
         QMessageBox.information(self, "Обновление", "Обновлений не найдено.")
 
@@ -647,8 +668,28 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
         self.update_button.setEnabled(True)
 
     def on_blacklist_updated(self):
-        QMessageBox.information(self, "Обновление черного списка", "Черный список обновлен.")
+        if self.updating_blacklist_on_startup:
+            self.logger.info("Черный список обновлен автоматически при запуске. Уведомление не отображается.")
+            self.updating_blacklist_on_startup = False
+        else:
+            QMessageBox.information(self, "Обновление черного списка", "Черный список успешно обновлен.")
+            self.logger.info("Черный список обновлен вручную. Уведомление отображено через QMessageBox.")
 
+    def on_blacklist_update_error(self, error_message):
+        self.console_output.append(error_message)
+        QMessageBox.warning(self, "Ошибка обновления черного списка", error_message)
+
+    @pyqtSlot()
+    def on_config_updated(self):
+        QMessageBox.information(self, "Обновление конфигурации", "Конфигурационный файл успешно обновлен.")
+        self.logger.info("Конфигурационный файл успешно обновлен.")
+
+    @pyqtSlot(str)
+    def on_config_update_error(self, error_message):
+        self.console_output.append(error_message)
+        QMessageBox.warning(self, "Ошибка обновления конфигурации", error_message)
+
+    @pyqtSlot(str)
     def on_update_error(self, error_message):
         self.console_output.append(error_message)
         QMessageBox.warning(self, "Ошибка обновления", error_message)
@@ -687,7 +728,7 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
     @pyqtSlot(str, str)
     def update_site_status(self, site, color):
         if site in self.site_status:
-            icon = self.create_status_icon(color)
+            icon = create_status_icon(color)
             self.site_status[site].setIcon(icon)
             self.logger.debug(f"Сайт {site} доступен: {color}")
 
@@ -696,34 +737,7 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
         self.check_sites_button.setEnabled(True)
         self.logger.info("Проверка доступности сайтов завершена.")
 
-    def open_path(self, path):
-        if not os.path.exists(path):
-            QMessageBox.warning(self, "Ошибка", f"Путь не найден: {path}")
-            return
-
-        try:
-            if platform.system() == "Windows":
-                os.startfile(path)
-            elif platform.system() == "Darwin":  # macOS
-                subprocess.Popen(["open", path])
-            else:  # Linux и другие
-                subprocess.Popen(["xdg-open", path])
-        except Exception as e:
-            self.logger.error(f"Ошибка при открытии пути {path}: {e}", exc_info=True)
-            QMessageBox.critical(self, "Ошибка", f"Не удалось открыть путь: {e}")
-
-    def open_logs_folder(self):
-        self.open_path(os.path.join(BASE_FOLDER, "logs"))
-
-    def open_config_file(self):
-        self.open_path(os.path.join(BASE_FOLDER, "config"))
-
     def load_config_via_dialog(self):
-        """
-        Метод для загрузки конфигурации через проводник.
-        Открывает диалог выбора файла и загружает выбранный default.ini.
-        Выполняет валидацию выбранного файла.
-        """
         options = QFileDialog.Options()
         options |= QFileDialog.ReadOnly
         file_path, _ = QFileDialog.getOpenFileName(
@@ -735,32 +749,34 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
         )
         if file_path:
             self.logger.info(f"Выбран файл конфигурации: {file_path}")
+            
+            if hasattr(self, 'worker_thread') and self.worker_thread is not None:
+                self.logger.info("Завершение работы WorkerThread перед загрузкой нового конфига.")
+                self.worker_thread.terminate_process()
+                self.worker_thread.wait()
+                self.worker_thread = None
+            
             validation_error = self.validate_config_file(file_path)
             if validation_error:
-                # Отображаем ошибку в консольном выводе и в диалоге
                 self.console_output.append(validation_error)
                 self.logger.error(validation_error)
                 QMessageBox.critical(self, "Ошибка загрузки конфигурации", validation_error)
                 return
 
-            # Если валидация прошла успешно, загружаем конфиг
             new_script_options, new_config_error = load_script_options(file_path)
 
             if new_config_error:
-                # Отображаем ошибку в консольном выводе и в диалоге
                 self.console_output.append(new_config_error)
                 self.logger.error(new_config_error)
                 QMessageBox.critical(self, "Ошибка загрузки конфигурации", new_config_error)
                 return
 
-            # Обновляем текущие опции скриптов
             self.script_options = new_script_options
             self.config_error = None
-            self.current_config_path = file_path  # Обновляем путь к текущему конфигу
+            self.current_config_path = file_path
             self.console_output.append("Конфигурация успешно загружена.")
             self.logger.info("Конфигурация успешно загружена.")
 
-            # Обновляем комбобокс: очищаем существующие элементы и добавляем новые
             self.selected_script.clear()
             self.selected_script.addItems(self.script_options.keys())
             self.selected_script.setEnabled(True)
@@ -768,14 +784,6 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
             self.stop_close_button.setEnabled(False)
 
     def validate_config_file(self, file_path):
-        """
-        Метод для валидации выбранного файла default.ini.
-        Проверяет:
-        - Существование файла
-        - Читаемость файла
-        - Корректность INI формата
-        - Наличие обязательных секций и ключей
-        """
         if not os.path.exists(file_path):
             return f"Файл не найден: {file_path}"
 
@@ -786,24 +794,37 @@ class GoodbyeDPIApp(QtWidgets.QWidget):
         try:
             config.read(file_path, encoding='utf-8')
         except Exception as e:
+            logging.error(f"Ошибка при чтении файла INI: {e}")
             return f"Ошибка при чтении файла INI: {e}"
 
-        # Проверка наличия основной секции
         if 'SCRIPT_OPTIONS' not in config.sections():
             return "Ошибка: Отсутствует секция [SCRIPT_OPTIONS] в конфигурационном файле."
 
-        # Проверка наличия хотя бы одной опции скрипта
         script_sections = [section for section in config.sections() if section != 'SCRIPT_OPTIONS']
         if not script_sections:
             return "Ошибка: В секции [SCRIPT_OPTIONS] отсутствуют настройки скриптов."
 
-        # Проверка обязательных ключей в каждой опции скрипта
         required_keys = ['executable', 'args']
         for section in script_sections:
             for key in required_keys:
                 if key not in config[section]:
                     return f"Ошибка: В секции [{section}] отсутствует ключ '{key}'."
 
-        # Дополнительные проверки, допишу потом
-
         return None
+
+    def toggle_blacklist_on_startup(self, state):
+        is_checked = state == Qt.Checked
+        self.settings.setValue("check_blacklist_on_startup", is_checked)
+        self.logger.info(f"Проверка обновлений черных списков при запуске {'включена' if is_checked else 'отключена'}.")
+
+    def on_blacklist_updated(self):
+        if self.updating_blacklist_on_startup:
+            self.logger.info("Черный список обновлен автоматически при запуске. Уведомление не отображается.")
+            self.updating_blacklist_on_startup = False
+        else:
+            QMessageBox.information(self, "Обновление черного списка", "Черный список успешно обновлен.")
+            self.logger.info("Черный список обновлен вручную. Уведомление отображено через QMessageBox.")
+
+    def on_blacklist_update_error(self, error_message):
+        self.console_output.append(error_message)
+        QMessageBox.warning(self, "Ошибка обновления черного списка", error_message)

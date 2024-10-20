@@ -10,11 +10,13 @@ from typing import Optional, List, Dict, Tuple
 from packaging.version import parse as parse_version
 import requests
 
-# Определение базовой папки проекта
+from PyQt5.QtGui import QColor, QIcon, QPixmap
+from PyQt5.QtCore import QSize
+
 BASE_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 ZAPRET_FOLDER = os.path.join(BASE_FOLDER, "zapret")
 CONFIG_PATH = os.path.join(BASE_FOLDER, "config", 'config.ini')
-CURRENT_VERSION: str = "1.6"  # Версия приложения
+CURRENT_VERSION: str = "1.6.1"
 
 BLACKLIST_FOLDER = os.path.join(BASE_FOLDER, "black")
 ICON_FOLDER = os.path.join(BASE_FOLDER, "resources", "icon")
@@ -48,7 +50,6 @@ DISPLAY_NAMES: List[str] = [
 GOODBYE_DPI_PROCESS_NAME: str = "goodbyedpi.exe"
 WIN_DIVERT_COMMAND: List[str] = ["net", "stop", "WinDivert"]
 
-# Определение архитектуры системы
 def get_architecture() -> str:
     """
     Определяет архитектуру системы.
@@ -58,7 +59,6 @@ def get_architecture() -> str:
     """
     return "x86_64" if platform.architecture()[0] == "64bit" else "x86"
 
-# Путь к goodbyedpi.exe с учётом архитектуры
 def get_goodbye_dpi_exe() -> str:
     """
     Возвращает путь к исполняемому файлу GoodbyeDPI в зависимости от архитектуры.
@@ -70,7 +70,6 @@ def get_goodbye_dpi_exe() -> str:
 
 GOODBYE_DPI_EXE: str = get_goodbye_dpi_exe()
 
-# Получение сайта по отображаемому имени
 def get_site_by_name(display_name: str) -> str:
     """
     Получает URL сайта по его отображаемому имени.
@@ -87,7 +86,48 @@ def get_site_by_name(display_name: str) -> str:
         logging.error(f"Сайт с именем '{display_name}' не найден.")
         return ""
 
-# Функции управления зависимостями и службами
+def open_path(path: str) -> Optional[str]:
+    """
+    Открывает указанный путь в файловом менеджере.
+
+    Args:
+        path (str): Путь к папке или файлу.
+
+    Returns:
+        Optional[str]: Сообщение об ошибке, если не удалось открыть путь, иначе None.
+    """
+    if not os.path.exists(path):
+        logging.warning(f"Путь не существует: {path}")
+        return f"Путь не существует: {path}"
+
+    try:
+        if platform.system() == "Windows":
+            os.startfile(path)
+        elif platform.system() == "Darwin":  # macOS
+            subprocess.Popen(["open", path])
+        else:  # Linux и другие
+            subprocess.Popen(["xdg-open", path])
+        logging.info(f"Путь '{path}' открыт.")
+        return None
+    except Exception as e:
+        logging.error(f"Не удалось открыть путь '{path}': {e}")
+        return f"Не удалось открыть путь: {e}"
+
+def create_status_icon(color: str, size: Tuple[int, int] = (12, 12)) -> QIcon:
+    """
+    Создает иконку статуса заданного цвета.
+
+    Args:
+        color (str): Цвет иконки (например, 'gray', 'green', 'red').
+        size (Tuple[int, int], optional): Размер иконки. По умолчанию (12, 12).
+
+    Returns:
+        QIcon: Созданная иконка.
+    """
+    pixmap = QPixmap(*size)
+    pixmap.fill(QColor(color))
+    return QIcon(pixmap)
+
 def ensure_module_installed(module_name: str, version: Optional[str] = None) -> None:
     """
     Проверяет, установлен ли модуль с указанной версией. Если нет, устанавливает его.
@@ -283,29 +323,6 @@ def delete_service() -> str:
         logging.error(f"Неизвестная ошибка при удалении службы: {e}")
         return "Не удалось удалить службу из-за неизвестной ошибки."
 
-def open_txt_file(file_path: str) -> Optional[str]:
-    """
-    Открывает текстовый файл с помощью блокнота.
-
-    Args:
-        file_path (str): Путь к файлу.
-
-    Returns:
-        Optional[str]: Сообщение об ошибке, если не удалось открыть файл, иначе None.
-    """
-    if os.path.exists(file_path):
-        try:
-            subprocess.Popen(['notepad.exe', file_path])
-            logging.info(f"Файл '{file_path}' открыт в блокноте.")
-            return None
-        except Exception as e:
-            logging.error(f"Не удалось открыть файл '{file_path}': {e}")
-            return f"Не удалось открыть файл: {e}"
-    else:
-        logging.warning(f"Файл не существует: {file_path}")
-        return "Файл не существует."
-
-# Загрузка SCRIPT_OPTIONS из config.ini
 def load_script_options(config_path: str) -> Tuple[Optional[Dict[str, Tuple[str, List[str]]]], Optional[str]]:
     """
     Загружает SCRIPT_OPTIONS из файла конфигурации и проверяет на дублирование разделов.
@@ -326,7 +343,6 @@ def load_script_options(config_path: str) -> Tuple[Optional[Dict[str, Tuple[str,
         logging.error(f"Ошибка при чтении default.ini: {e}")
         return None, f"Ошибка при чтении default.ini: Названия конфигураций не должны повторяться!"
 
-    # Проверка на дублирующиеся разделы
     section_counts = {}
     try:
         with open(config_path, 'r', encoding='utf-8') as f:
@@ -345,7 +361,6 @@ def load_script_options(config_path: str) -> Tuple[Optional[Dict[str, Tuple[str,
         logging.error(error_message)
         return None, error_message
 
-    # Загрузка опций скриптов
     script_options = {}
     for section in config.sections():
         if section == "SCRIPT_OPTIONS":
@@ -354,13 +369,10 @@ def load_script_options(config_path: str) -> Tuple[Optional[Dict[str, Tuple[str,
         executable = config.get(section, 'executable', fallback=None)
         args = config.get(section, 'args', fallback='')
 
-        # Объединяем многострочные аргументы в одну строку
         args = ' '.join(args.splitlines())
 
-        # Разделяем аргументы по точке с запятой
         args_list = [arg.strip() for arg in args.split(';') if arg.strip()] if args else []
 
-        # Заменяем плейсхолдеры на реальные пути
         args_list = [
             arg.replace('{ZAPRET_FOLDER}', ZAPRET_FOLDER)
                .replace('{BLACKLIST_FILES_0}', BLACKLIST_FILES[0])
@@ -372,12 +384,10 @@ def load_script_options(config_path: str) -> Tuple[Optional[Dict[str, Tuple[str,
             for arg in args_list
         ]
 
-        # Заменяем плейсхолдеры в executable
         if executable:
             executable = executable.replace('{ZAPRET_FOLDER}', ZAPRET_FOLDER)\
                                    .replace('{BASE_FOLDER}', BASE_FOLDER)\
                                    .replace('{architecture}', get_architecture())
-            # Если путь относительный, делаем его абсолютным
             if not os.path.isabs(executable):
                 executable = os.path.join(BASE_FOLDER, executable)
 
@@ -385,6 +395,3 @@ def load_script_options(config_path: str) -> Tuple[Optional[Dict[str, Tuple[str,
 
     logging.info(f"SCRIPT_OPTIONS загружены: {script_options}")
     return script_options, None
-
-# Думаю пока вроде нужно, вроде нет
-# SCRIPT_OPTIONS: Dict[str, Tuple[str, List[str]]] = load_script_options(CONFIG_PATH)

@@ -6,13 +6,13 @@ from PyQt5.QtWidgets import QApplication
 from qfluentwidgets import Theme, setTheme
 import pywinstyles
 
-# Константы
 DARK_THEME_NAME = "dark"
 LIGHT_THEME_NAME = "light"
 DARK_STYLESHEET = "dark_theme.qss"
 LIGHT_STYLESHEET = "light_theme.qss"
-STYLES_FOLDER = "resources/styles"  
-ICON_FOLDER = "resources/icon" 
+STYLES_FOLDER = "resources/styles"
+ICON_FOLDER = "resources/icon"
+
 
 def apply_theme(
     app_instance: QApplication,
@@ -35,12 +35,13 @@ def apply_theme(
         stylesheet = DARK_STYLESHEET
     else:
         setTheme(Theme.LIGHT)
-        pywinstyles.apply_style(app_instance, DARK_THEME_NAME)  # Если хотите белую шапку, то LIGHT_THEME_NAME
+        pywinstyles.apply_style(app_instance, DARK_THEME_NAME)
         stylesheet = LIGHT_STYLESHEET
 
     apply_stylesheet(app_instance, stylesheet, base_folder)
     settings.setValue("theme", theme_name)
     logging.info(f"Тема '{theme_name}' применена.")
+
 
 def apply_stylesheet(
     app_instance: QApplication,
@@ -65,6 +66,7 @@ def apply_stylesheet(
         logging.error(f"Файл стилей не найден: {style_path}")
     except Exception as e:
         logging.error(f"Не удалось загрузить файл стилей {style_path}: {e}")
+
 
 def update_theme_button_text(
     app_instance: Any,  
@@ -93,6 +95,7 @@ def update_theme_button_text(
 
     logging.debug(f"Текст кнопки переключения темы обновлён на '{theme_button.text()}'.")
 
+
 def toggle_theme(
     app_instance: Any,
     settings: Any,
@@ -112,6 +115,7 @@ def toggle_theme(
     update_theme_button_text(app_instance, settings)
     logging.info(f"Тема переключена с '{current_theme}' на '{new_theme}'.")
 
+
 def get_stylesheet_path(base_folder: str, stylesheet_name: str) -> str:
     """
     Возвращает полный путь к файлу стилей.
@@ -124,6 +128,7 @@ def get_stylesheet_path(base_folder: str, stylesheet_name: str) -> str:
         str: Полный путь к файлу стилей.
     """
     return os.path.join(base_folder, STYLES_FOLDER, stylesheet_name)
+
 
 def get_stylesheet(
     app_instance: QApplication,
