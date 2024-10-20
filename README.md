@@ -110,7 +110,7 @@ light_theme.qss - светлый интерфейс
     python main.py
     ```
 
-## Благодарности*
+## Благодарности
 - **GoodbyeDPI:** Основа для работы YouTube. Разработчик: ValdikSS. [Репозиторий](https://github.com/ValdikSS/GoodbyeDPI)
 - **Zapret:** Основа для работы Discord и YouTube. Разработчик: bol-van. [Репозиторий](https://github.com/bol-van/zapret)
 
