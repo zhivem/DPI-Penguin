@@ -67,7 +67,7 @@ args =
     --dpi-desync-autottl=2;  | Автоматическое управление TTL (Time to Live)
     --dpi-desync-repeats=6;  | Повторить процесс десинхронизации 6 раз
     --dpi-desync-fooling=badseq; | Обман DPI с помощью неправильной последовательности пакетов
-    --dpi-desync-fake-tls={ZAPRET_FOLDER}\tls_clienthello_www_google_com.bin;  // Использование поддельного TLS трафика
+    --dpi-desync-fake-tls={ZAPRET_FOLDER}\tls_clienthello_www_google_com.bin;  | Использование поддельного TLS трафика
 ```
 ### Дополнительные файлы конфигурации
 ```ini
