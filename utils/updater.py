@@ -23,14 +23,19 @@ BLACKLISTS = [
         "output_file": os.path.join(BASE_FOLDER, "black", "discord-blacklist.txt")
     },
     {
-        "name": "disk-youtube", 
-        "url": "https://raw.githubusercontent.com/zhivem/DPI-Penguin/refs/heads/main/black/disk-youtube.txt",
-        "output_file": os.path.join(BASE_FOLDER, "black", "disk-youtube.txt")
+        "name": "disk-youtube-blacklist", 
+        "url": "https://raw.githubusercontent.com/zhivem/DPI-Penguin/refs/heads/main/black/disk-youtube-blacklist.txt",
+        "output_file": os.path.join(BASE_FOLDER, "black", "disk-youtube-blacklist.txt")
     },
     {
-        "name": "russia-youtube",
-        "url": "https://raw.githubusercontent.com/zhivem/DPI-Penguin/refs/heads/main/black/russia-youtube.txt",
-        "output_file": os.path.join(BASE_FOLDER, "black", "russia-youtube.txt")
+        "name": "ipset-discord", 
+        "url": "https://raw.githubusercontent.com/zhivem/DPI-Penguin/refs/heads/main/black/ipset-discord.txt",
+        "output_file": os.path.join(BASE_FOLDER, "black", "ipset-discord.txt")
+    },
+    {
+        "name": "youtube-blacklist",
+        "url": "https://raw.githubusercontent.com/zhivem/DPI-Penguin/refs/heads/main/black/youtube-blacklist.txt",
+        "output_file": os.path.join(BASE_FOLDER, "black", "youtube-blacklist.txt")
     }
 ]
 

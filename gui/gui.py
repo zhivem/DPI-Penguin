@@ -23,9 +23,7 @@ from workers.site_checker import SiteCheckerWorker
 from utils.updater import Updater
 from utils.utils import (
     BASE_FOLDER,
-    BLACKLIST_FILES,
     DISPLAY_NAMES,
-    GOODBYE_DPI_PROCESS_NAME,
     WIN_DIVERT_COMMAND,
     CURRENT_VERSION,
     create_service,
@@ -162,10 +160,10 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             event.accept()
 
     def restore_from_tray(self):
-        self.showNormal()      
-        self.raise_()              
-        self.activateWindow()      
-        self.tray_icon.hide()       
+        self.showNormal()
+        self.raise_()
+        self.activateWindow()
+        self.tray_icon.hide()
 
     def on_tray_icon_activated(self, reason):
         if reason == QSystemTrayIcon.ActivationReason.Trigger:
@@ -173,12 +171,6 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
                 self.restore_from_tray()
             else:
                 self.hide()
-                self.tray_icon.showMessage(
-                    "DPI Penguin by Zhivem",
-                    "Приложение свернуто в трей. Для восстановления, нажмите на иконку в трее.",
-                    QSystemTrayIcon.MessageIcon.Information,
-                    1000
-                )
 
     def exit_app(self):
         self.tray_icon.hide()
@@ -389,20 +381,22 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         layout = QtWidgets.QVBoxLayout(group)
 
         dependencies = [
-            {
-                "title": "GoodbyeDPI",
-                "description": "Основа для работы YouTube",
-                "version": "0.2.3rc3",
-                "developer": "ValdikSS",
+
+             {
+                "title": "Discord Fix [howdyho]",
+                "description": "Конфигурации",
+                "version": "5.2",
+                "developer": "Абрахам",
                 "links": [
-                    "https://github.com/ValdikSS/GoodbyeDPI/",
-                    "https://github.com/ValdikSS/"
+                    "https://howdyho.ne",
+                    "https://vk.com/howdyho_net"
                 ]
             },
+
             {
                 "title": "Zapret",
                 "description": "Основа для работы Discord и YouTube",
-                "version": "v.65",
+                "version": "v.66",
                 "developer": "bol-van",
                 "links": [
                     "https://github.com/bol-van/zapret",
@@ -436,11 +430,9 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
     def toggle_tray_behavior(self, checked):
         self.minimize_to_tray = checked
         self.settings.setValue("minimize_to_tray", self.minimize_to_tray)
-        self.logger.debug(f"Флажок 'Сворачивать в трей' изменен: {self.minimize_to_tray}")
 
         if not checked and self.tray_icon.isVisible():
             self.tray_icon.hide()
-            self.logger.debug("Иконка в трее скрыта, так как минимизация в трей отключена.")
 
     def toggle_autostart(self, checked):
         if checked:
@@ -508,9 +500,10 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
 
         try:
             capture_output = selected_option not in [
-                "Обход блокировки Discord",
+                "Обход блокировки YouTube",
                 "Обход Discord + YouTube",
-                "Обход блокировки YouTube"
+                "Обход блокировки Discord",
+                "Обход блокировок для ЧС РКН"
             ]
             self.start_process(
                 command,
@@ -536,12 +529,13 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             return False
 
         if selected_option in [
-            "Обход блокировки Discord",
+            "Обход блокировки YouTube",
             "Обход Discord + YouTube",
-            "Обход блокировок YouTube (Актуальный метод)"
+            "Обход блокировки Discord",
+            "Обход блокировок для ЧС РКН"
         ]:
             required_files = [
-                os.path.join(BASE_FOLDER, "black", BLACKLIST_FILES[2]),
+                os.path.join(BASE_FOLDER, "black"),
                 os.path.join(BASE_FOLDER, "zapret", "quic_initial_www_google_com.bin"),
                 os.path.join(BASE_FOLDER, "zapret", "tls_clienthello_www_google_com.bin"),
                 os.path.join(BASE_FOLDER, "zapret", "tls_clienthello_iana_org.bin")
@@ -587,6 +581,7 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             "loaded hosts",
             "loading plain text list",
             "loaded",
+            "loading ipset"
         ]
 
         text_lower = text.lower()
@@ -624,8 +619,12 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             self.worker_thread.wait()
             self.worker_thread = None
 
-        self.start_process(WIN_DIVERT_COMMAND, "WinDivert", capture_output=False)
-        self.close_process(GOODBYE_DPI_PROCESS_NAME, "GoodbyeDPI")
+        # Запуск команды остановки WinDivert без отображения консоли
+        self.start_process(
+            WIN_DIVERT_COMMAND,
+            "WinDivert",
+            capture_output=False
+        )
         self.close_process("winws.exe", "winws.exe")
 
     def close_process(self, process_name, display_name):
@@ -822,10 +821,3 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
 
     def toggle_blacklist_on_startup(self, checked):
         self.settings.setValue("check_blacklist_on_startup", checked)
-
-    def toggle_tray_behavior(self, checked):
-        self.minimize_to_tray = checked
-        self.settings.setValue("minimize_to_tray", self.minimize_to_tray)
-
-        if not checked and self.tray_icon.isVisible():
-            self.tray_icon.hide()

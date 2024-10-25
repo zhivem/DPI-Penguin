@@ -38,6 +38,7 @@ discordsays.com
 discordsez.com
 discordstatus.com
 gateway.discord.gg
+hammerandchisel.ssl.zendesk.com
 images-ext-1.discordapp.net
 media.discordapp.net
 watchanimeattheoffice.com

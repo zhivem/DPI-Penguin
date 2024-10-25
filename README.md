@@ -2,7 +2,7 @@
 
 ![Логотип DPI Penguin](resources/icon/newicon.ico)
 
-**DPI Penguin** — это графическое приложение на Python, разработанное для обхода сетевых ограничений, таких как глубокий анализ пакетов (DPI). Приложение предоставляет интуитивно понятный интерфейс для управления скриптами, позволяющими получать доступ к платформам таким как YouTube и Discord. Работа приложения основана на интеграции с [Zapret](https://github.com/bol-van/zapret) и [GoodbyeDPI](https://github.com/ValdikSS/GoodbyeDPI). Загрузить `exe` можно c [Releases](https://github.com/zhivem/DPI-Penguin/releases)
+**DPI Penguin** — это графическое приложение на Python, разработанное для обхода сетевых ограничений, таких как глубокий анализ пакетов (DPI). Приложение предоставляет интуитивно понятный интерфейс для управления скриптами, позволяющими получать доступ к платформам таким как YouTube и Discord. Работа приложения основана на интеграции с [Zapret](https://github.com/bol-van/zapret). Загрузить `exe` можно c [Releases](https://github.com/zhivem/DPI-Penguin/releases)
 
 ![image](https://github.com/user-attachments/assets/c431c993-0f60-46d7-bcc9-bd75a4479e4f)
 ![image](https://github.com/user-attachments/assets/7568e004-110f-4168-b231-cd4ee4679efc)
@@ -21,16 +21,17 @@
 
 ## Конфигурация настройки
 
-Приложение использует файл `default.ini`, расположенный в директории `config`. Этот файл содержит настройки для различных скриптов и параметров работы приложения. Вы можете редактировать этот файл вручную и добавлять свои конфигурации. Пример на основе `DiscordFix`:
+Приложение использует файл `default.ini`, расположенный в папке `config`. Этот файл содержит настройки для различных скриптов и параметров работы приложения. Вы можете редактировать этот файл вручную и добавлять свои конфигурации. Пример на основе `DiscordFix`:
 
 ### Путь к исполняемым файлам должны оставаться как есть 
 
 ```py
 {ZAPRET_FOLDER}\winws.exe
-{BASE_FOLDER}\bin\{architecture}\goodbyedpi.exe
 {ZAPRET_FOLDER}\quic_initial_www_google_com.bin 
 {ZAPRET_FOLDER}\tls_clienthello_www_google_com.bin
+{ZAPRET_FOLDER}\tls_clienthello_iana_org.bin
 ```
+
 ### Путь к черным спискам должны оставаться как есть 
 
 ```py
@@ -38,12 +39,13 @@
  "russia-youtube.txt" - {BLACKLIST_FILES_1}
  "discord-blacklist.txt" -{BLACKLIST_FILES_2}
  "disk-youtube.txt" - {BLACKLIST_FILES_3}
+ "ipset-discord.txt" - {BLACKLIST_FOLDER}\ipset-discord.txt
 ```
 ### Пример конфига DiscordFix
 
 ```py
 [DiscordFix]  | Название секции, называйте как хотите
-executable = {ZAPRET_FOLDER}\winws.exe либо goodbyedpi.exe  | Путь к исполняемому файлу для обхода блокировок
+executable = {ZAPRET_FOLDER}\winws.exe | Путь к исполняемому файлу для обхода блокировок
 args = 
     --wf-tcp=443;  | Открыть порт TCP 443 (HTTPS)
     --wf-udp=443,50000-65535;  | Открыть порты UDP 443 и диапазон 50000-65535 для использования
@@ -67,14 +69,11 @@ args =
     --dpi-desync-autottl=2;  | Автоматическое управление TTL (Time to Live)
     --dpi-desync-repeats=6;  | Повторить процесс десинхронизации 6 раз
     --dpi-desync-fooling=badseq; | Обман DPI с помощью неправильной последовательности пакетов
-    --dpi-desync-fake-tls={ZAPRET_FOLDER}\tls_clienthello_www_google_com.bin;  // Использование поддельного TLS трафика
+    --dpi-desync-fake-tls={ZAPRET_FOLDER}\tls_clienthello_www_google_com.bin;  | Использование поддельного TLS трафика
 ```
 ### Дополнительные файлы конфигурации
-```ini
-    Default.ini — основной конфигурационный файл. 
-    DiscordFix(MGTS).ini — фикс для работы Discord с провайдером МГТС.
-    FixDisc+YouTube (Билайн, Ростелеком, Инфолинк).ini — фикс для Discord и YouTube для провайдеров Билайн, Ростелеком, Инфолинк.
-    YouTube-new-Fix.ini — дополнительный фикс для YouTube.
+```
+    В архиве с программой лежать конфигурации которые вы можете использовать вместо обычного `default.ini`. DiscordFix (для МГТС).ini, YoutubeFix (для МГТС).ini, FixYouTube+Discord (для Билайн, Ростелеком, Инфолинк).ini и т.д. Чтобы открыть папку с конфигурациями нажмите кнопку 'Открыть configs'.
 ```
 ### Возможные ошибки
 

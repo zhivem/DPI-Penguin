@@ -6,7 +6,6 @@ from typing import List, Optional
 
 from PyQt6 import QtCore
 
-
 class WorkerThread(QtCore.QThread):
     output_signal = QtCore.pyqtSignal(str)
     finished_signal = QtCore.pyqtSignal(str)
@@ -29,41 +28,55 @@ class WorkerThread(QtCore.QThread):
         self.logger = logging.getLogger(self.__class__.__name__)
 
     def run(self) -> None:
+        self.logger.debug(f"Запуск команды: {' '.join(self.command)}")
         try:
-            self.logger.debug(f"Запуск команды: {' '.join(self.command)}")
-            popen_params = {
-                'args': self.command,
-                'text': True,
-                'encoding': self.encoding,
-                'creationflags': subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0,
-                'stdout': subprocess.PIPE if self.capture_output else subprocess.DEVNULL,
-                'stderr': subprocess.STDOUT if self.capture_output else subprocess.DEVNULL
-            }
-
-            self.process = subprocess.Popen(**popen_params)
-
+            self.process = self._start_process()
             if self.capture_output and self.process.stdout:
-                for output in self.process.stdout:
-                    if self._is_terminated:
-                        break
-                    output = output.strip()
-                    if output:
-                        self.output_signal.emit(output)
-                        self.logger.debug(f"[{self.process_name}] {output}")
-
+                self._capture_output()
             self.process.wait()
             self.logger.info(f"Процесс {self.process_name} завершён с кодом {self.process.returncode}")
         except subprocess.SubprocessError as e:
-            error_message = f"Ошибка запуска процесса {self.process_name}: {e}"
-            self.logger.error(error_message)
-            self.error_signal.emit(error_message)
+            self._handle_error(f"Ошибка запуска процесса {self.process_name}: {e}")
         except Exception as e:
-            error_message = f"Неожиданная ошибка в WorkerThread {self.process_name}: {e}"
-            self.logger.critical(error_message, exc_info=True)
-            self.error_signal.emit(error_message)
+            self._handle_error(f"Неожиданная ошибка в WorkerThread {self.process_name}: {e}", critical=True)
         finally:
             self.finished_signal.emit(self.process_name)
             self.process = None
+
+    def _start_process(self) -> subprocess.Popen:
+        popen_params = {
+            'args': self.command,
+            'text': True,
+            'encoding': self.encoding,
+            'creationflags': subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0,
+            'stdout': subprocess.PIPE if self.capture_output else subprocess.DEVNULL,
+            'stderr': subprocess.STDOUT if self.capture_output else subprocess.DEVNULL,
+            'shell': False
+        }
+
+        if os.name == 'nt':
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = subprocess.SW_HIDE
+            popen_params['startupinfo'] = startupinfo
+
+        return subprocess.Popen(**popen_params)
+
+    def _capture_output(self) -> None:
+        for output in self.process.stdout:
+            if self._is_terminated:
+                self.logger.debug("Завершение захвата вывода из-за принудительного завершения процесса.")
+                break
+            output = output.strip()
+            if output:
+                self.output_signal.emit(output)
+                self.logger.debug(f"[{self.process_name}] {output}")
+
+    def _handle_error(self, message: str, critical: bool = False) -> None:
+        self.logger.error(message)
+        if critical:
+            self.logger.critical(message, exc_info=True)
+        self.error_signal.emit(message)
 
     def terminate_process(self) -> None:
         if self.process and self.process.poll() is None:

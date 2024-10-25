@@ -1,8 +1,8 @@
-import configparser
+import configparser  
 import logging
 import os
-import platform
 import subprocess
+import platform
 import sys
 import winreg
 from typing import Optional, List, Dict, Tuple
@@ -14,18 +14,17 @@ from PyQt6.QtGui import QColor, QIcon, QPixmap
 
 BASE_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 ZAPRET_FOLDER = os.path.join(BASE_FOLDER, "zapret")
-CONFIG_PATH = os.path.join(BASE_FOLDER, "config", 'config.ini')
-CURRENT_VERSION: str = "1.6.2"
+CONFIG_PATH = os.path.join(BASE_FOLDER, "config", 'default.ini')
+CURRENT_VERSION: str = "1.6.3"
 
 BLACKLIST_FOLDER = os.path.join(BASE_FOLDER, "black")
 ICON_FOLDER = os.path.join(BASE_FOLDER, "resources", "icon")
-BIN_FOLDER = os.path.join(BASE_FOLDER, "bin")
 
 BLACKLIST_FILES: List[str] = [
-    os.path.join(BLACKLIST_FOLDER, "russia-blacklist.txt"),
-    os.path.join(BLACKLIST_FOLDER, "russia-youtube.txt"),
-    os.path.join(BLACKLIST_FOLDER, "discord-blacklist.txt"),
-    os.path.join(BLACKLIST_FOLDER, "disk-youtube.txt")
+    os.path.join(BLACKLIST_FOLDER, "russia-blacklist.txt"), 
+    os.path.join(BLACKLIST_FOLDER, "youtube-blacklist.txt"), 
+    os.path.join(BLACKLIST_FOLDER, "discord-blacklist.txt"), 
+    os.path.join(BLACKLIST_FOLDER, "disk-youtube-blacklist.txt")
 ]
 
 SITES: List[str] = [
@@ -46,39 +45,11 @@ DISPLAY_NAMES: List[str] = [
     "Служебный домен YouTube"
 ]
 
-GOODBYE_DPI_PROCESS_NAME: str = "goodbyedpi.exe"
 WIN_DIVERT_COMMAND: List[str] = ["net", "stop", "WinDivert"]
 
-def get_architecture() -> str:
-    """
-    Определяет архитектуру системы.
-
-    Returns:
-        str: "x86_64" для 64-битных систем, "x86" для 32-битных.
-    """
-    return "x86_64" if platform.architecture()[0] == "64bit" else "x86"
-
-def get_goodbye_dpi_exe() -> str:
-    """
-    Возвращает путь к исполняемому файлу GoodbyeDPI в зависимости от архитектуры.
-
-    Returns:
-        str: Полный путь к goodbyedpi.exe.
-    """
-    return os.path.join(BIN_FOLDER, get_architecture(), "goodbyedpi.exe")
-
-GOODBYE_DPI_EXE: str = get_goodbye_dpi_exe()
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def get_site_by_name(display_name: str) -> str:
-    """
-    Получает URL сайта по его отображаемому имени.
-
-    Args:
-        display_name (str): Отображаемое имя сайта.
-
-    Returns:
-        str: URL сайта, если найден, иначе пустая строка.
-    """
     try:
         return SITES[DISPLAY_NAMES.index(display_name)]
     except ValueError:
@@ -86,15 +57,6 @@ def get_site_by_name(display_name: str) -> str:
         return ""
 
 def open_path(path: str) -> Optional[str]:
-    """
-    Открывает указанный путь в файловом менеджере.
-
-    Args:
-        path (str): Путь к папке или файлу.
-
-    Returns:
-        Optional[str]: Сообщение об ошибке, если не удалось открыть путь, иначе None.
-    """
     if not os.path.exists(path):
         logging.warning(f"Путь не существует: {path}")
         return f"Путь не существует: {path}"
@@ -113,28 +75,11 @@ def open_path(path: str) -> Optional[str]:
         return f"Не удалось открыть путь: {e}"
 
 def create_status_icon(color: str, size: Tuple[int, int] = (12, 12)) -> QIcon:
-    """
-    Создает иконку статуса заданного цвета.
-
-    Args:
-        color (str): Цвет иконки (например, 'gray', 'green', 'red').
-        size (Tuple[int, int], optional): Размер иконки. По умолчанию (12, 12).
-
-    Returns:
-        QIcon: Созданная иконка.
-    """
     pixmap = QPixmap(*size)
     pixmap.fill(QColor(color))
     return QIcon(pixmap)
 
 def ensure_module_installed(module_name: str, version: Optional[str] = None) -> None:
-    """
-    Проверяет, установлен ли модуль с указанной версией. Если нет, устанавливает его.
-
-    Args:
-        module_name (str): Название модуля.
-        version (Optional[str], optional): Необходимая версия модуля. По умолчанию None.
-    """
     try:
         __import__(module_name)
         if version:
@@ -147,16 +92,6 @@ def ensure_module_installed(module_name: str, version: Optional[str] = None) -> 
         install_module(module_name, version)
 
 def install_module(module_name: str, version: Optional[str] = None) -> None:
-    """
-    Устанавливает указанный модуль с помощью pip.
-
-    Args:
-        module_name (str): Название модуля.
-        version (Optional[str], optional): Необходимая версия модуля. По умолчанию None.
-
-    Raises:
-        subprocess.CalledProcessError: Если установка модуля завершилась неудачно.
-    """
     try:
         cmd = [
             sys.executable, "-m", "pip", "install",
@@ -169,12 +104,6 @@ def install_module(module_name: str, version: Optional[str] = None) -> None:
         raise
 
 def get_latest_version() -> Optional[str]:
-    """
-    Получает последнюю версию приложения из GitHub API.
-
-    Returns:
-        Optional[str]: Тег последней версии, если успешно получен, иначе None.
-    """
     url = 'https://api.github.com/repos/zhivem/DPI-Penguin/releases/latest'
     try:
         response = requests.get(url, timeout=10)
@@ -188,32 +117,16 @@ def get_latest_version() -> Optional[str]:
     return None
 
 def is_newer_version(latest: str, current: str) -> bool:
-    """
-    Сравнивает версии приложения.
-
-    Args:
-        latest (str): Последняя доступная версия.
-        current (str): Текущая версия приложения.
-
-    Returns:
-        bool: True, если последняя версия новее текущей, иначе False.
-    """
     return parse_version(latest) > parse_version(current)
 
 def is_autostart_enabled() -> bool:
-    """
-    Проверяет, включен ли автозапуск приложения при старте системы.
-
-    Returns:
-        bool: True, если автозапуск включен, иначе False.
-    """
     try:
         with winreg.OpenKey(
             winreg.HKEY_CURRENT_USER,
             r"Software\Microsoft\Windows\CurrentVersion\Run",
             0, winreg.KEY_READ
         ) as key:
-            winreg.QueryValueEx(key, "GoodbyeDPIApp")
+            winreg.QueryValueEx(key, "WinWSApp")
             return True
     except FileNotFoundError:
         return False
@@ -222,9 +135,6 @@ def is_autostart_enabled() -> bool:
         return False
 
 def enable_autostart() -> None:
-    """
-    Включает автозапуск приложения при старте системы.
-    """
     try:
         with winreg.OpenKey(
             winreg.HKEY_CURRENT_USER,
@@ -232,23 +142,20 @@ def enable_autostart() -> None:
             0, winreg.KEY_SET_VALUE
         ) as key:
             executable_path = get_executable_path()
-            winreg.SetValueEx(key, "GoodbyeDPIApp", 0, winreg.REG_SZ, executable_path)
+            winreg.SetValueEx(key, "WinWSApp", 0, winreg.REG_SZ, executable_path)
             logging.info("Автозапуск успешно установлен.")
     except Exception as e:
         logging.error(f"Ошибка при установке автозапуска: {e}")
         raise
 
 def disable_autostart() -> None:
-    """
-    Отключает автозапуск приложения при старте системы.
-    """
     try:
         with winreg.OpenKey(
             winreg.HKEY_CURRENT_USER,
             r"Software\Microsoft\Windows\CurrentVersion\Run",
             0, winreg.KEY_SET_VALUE
         ) as key:
-            winreg.DeleteValue(key, "GoodbyeDPIApp")
+            winreg.DeleteValue(key, "WinWSApp")
             logging.info("Автозапуск успешно отключен.")
     except FileNotFoundError:
         logging.info("Автозапуск уже отключен.")
@@ -257,90 +164,20 @@ def disable_autostart() -> None:
         raise
 
 def get_executable_path() -> str:
-    """
-    Определяет путь к исполняемому файлу приложения.
-
-    Returns:
-        str: Полный путь к исполняемому файлу.
-    """
     if getattr(sys, 'frozen', False):
         return sys.executable
     else:
         script_path = os.path.abspath(sys.argv[0])
         return f'python "{script_path}"'
 
-def create_service() -> str:
-    """
-    Создает службу Windows для приложения GoodbyeDPI.
-
-    Returns:
-        str: Сообщение о результате создания службы.
-    """
-    try:
-        arch = get_architecture()
-        binary_path = f'"{os.path.join(BIN_FOLDER, arch, "goodbyedpi.exe")}"'
-        blacklist_path = f'"{BLACKLIST_FILES[0]}"'
-        youtube_blacklist_path = f'"{BLACKLIST_FILES[1]}"'
-
-        cmd_create = [
-            'sc', 'create', 'Penguin',
-            f'binPath= {binary_path} -e1 -q --fake-gen=5 --fake-from-hex=160301FFFF01FFFFFF0303594F5552204144564552544953454D454E542048455245202D202431302F6D6F000000000009000000050003000000 {blacklist_path} --blacklist {youtube_blacklist_path}',
-            'start=', 'auto'
-        ]
-        subprocess.run(cmd_create, check=True)
-
-        cmd_description = [
-            'sc', 'description', 'Penguin',
-            'Passive Deep Packet Inspection blocker and Active DPI circumvention utility'
-        ]
-        subprocess.run(cmd_description, check=True)
-
-        logging.info("Служба создана и настроена для автоматического запуска.")
-        return "Служба создана и настроена для автоматического запуска."
-    except subprocess.CalledProcessError:
-        logging.error("Не удалось создать службу.")
-        return "Не удалось создать службу."
-    except Exception as e:
-        logging.error(f"Неизвестная ошибка при создании службы: {e}")
-        return "Не удалось создать службу из-за неизвестной ошибки."
-
-def delete_service() -> str:
-    """
-    Удаляет службу Windows для приложения GoodbyeDPI.
-
-    Returns:
-        str: Сообщение о результате удаления службы.
-    """
-    try:
-        subprocess.run(['sc', 'delete', 'Penguin'], check=True)
-        logging.info("Служба успешно удалена.")
-        return "Служба успешно удалена."
-    except subprocess.CalledProcessError:
-        logging.error("Не удалось удалить службу.")
-        return "Не удалось удалить службу."
-    except Exception as e:
-        logging.error(f"Неизвестная ошибка при удалении службы: {e}")
-        return "Не удалось удалить службу из-за неизвестной ошибки."
-
 def load_script_options(config_path: str) -> Tuple[Optional[Dict[str, Tuple[str, List[str]]]], Optional[str]]:
-    """
-    Загружает SCRIPT_OPTIONS из файла конфигурации и проверяет на дублирование разделов.
-
-    Args:
-        config_path (str): Путь к файлу конфигурации.
-
-    Returns:
-        Tuple[Optional[Dict[str, Tuple[str, List[str]]]], Optional[str]]:
-            - Словарь с опциями скриптов, если ошибок нет, иначе None.
-            - Сообщение об ошибке, если дублирующиеся разделы найдены, иначе None.
-    """
     config = configparser.ConfigParser()
     config.optionxform = str
     try:
         config.read(config_path, encoding='utf-8')
     except configparser.Error as e:
-        logging.error(f"Ошибка при чтении default.ini: {e}")
-        return None, f"Ошибка при чтении default.ini: Названия конфигураций не должны повторяться!"
+        logging.error(f"Ошибка при чтении config.ini: {e}")
+        return None, f"Ошибка при чтении config.ini: {e}"
 
     section_counts = {}
     try:
@@ -351,8 +188,8 @@ def load_script_options(config_path: str) -> Tuple[Optional[Dict[str, Tuple[str,
                     section = line[1:-1].strip()
                     section_counts[section] = section_counts.get(section, 0) + 1
     except Exception as e:
-        logging.error(f"Ошибка при обработке default.ini: {e}")
-        return None, f"Ошибка при обработке default.ini: {e}"
+        logging.error(f"Ошибка при обработке config.ini: {e}")
+        return None, f"Ошибка при обработке config.ini: {e}"
 
     duplicates = [name for name, count in section_counts.items() if count > 1]
     if duplicates:
@@ -374,19 +211,18 @@ def load_script_options(config_path: str) -> Tuple[Optional[Dict[str, Tuple[str,
 
         args_list = [
             arg.replace('{ZAPRET_FOLDER}', ZAPRET_FOLDER)
+               .replace('{BLACKLIST_FOLDER}', BLACKLIST_FOLDER)
                .replace('{BLACKLIST_FILES_0}', BLACKLIST_FILES[0])
                .replace('{BLACKLIST_FILES_1}', BLACKLIST_FILES[1])
                .replace('{BLACKLIST_FILES_2}', BLACKLIST_FILES[2])
                .replace('{BLACKLIST_FILES_3}', BLACKLIST_FILES[3])
                .replace('{BASE_FOLDER}', BASE_FOLDER)
-               .replace('{architecture}', get_architecture())
             for arg in args_list
         ]
 
         if executable:
             executable = executable.replace('{ZAPRET_FOLDER}', ZAPRET_FOLDER)\
-                                   .replace('{BASE_FOLDER}', BASE_FOLDER)\
-                                   .replace('{architecture}', get_architecture())
+                                   .replace('{BASE_FOLDER}', BASE_FOLDER)
             if not os.path.isabs(executable):
                 executable = os.path.join(BASE_FOLDER, executable)
 
@@ -394,3 +230,87 @@ def load_script_options(config_path: str) -> Tuple[Optional[Dict[str, Tuple[str,
 
     logging.info(f"SCRIPT_OPTIONS загружены: {script_options}")
     return script_options, None
+
+def create_service() -> str:
+
+    try:
+        binary_path = os.path.join(ZAPRET_FOLDER, "winws.exe")
+        blacklist_path = BLACKLIST_FILES[3]
+        quic_initial = os.path.join(ZAPRET_FOLDER, "quic_initial_www_google_com.bin")
+        ipset = os.path.join(BLACKLIST_FOLDER, "ipset-discord.txt")
+        ts = os.path.join(ZAPRET_FOLDER, "tls_clienthello_www_google_com.bin")
+
+        required_files = [binary_path, blacklist_path, quic_initial, ipset, ts]
+        missing_files = [f for f in required_files if not os.path.exists(f)]
+        if missing_files:
+            logging.error(f"Отсутствуют необходимые файлы: {', '.join(missing_files)}")
+            return f"Не удалось создать службу: отсутствуют файлы {', '.join(missing_files)}."
+
+        bin_path_with_args = (
+            f'"{binary_path} '
+            f'--wf-tcp=80,443 '
+            f'--wf-udp=443,50000-50100 '
+            f'--filter-udp=443 '
+            f'--hostlist={blacklist_path} '
+            f'--dpi-desync=fake '
+            f'--dpi-desync-repeats=6 '
+            f'--dpi-desync-fake-quic={quic_initial} '
+            f'--filter-udp=50000-50100 '
+            f'--ipset={ipset} '
+            f'--dpi-desync-any-protocol '
+            f'--dpi-desync-cutoff=d3 '
+            f'--filter-tcp=80 '
+            f'--dpi-desync=fake,split2 '
+            f'--dpi-desync-autottl=2 '
+            f'--dpi-desync-fooling=md5sig '
+            f'--filter-tcp=443 '
+            f'--dpi-desync=fake,split '
+            f'--dpi-desync-autottl=2 '
+            f'--dpi-desync-repeats=6 '
+            f'--dpi-desync-fooling=badseq '
+            f'--dpi-desync-fake-tls={ts}"'
+        )
+
+        cmd_create = [
+            'sc', 'create', 'Penguin',
+            f'binPath= {bin_path_with_args}',
+        ]
+
+        logging.debug(f"Команда для создания службы: {' '.join(cmd_create)}")
+
+        subprocess.run(cmd_create, check=True)
+
+        cmd_description = [
+            'sc', 'description', 'Penguin',
+            'Passive Deep Packet Inspection blocker and Active DPI circumvention utility'
+        ]
+
+        logging.debug(f"Команда для добавления описания службы: {' '.join(cmd_description)}")
+
+        subprocess.run(cmd_description, check=True)
+
+        logging.info("Служба создана и настроена для автоматического запуска.")
+        return "Служба создана и настроена для автоматического запуска."
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Не удалось создать службу. Ошибка: {e}")
+        return "Не удалось создать службу."
+    except Exception as e:
+        logging.error(f"Неизвестная ошибка при создании службы: {e}")
+        return "Не удалось создать службу из-за неизвестной ошибки."
+
+def delete_service() -> str:
+
+    try:
+        cmd_delete = ['sc', 'delete', 'Penguin']
+
+        logging.debug(f"Команда для удаления службы: {' '.join(cmd_delete)}")
+
+        subprocess.run(cmd_delete, check=True)
+        logging.info("Служба успешно удалена.")
+        return "Служба успешно удалена."
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Не удалось удалить службу. Ошибка: {e}")
+        return "Не удалось удалить службу."
+    except Exception as e:
+        logging.error(f"Неизвестная ошибка при удалении службы: {e}")
+        return "Не удалось удалить службу из-за неизвестной ошибки."
