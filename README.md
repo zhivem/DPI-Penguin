@@ -37,7 +37,7 @@
 ```py
  "russia-blacklist.txt" - {BLACKLIST_FILES_0}
  "russia-youtube.txt" - {BLACKLIST_FILES_1}
- "discord-blacklist.txt" -{BLACKLIST_FILES_2}
+ "discord-blacklist.txt" - {BLACKLIST_FILES_2}
  "disk-youtube.txt" - {BLACKLIST_FILES_3}
  "ipset-discord.txt" - {BLACKLIST_FOLDER}\ipset-discord.txt
 ```
