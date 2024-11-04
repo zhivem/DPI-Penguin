@@ -6,6 +6,8 @@ from typing import List, Optional
 
 from PyQt6 import QtCore
 
+from utils.utils import tr
+
 class WorkerThread(QtCore.QThread):
     output_signal = QtCore.pyqtSignal(str)
     finished_signal = QtCore.pyqtSignal(str)
@@ -28,17 +30,27 @@ class WorkerThread(QtCore.QThread):
         self.logger = logging.getLogger(self.__class__.__name__)
 
     def run(self) -> None:
-        self.logger.debug(f"Запуск команды: {' '.join(self.command)}")
+        self.logger.debug(tr("Запуск команды: {command}").format(command=' '.join(self.command)))
         try:
             self.process = self._start_process()
             if self.capture_output and self.process.stdout:
                 self._capture_output()
-            self.process.wait()
-            self.logger.info(f"Процесс {self.process_name} завершён с кодом {self.process.returncode}")
+            else:
+                self.process.wait()
+            self.logger.info(tr("Процесс {process_name} завершён с кодом {returncode}").format(
+                process_name=self.process_name,
+                returncode=self.process.returncode
+            ))
         except subprocess.SubprocessError as e:
-            self._handle_error(f"Ошибка запуска процесса {self.process_name}: {e}")
+            self._handle_error(tr("Ошибка запуска процесса {process_name}: {error}").format(
+                process_name=self.process_name,
+                error=e
+            ))
         except Exception as e:
-            self._handle_error(f"Неожиданная ошибка в WorkerThread {self.process_name}: {e}", critical=True)
+            self._handle_error(tr("Неожиданная ошибка в WorkerThread {process_name}: {error}").format(
+                process_name=self.process_name,
+                error=e
+            ), critical=True)
         finally:
             self.finished_signal.emit(self.process_name)
             self.process = None
@@ -65,12 +77,16 @@ class WorkerThread(QtCore.QThread):
     def _capture_output(self) -> None:
         for output in self.process.stdout:
             if self._is_terminated:
-                self.logger.debug("Завершение захвата вывода из-за принудительного завершения процесса.")
+                self.logger.debug(tr("Завершение захвата вывода из-за принудительного завершения процесса."))
                 break
             output = output.strip()
             if output:
                 self.output_signal.emit(output)
-                self.logger.debug(f"[{self.process_name}] {output}")
+                self.logger.debug(tr("[{process_name}] {output}").format(
+                    process_name=self.process_name,
+                    output=output
+                ))
+        self.process.stdout.close()
 
     def _handle_error(self, message: str, critical: bool = False) -> None:
         self.logger.error(message)
@@ -82,7 +98,16 @@ class WorkerThread(QtCore.QThread):
         if self.process and self.process.poll() is None:
             try:
                 self.process.terminate()
+                self.process.wait()
                 self._is_terminated = True
-                self.logger.info(f"Процесс {self.process_name} принудительно завершён.")
+                self.logger.info(tr("Процесс {process_name} принудительно завершён.").format(
+                    process_name=self.process_name
+                ))
             except Exception as e:
-                self.logger.error(f"Не удалось завершить процесс {self.process_name}: {e}")
+                self.logger.error(tr("Не удалось завершить процесс {process_name}: {error}").format(
+                    process_name=self.process_name,
+                    error=e
+                ))
+        self.quit()
+        self.wait()
+
