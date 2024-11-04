@@ -77,7 +77,7 @@ class WorkerThread(QtCore.QThread):
     def _capture_output(self) -> None:
         for output in self.process.stdout:
             if self._is_terminated:
-                self.logger.debug(tr("Завершение захвата вывода из-за принудительного завершения процесса."))
+                self.logger.debug(tr("Завершение захвата вывода из-за принудительного завершения процесса"))
                 break
             output = output.strip()
             if output:
@@ -100,7 +100,7 @@ class WorkerThread(QtCore.QThread):
                 self.process.terminate()
                 self.process.wait()
                 self._is_terminated = True
-                self.logger.info(tr("Процесс {process_name} принудительно завершён.").format(
+                self.logger.info(tr("Процесс {process_name} принудительно завершён").format(
                     process_name=self.process_name
                 ))
             except Exception as e:
@@ -108,6 +108,3 @@ class WorkerThread(QtCore.QThread):
                     process_name=self.process_name,
                     error=e
                 ))
-        self.quit()
-        self.wait()
-

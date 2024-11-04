@@ -38,7 +38,7 @@ class TranslationManager:
             self.current_language = lang_code
             self.logger.info(f"Язык установлен на: {self.language_names.get(lang_code, lang_code)}")
         else:
-            self.logger.warning(f"Язык '{lang_code}' не поддерживается.")
+            self.logger.warning(f"Язык '{lang_code}' не поддерживается")
 
     def translate(self, text):
         if self.current_language == 'ru':

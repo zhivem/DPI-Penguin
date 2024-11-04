@@ -15,3 +15,6 @@ env/
 
 # Логи
 Logs/
+
+#UPX
+upx-4.2.4-win64

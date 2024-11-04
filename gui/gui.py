@@ -205,7 +205,9 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
 
         self.selected_script = QFComboBox()
         if not self.config_error:
-            self.selected_script.addItems(self.script_options.keys())
+            for script_name in self.script_options.keys():
+                translated_name = tr(script_name)
+                self.selected_script.addItem(translated_name, userData=script_name)
         self.selected_script.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Preferred)
         script_layout.addWidget(self.selected_script)
 
@@ -346,6 +348,9 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         self.create_service_button = self.create_button(tr("Создать службу"), self.handle_create_service, services_layout)
         self.delete_service_button = self.create_button(tr("Удалить службу"), self.handle_delete_service, services_layout)
 
+        services_layout.addWidget(self.create_service_button)
+        services_layout.addWidget(self.delete_service_button)
+
         settings_layout.addWidget(self.services_group)
 
         self.updates_group = QGroupBox(tr("Обновления"))
@@ -355,6 +360,10 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         self.update_blacklist_button = self.create_button(tr("Обновить черные списки"), self.update_blacklist, updates_layout)
         self.update_config_settings_button = self.create_button(tr("Обновить конфигурацию"), self.update_config, updates_layout)
         self.update_button = self.create_button(tr("Проверить обновления"), self.check_for_updates, updates_layout)
+
+        updates_layout.addWidget(self.update_blacklist_button)
+        updates_layout.addWidget(self.update_config_settings_button)
+        updates_layout.addWidget(self.update_button)
 
         settings_layout.addWidget(self.updates_group)
 
@@ -405,6 +414,19 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         self.details_group.setTitle(tr("Подробности"))
         self.acknowledgements_group.setTitle(tr("Зависимости"))
         self.update_info_tab_texts()
+
+        self.update_script_options_display()
+
+    def update_script_options_display(self):
+        current_data = self.selected_script.currentData()
+        self.selected_script.clear()
+        for script_name in self.script_options.keys():
+            translated_name = tr(script_name)
+            self.selected_script.addItem(translated_name, userData=script_name)
+        if current_data:
+            index = self.selected_script.findData(current_data)
+            if index >= 0:
+                self.selected_script.setCurrentIndex(index)
 
     def create_info_tab(self):
         info_tab = QtWidgets.QWidget()
@@ -510,20 +532,17 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
     def toggle_autostart(self, checked):
         if checked:
             enable_autostart()
-            self.logger.info(tr("Автозапуск включен."))
+            self.logger.info(tr("Автозапуск включен"))
         else:
             disable_autostart()
-            self.logger.info(tr("Автозапуск отключен."))
+            self.logger.info(tr("Автозапуск отключен"))
 
     def toggle_autorun_with_last_config(self, checked):
         self.autorun_with_last_config = checked
         settings.setValue("autorun_with_last_config", self.autorun_with_last_config)
-        self.logger.info(f"{tr('Автозапуск с последним конфигом')} {'включен' if checked else 'отключен'}.")
-
+        self.logger.info(f"{tr('Автозапуск с последним конфигом')} {'включен' if checked else 'отключен'}")
         if checked:
             settings.setValue("last_config_path", self.current_config_path)
-        else:
-            pass
 
     def create_button(self, text, func, layout, enabled=True, icon_path=None, icon_size=(24, 24), tooltip=None):
         button = PushButton(tr(text), self)
@@ -551,11 +570,11 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
 
     def run_exe(self, auto_run=False):
         if self.config_error:
-            self.console_output.append(tr("Не удалось загрузить конфигурацию из-за ошибок."))
-            self.logger.error(tr("Не удалось загрузить конфигурацию из-за ошибок."))
+            self.console_output.append(tr("Не удалось загрузить конфигурацию из-за ошибок"))
+            self.logger.error(tr("Не удалось загрузить конфигурацию из-за ошибок"))
             return
 
-        selected_option = self.selected_script.currentText()
+        selected_option = self.selected_script.currentData()
         if selected_option not in self.script_options:
             error_msg = tr("Ошибка: неизвестный вариант скрипта {option}.").format(option=selected_option)
             self.console_output.append(error_msg)
@@ -566,6 +585,9 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
 
         if not self.is_executable_available(executable, selected_option):
             return
+        
+        translated_option = tr(selected_option) 
+        clear_console_text = tr("Установка: {option} запущена...").format(option=translated_option)
 
         command = [executable] + args
         self.logger.debug(f"{tr('Команда для запуска')}: {command}")
@@ -581,10 +603,10 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
                 command,
                 selected_option,
                 disable_run=True,
-                clear_console_text=tr("Установка: {option} запущена...").format(option=selected_option),
+                clear_console_text=clear_console_text,
                 capture_output=capture_output
             )
-            self.logger.info(f"{tr('Процесс')} '{selected_option}' {tr('запущен.')}")
+            self.logger.info(f"{tr('Процесс')} '{selected_option}' {tr('запущен')}")
         except Exception as e:
             error_msg = f"{tr('Ошибка запуска процесса')}: {e}"
             self.logger.error(error_msg, exc_info=True)
@@ -595,15 +617,15 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
 
     def is_executable_available(self, executable, selected_option):
         if not os.path.exists(executable):
-            error_msg = f"{tr('Файл')} {executable} {tr('не найден.')}"
+            error_msg = f"{tr('Файл')} {executable} {tr('не найден')}"
             self.logger.error(error_msg)
-            self.console_output.append(f"{tr('Ошибка')}: {tr('файл')} {executable} {tr('не найден.')}")
+            self.console_output.append(f"{tr('Ошибка')}: {tr('файл')} {executable} {tr('не найден')}")
             return False
 
         if not os.access(executable, os.X_OK):
             error_msg = f"{tr('Недостаточно прав для запуска')} {executable}."
             self.logger.error(error_msg)
-            self.console_output.append(f"{tr('Ошибка')}: {tr('Недостаточно прав для запуска')} {executable}.")
+            self.console_output.append(f"{tr('Ошибка')}: {tr('Недостаточно прав для запуска')} {executable}")
             return False
 
         if selected_option in [
@@ -625,7 +647,7 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
                 self.console_output.append(f"{tr('Ошибка')}: {tr('не найдены файлы')}: {', '.join(missing_files)}")
                 return False
 
-        self.logger.debug(f"{tr('Исполняемый файл')} {executable} {tr('доступен для запуска.')}")
+        self.logger.debug(f"{tr('Исполняемый файл')} {executable} {tr('доступен для запуска')}")
         return True
 
     def start_process(self, command, process_name, disable_run=False, clear_console_text=None, capture_output=True):
@@ -635,6 +657,7 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         try:
             if self.worker_thread is not None:
                 self.worker_thread.terminate_process()
+                self.worker_thread.quit()
                 self.worker_thread.wait()
                 self.worker_thread = None
 
@@ -672,7 +695,7 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         text_lower = text.lower()
 
         if "windivert initialized. capture is started." in text_lower:
-            self.console_output.append(tr("Ваша конфигурация выполняется."))
+            self.console_output.append(tr("Ваша конфигурация выполняется"))
         elif any(keyword in text_lower for keyword in ignore_keywords):
             return
         else:
@@ -687,22 +710,37 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             cursor.removeSelectedText()
             cursor.deleteChar()
 
+    @pyqtSlot(str)
     def on_finished(self, process_name):
         if process_name in self.script_options:
             self.run_button.setEnabled(True)
             self.stop_close_button.setEnabled(False)
-            self.logger.info(f"{tr('Процесс')} {process_name} {tr('завершён.')}")
-            self.console_output.append(tr("Обход блокировки завершен."))
+            self.logger.info(f"{tr('Процесс')} {process_name} {tr('завершён')}")
+            self.console_output.append(tr("Обход блокировки завершен"))
+
+            if self.worker_thread:
+                try:
+                    self.worker_thread.output_signal.disconnect(self.update_output)
+                except TypeError:
+                    pass  
+                try:
+                    self.worker_thread.finished_signal.disconnect(self.on_finished)
+                except TypeError:
+                    pass 
+
             self.worker_thread = None
 
     def stop_and_close(self):
-        self.logger.info(tr("Начата процедура остановки и закрытия процессов."))
+        self.logger.info(tr("Начата процедура остановки и закрытия процессов"))
 
-        if hasattr(self, 'worker_thread') and self.worker_thread is not None:
-            self.logger.info(tr("Завершение работы WorkerThread."))
+        if self.worker_thread is not None:
+            self.logger.info(tr("Завершение работы WorkerThread"))
             self.worker_thread.terminate_process()
             self.worker_thread.quit()
-            self.worker_thread.wait() 
+            if not self.worker_thread.wait(5000):
+                self.logger.warning(tr("WorkerThread не завершился в течение 5 секунд. Принудительно завершаем"))
+                self.worker_thread.terminate()
+                self.worker_thread.wait()
             self.worker_thread = None
 
         self.start_process(
@@ -717,21 +755,21 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             for proc in psutil.process_iter(['pid', 'name']):
                 if proc.info['name'].lower() == process_name.lower():
                     psutil.Process(proc.info['pid']).terminate()
-                    self.console_output.append(tr("Обход остановлен."))
-                    self.logger.debug(f"{tr('Процесс')} {display_name} (PID: {proc.info['pid']}) {tr('завершён.')}")
+                    self.console_output.append(tr("Обход остановлен"))
+                    self.logger.debug(f"{tr('Процесс')} {display_name} (PID: {proc.info['pid']}) {tr('завершён')}")
         except psutil.NoSuchProcess:
             self.logger.warning(f"{tr('Процесс')} {display_name} {tr('не найден.')}")
         except psutil.AccessDenied:
-            error_msg = f"{tr('Недостаточно прав для завершения процесса')} {display_name}."
+            error_msg = f"{tr('Недостаточно прав для завершения процесса')} {display_name}"
             self.logger.error(error_msg)
-            self.console_output.append(f"{tr('Ошибка')}: {tr('Недостаточно прав для завершения процесса')} {display_name}.")
+            self.console_output.append(f"{tr('Ошибка')}: {tr('Недостаточно прав для завершения процесса')} {display_name}")
         except Exception as e:
             error_msg = f"{tr('Ошибка завершения процесса')} {display_name}: {str(e)}"
             self.console_output.append(error_msg)
             self.logger.error(error_msg)
 
     def update_blacklist(self):
-        self.logger.debug(tr("Начата процедура обновления черного списка."))
+        self.logger.debug(tr("Начата процедура обновления черного списка"))
         self.updater.update_blacklist()
 
     def update_config(self):
@@ -743,17 +781,17 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             QMessageBox.StandardButton.No
         )
         if reply == QMessageBox.StandardButton.Yes:
-            self.logger.info(tr("Начато обновление конфигурационного файла."))
+            self.logger.info(tr("Начато обновление конфигурационного файла"))
             self.updater.update_config()
         else:
-            self.logger.info(tr("Обновление конфигурационного файла отменено пользователем."))
+            self.logger.info(tr("Обновление конфигурационного файла отменено пользователем"))
 
     def check_for_updates(self):
         self.update_button.setEnabled(False)
         self.updater.start()
 
     def no_update(self):
-        QMessageBox.information(self, tr("Обновление"), tr("Обновлений не найдено."))
+        QMessageBox.information(self, tr("Обновление"), tr("Обновлений не найдено"))
 
     def on_update_finished(self):
         self.update_button.setEnabled(True)
@@ -761,11 +799,11 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
     @pyqtSlot()
     def on_blacklist_updated(self):
         if self.updating_blacklist_on_startup:
-            self.logger.info(tr("Черный список обновлен автоматически при запуске. Уведомление не отображается."))
+            self.logger.info(tr("Черный список обновлен автоматически при запуске. Уведомление не отображается"))
             self.updating_blacklist_on_startup = False
         else:
-            QMessageBox.information(self, tr("Обновление черного списка"), tr("Черный список успешно обновлен."))
-            self.logger.info(tr("Черный список обновлен вручную. Уведомление отображено через QMessageBox."))
+            QMessageBox.information(self, tr("Обновление черного списка"), tr("Черный список успешно обновлен"))
+            self.logger.info(tr("Черный список обновлен вручную. Уведомление отображено через QMessageBox"))
 
     @pyqtSlot(str)
     def on_blacklist_update_error(self, error_message):
@@ -775,8 +813,8 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
 
     @pyqtSlot()
     def on_config_updated(self):
-        QMessageBox.information(self, tr("Обновление конфигурации"), tr("Конфигурационный файл успешно обновлен."))
-        self.logger.info(tr("Конфигурационный файл успешно обновлен."))
+        QMessageBox.information(self, tr("Обновление конфигурации"), tr("Конфигурационный файл успешно обновлен"))
+        self.logger.info(tr("Конфигурационный файл успешно обновлен"))
 
     @pyqtSlot(str)
     def on_config_update_error(self, error_message):
@@ -795,7 +833,7 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         QMessageBox.information(
             self,
             tr("Доступно обновление"),
-            tr('Доступна новая версия {latest_version}. <a href="https://github.com/zhivem/DPI-Penguin/releases">Перейдите на страницу загрузки</a>.').format(latest_version=latest_version),
+            tr('Доступна новая версия {latest_version}. <a href="https://github.com/zhivem/DPI-Penguin/releases">Перейдите на страницу загрузки</a>').format(latest_version=latest_version),
             QMessageBox.StandardButton.Ok
         )
 
@@ -818,8 +856,8 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         if file_path:
             self.logger.info(f"{tr('Выбран файл конфигурации')}: {file_path}")
 
-            if hasattr(self, 'worker_thread') and self.worker_thread is not None:
-                self.logger.info(tr("Завершение работы WorkerThread перед загрузкой нового конфига."))
+            if self.worker_thread is not None:
+                self.logger.info(tr("Завершение работы WorkerThread перед загрузкой новой конфигурации"))
                 self.worker_thread.terminate_process()
                 self.worker_thread.quit()
                 self.worker_thread.wait()
@@ -843,11 +881,10 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             self.script_options = new_script_options
             self.config_error = None
             self.current_config_path = file_path
-            self.console_output.append(tr("Конфигурация успешно загружена."))
-            self.logger.info(tr("Конфигурация успешно загружена."))
+            self.console_output.append(tr("Конфигурация успешно загружена"))
+            self.logger.info(tr("Конфигурация успешно загружена"))
 
-            self.selected_script.clear()
-            self.selected_script.addItems(self.script_options.keys())
+            self.update_script_options_display()
             self.selected_script.setEnabled(True)
             self.run_button.setEnabled(True)
             self.stop_close_button.setEnabled(False)
@@ -875,13 +912,13 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             return error_msg
 
         if 'SCRIPT_OPTIONS' not in config.sections():
-            error_msg = tr("Ошибка: Отсутствует секция [SCRIPT_OPTIONS] в конфигурационном файле.")
+            error_msg = tr("Ошибка: Отсутствует секция [SCRIPT_OPTIONS] в конфигурационном файле")
             self.logger.error(error_msg)
             return error_msg
 
         script_sections = [section for section in config.sections() if section != 'SCRIPT_OPTIONS']
         if not script_sections:
-            error_msg = tr("Ошибка: В секции [SCRIPT_OPTIONS] отсутствуют настройки скриптов.")
+            error_msg = tr("Ошибка: В секции [SCRIPT_OPTIONS] отсутствуют настройки скриптов")
             self.logger.error(error_msg)
             return error_msg
 
@@ -889,7 +926,7 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         for section in script_sections:
             for key in required_keys:
                 if key not in config[section]:
-                    error_msg = f"{tr('Ошибка')}: {tr('В секции')} [{section}] {tr('отсутствует ключ')} '{key}'."
+                    error_msg = f"{tr('Ошибка')}: {tr('В секции')} [{section}] {tr('отсутствует ключ')} '{key}'"
                     self.logger.error(error_msg)
                     return error_msg
 
@@ -897,5 +934,4 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
 
     def toggle_blacklist_on_startup(self, checked):
         settings.setValue("check_blacklist_on_startup", checked)
-        self.logger.info(tr("Настройки обновления черного списка при запуске изменены."))
-
+        self.logger.info(tr("Настройки обновления черного списка при запуске изменены"))

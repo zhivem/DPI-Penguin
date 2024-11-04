@@ -30,7 +30,7 @@ def set_language(lang_code: str):
 BASE_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 ZAPRET_FOLDER = os.path.join(BASE_FOLDER, "zapret")
 CONFIG_PATH = os.path.join(BASE_FOLDER, "config", 'default.ini')
-CURRENT_VERSION: str = "1.6.4"
+CURRENT_VERSION: str = "1.6.5"
 
 BLACKLIST_FOLDER = os.path.join(BASE_FOLDER, "black")
 ICON_FOLDER = os.path.join(BASE_FOLDER, "resources", "icon")
@@ -133,7 +133,7 @@ def enable_autostart() -> None:
         ) as key:
             executable_path = get_executable_path()
             winreg.SetValueEx(key, "WinWSApp", 0, winreg.REG_SZ, executable_path)
-            logging.info(tr("Автозапуск успешно установлен."))
+            logging.info(tr("Автозапуск успешно установлен"))
     except Exception as e:
         logging.error(tr("Ошибка при установке автозапуска: {error}").format(error=e))
         raise
@@ -146,9 +146,9 @@ def disable_autostart() -> None:
             0, winreg.KEY_SET_VALUE
         ) as key:
             winreg.DeleteValue(key, "WinWSApp")
-            logging.info(tr("Автозапуск успешно отключен."))
+            logging.info(tr("Автозапуск успешно отключен"))
     except FileNotFoundError:
-        logging.info(tr("Автозапуск уже отключен."))
+        logging.info(tr("Автозапуск уже отключен"))
     except Exception as e:
         logging.error(tr("Ошибка при отключении автозапуска: {error}").format(error=e))
         raise
@@ -278,14 +278,14 @@ def create_service() -> str:
 
         subprocess.run(cmd_description, check=True)
 
-        logging.info(tr("Служба создана и настроена для автоматического запуска."))
-        return tr("Служба создана и настроена для автоматического запуска.")
+        logging.info(tr("Служба создана и настроена для автоматического запуска"))
+        return tr("Служба создана и настроена для автоматического запуска")
     except subprocess.CalledProcessError as e:
         logging.error(tr("Не удалось создать службу. Ошибка: {error}").format(error=e))
-        return tr("Не удалось создать службу.")
+        return tr("Не удалось создать службу")
     except Exception as e:
         logging.error(tr("Неизвестная ошибка при создании службы: {error}").format(error=e))
-        return tr("Не удалось создать службу из-за неизвестной ошибки.")
+        return tr("Не удалось создать службу из-за неизвестной ошибки")
 
 def delete_service() -> str:
     try:
@@ -294,11 +294,11 @@ def delete_service() -> str:
         logging.debug(tr("Команда для удаления службы: {command}").format(command=' '.join(cmd_delete)))
 
         subprocess.run(cmd_delete, check=True)
-        logging.info(tr("Служба успешно удалена."))
-        return tr("Служба успешно удалена.")
+        logging.info(tr("Служба успешно удалена"))
+        return tr("Служба успешно удалена")
     except subprocess.CalledProcessError as e:
         logging.error(tr("Не удалось удалить службу. Ошибка: {error}").format(error=e))
-        return tr("Не удалось удалить службу.")
+        return tr("Не удалось удалить службу")
     except Exception as e:
         logging.error(tr("Неизвестная ошибка при удалении службы: {error}").format(error=e))
-        return tr("Не удалось удалить службу из-за неизвестной ошибки.")
+        return tr("Не удалось удалить службу из-за неизвестной ошибки")

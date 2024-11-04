@@ -52,7 +52,7 @@ def setup_logging():
         force=True
     )
 
-    logging.info(tr("Логирование настроено."))
+    logging.info(tr("Логирование настроено"))
 
 def is_admin() -> bool:
     if os.name == 'nt':
@@ -78,7 +78,7 @@ def run_as_admin(argv=None):
     show_cmd = win32con.SW_NORMAL
     ret = shell32.ShellExecuteW(None, "runas", executable, params, None, show_cmd)
     if int(ret) <= 32:
-        logging.error(tr("Не удалось перезапустить программу с правами администратора."))
+        logging.error(tr("Не удалось перезапустить программу с правами администратора"))
         sys.exit(1)
     sys.exit(0)
 
@@ -87,14 +87,14 @@ def ensure_single_instance():
         handle = win32event.CreateMutex(None, False, MUTEX_NAME)
         last_error = win32api.GetLastError()
         if last_error == winerror.ERROR_ALREADY_EXISTS:
-            logging.info(tr("Обнаружен уже запущенный экземпляр приложения."))
+            logging.info(tr("Обнаружен уже запущенный экземпляр приложения"))
             return False
         atexit.register(win32api.CloseHandle, handle)
     return True
 
 def check_for_updates_on_startup(updater: Updater):
     updater.update_available.connect(prompt_update)
-    updater.no_update.connect(lambda: logging.info(tr("Обновления не найдены.")))
+    updater.no_update.connect(lambda: logging.info(tr("Обновления не найдены")))
     updater.update_error.connect(lambda msg: logging.error(tr("Ошибка проверки обновлений: {msg}").format(msg=msg)))
     updater.start()
 
@@ -110,7 +110,7 @@ def prompt_update(latest_version: str):
         webbrowser.open(UPDATE_URL)
 
 def terminate_processes(process_names):
-    logging.info(tr("Попытка завершить указанные процессы."))
+    logging.info(tr("Попытка завершить указанные процессы"))
     current_process_id = win32api.GetCurrentProcessId()
     try:
         process_ids = win32process.EnumProcesses()
@@ -124,7 +124,7 @@ def terminate_processes(process_names):
                 for name in process_names:
                     if exe_base_name == name.lower():
                         win32api.TerminateProcess(h_process, 0)
-                        logging.info(tr("Процесс {exe_base_name} (PID: {pid}) успешно завершён.").format(exe_base_name=exe_base_name, pid=pid))
+                        logging.info(tr("Процесс {exe_base_name} (PID: {pid}) успешно завершён").format(exe_base_name=exe_base_name, pid=pid))
                 win32api.CloseHandle(h_process)
             except Exception as e:
                 logging.debug(tr("Не удалось завершить PID {pid}: {e}").format(pid=pid, e=e))
@@ -140,14 +140,14 @@ def stop_service(service_name):
             win32serviceutil.WaitForServiceStatus(service_name, win32service.SERVICE_STOPPED, 30)
             logging.info(tr("Служба {service_name} успешно остановлена.").format(service_name=service_name))
         else:
-            logging.info(tr("Служба {service_name} не запущена.").format(service_name=service_name))
+            logging.info(tr("Служба {service_name} не запущена").format(service_name=service_name))
     except win32service.error as e:
         if e.winerror == winerror.ERROR_SERVICE_DOES_NOT_EXIST:
-            logging.warning(tr("Служба {service_name} не найдена.").format(service_name=service_name))
+            logging.warning(tr("Служба {service_name} не найдена").format(service_name=service_name))
         else:
-            logging.error(tr("Не удалось остановить службу {service_name}: {e}.").format(service_name=service_name, e=e))
+            logging.error(tr("Не удалось остановить службу {service_name}: {e}").format(service_name=service_name, e=e))
     except Exception as e:
-        logging.error(tr("Неожиданная ошибка при остановке службы {service_name}: {e}.").format(service_name=service_name, e=e))
+        logging.error(tr("Неожиданная ошибка при остановке службы {service_name}: {e}").format(service_name=service_name, e=e))
 
 def terminate_and_stop_services():
     if os.name == 'nt':
@@ -156,18 +156,17 @@ def terminate_and_stop_services():
 
 def main():
     setup_logging()
-
     app = QtWidgets.QApplication(sys.argv)
 
     if not is_admin():
-        logging.info(tr("Перезапуск программы с правами администратора."))
+        logging.info(tr("Перезапуск программы с правами администратора"))
         run_as_admin()
 
     terminate_and_stop_services()
 
     if not ensure_single_instance():
-        logging.info(tr("Попытка запустить вторую копию приложения."))
-        QMessageBox.warning(None, tr("Предупреждение"), tr("Приложение уже запущено."))
+        logging.info(tr("Попытка запустить вторую копию приложения"))
+        QMessageBox.warning(None, tr("Предупреждение"), tr("Приложение уже запущено"))
         sys.exit(0)
 
     ensure_module_installed('packaging')
@@ -176,6 +175,9 @@ def main():
     check_for_updates_on_startup(updater)
 
     window = GoodbyeDPIApp()
+
+    app.aboutToQuit.connect(window.stop_and_close)
+
     result = app.exec()
 
 if __name__ == '__main__':

@@ -33,7 +33,7 @@ def apply_theme(
 
     apply_stylesheet(app_instance, stylesheet, base_folder)
     settings.setValue("theme", theme_name)
-    logging.info(tr("Тема '{theme_name}' применена.").format(theme_name=theme_name))
+    logging.info(tr("Тема '{theme_name}' применена").format(theme_name=theme_name))
 
 def apply_stylesheet(
     app_instance: QApplication,
@@ -59,7 +59,7 @@ def update_theme_button_text(
     theme_button: PushButton = getattr(app_instance, "theme_toggle_button", None)
 
     if not theme_button:
-        logging.warning(tr("Кнопка 'theme_toggle_button' не найдена в app_instance."))
+        logging.warning(tr("Кнопка 'theme_toggle_button' не найдена в app_instance"))
         return
 
     if current_theme == LIGHT_THEME_NAME:
@@ -69,7 +69,7 @@ def update_theme_button_text(
         theme_button.setText(tr("Переключиться на светлую тему"))
         theme_button.setToolTip(tr("Нажмите, чтобы переключиться на светлую тему"))
 
-    logging.debug(tr("Текст кнопки переключения темы обновлён на '{text}'.").format(text=theme_button.text()))
+    logging.debug(tr("Текст кнопки переключения темы обновлён на '{text}'").format(text=theme_button.text()))
 
 def toggle_theme(
     app_instance: Any,

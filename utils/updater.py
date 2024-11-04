@@ -73,20 +73,20 @@ class Updater(QThread):
 
     def check_for_updates(self) -> None:
         try:
-            self.logger.debug(tr("Начата проверка наличия обновлений."))
+            self.logger.debug(tr("Начата проверка наличия обновлений"))
             latest_version = get_latest_version()
             if latest_version:
                 if is_newer_version(latest_version, CURRENT_VERSION):
                     self.logger.info(tr(f"Доступна новая версия: {latest_version}"))
                     self.update_available.emit(latest_version)
                 else:
-                    self.logger.info(tr("Обновления не найдены."))
+                    self.logger.info(tr("Обновления не найдены"))
                     self.no_update.emit()
             else:
-                self.logger.warning(tr("Не удалось получить последнюю версию."))
+                self.logger.warning(tr("Не удалось получить последнюю версию"))
                 self.no_update.emit()
         except requests.RequestException as e:
-            error_message = tr("Не удалось проверить обновления. Пожалуйста, проверьте подключение к сети.")
+            error_message = tr("Не удалось проверить обновления. Пожалуйста, проверьте подключение к сети")
             self.logger.error(f"{error_message} Ошибка: {e}")
             self.update_error.emit(error_message)
         except Exception as e:
@@ -109,7 +109,7 @@ class Updater(QThread):
                 os.makedirs(os.path.dirname(output_file), exist_ok=True)
                 with open(output_file, 'wb') as file:
                     file.write(response.content)
-                self.logger.info(tr(f"Загрузка черного списка '{name}' успешно завершена."))
+                self.logger.info(tr(f"Загрузка черного списка '{name}' успешно завершена"))
             except requests.RequestException as e:
                 error_message = tr(f"Ошибка обновления черного списка '{name}': {str(e)}")
                 self.logger.error(error_message)
@@ -132,7 +132,7 @@ class Updater(QThread):
             os.makedirs(os.path.dirname(CONFIG_OUTPUT_FILE), exist_ok=True)
             with open(CONFIG_OUTPUT_FILE, 'wb') as file:
                 file.write(response.content)
-            self.logger.info(tr("Загрузка конфигурационного файла успешно завершена."))
+            self.logger.info(tr("Загрузка конфигурационного файла успешно завершена"))
             self.config_updated.emit()
         except requests.RequestException as e:
             error_message = tr(f"Ошибка обновления конфигурационного файла: {str(e)}")
