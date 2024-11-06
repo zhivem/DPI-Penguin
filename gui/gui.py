@@ -1,6 +1,7 @@
 import logging
 import os
 import configparser
+import requests  # Добавляем импорт requests для HTTP-запросов
 
 import psutil
 from PyQt6 import QtCore, QtGui, QtWidgets
@@ -35,6 +36,8 @@ from utils.utils import (
     settings,
 )
 import utils.theme_utils
+
+from gui.settings_dialog import SettingsDialog  # Импортируем SettingsDialog из нового файла
 
 TRAY_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "newicon.ico")
 THEME_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "themes.png")
@@ -88,7 +91,19 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             self.updating_blacklist_on_startup = True
             self.updater.update_blacklist()
 
+        # Проверка обновлений zapret при запуске
+        self.check_zapret_update()
+
         if self.autorun_with_last_config and not self.config_error:
+            last_selected_script = settings.value("last_selected_script", None)
+            if last_selected_script and last_selected_script in self.script_options:
+                index = self.selected_script.findData(last_selected_script)
+                if index >= 0:
+                    self.selected_script.setCurrentIndex(index)
+            else:
+                if self.selected_script.count() > 0:
+                    self.selected_script.setCurrentIndex(0)
+
             self.logger.info(tr("Автоматический запуск с последним конфигом активирован. Запуск процесса..."))
             self.run_exe(auto_run=True)
             self.hide()
@@ -164,7 +179,7 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             self.tray_icon.show()
             self.tray_icon.showMessage(
                 tr("DPI Penguin by Zhivem"),
-                tr("Приложение свернуто в трей. Для восстановления, нажмите на иконку в трее."),
+                tr("Приложение свернуто в трей. Для восстановления, нажмите на иконку в трее"),
                 QSystemTrayIcon.MessageIcon.Information,
                 1000
             )
@@ -361,9 +376,18 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         self.update_config_settings_button = self.create_button(tr("Обновить конфигурацию"), self.update_config, updates_layout)
         self.update_button = self.create_button(tr("Проверить обновления"), self.check_for_updates, updates_layout)
 
+        # Новая кнопка "Дополнительные настройки"
+        self.open_additional_settings_button = self.create_button(
+            text=tr("Дополнительные настройки"),
+            func=self.open_settings_dialog,
+            layout=updates_layout
+        )
+
+        # Добавляем кнопки в макет обновлений
         updates_layout.addWidget(self.update_blacklist_button)
         updates_layout.addWidget(self.update_config_settings_button)
         updates_layout.addWidget(self.update_button)
+        updates_layout.addWidget(self.open_additional_settings_button)  # Новая кнопка
 
         settings_layout.addWidget(self.updates_group)
 
@@ -400,6 +424,7 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         self.update_blacklist_button.setText(tr("Обновить черные списки"))
         self.update_config_settings_button.setText(tr("Обновить конфигурацию"))
         self.update_button.setText(tr("Проверить обновления"))
+        self.open_additional_settings_button.setText(tr("Дополнительные настройки"))  # Обновляем текст новой кнопки
 
         self.language_group.setTitle(tr("Язык / Language"))
         self.autostart_group.setTitle(tr("Автозапуск"))
@@ -580,6 +605,8 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             self.console_output.append(error_msg)
             self.logger.error(error_msg)
             return
+
+        settings.setValue("last_selected_script", selected_option)
 
         executable, args = self.script_options[selected_option]
 
@@ -935,3 +962,60 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
     def toggle_blacklist_on_startup(self, checked):
         settings.setValue("check_blacklist_on_startup", checked)
         self.logger.info(tr("Настройки обновления черного списка при запуске изменены"))
+
+    # Новый метод для открытия диалогового окна настроек
+    def open_settings_dialog(self):
+        dialog = SettingsDialog(self)
+        dialog.exec()
+
+    def check_zapret_update(self):
+        """
+        Метод для проверки наличия обновлений zapret.
+        Сравнивает локальную версию с версией на GitHub.
+        Если доступна новая версия, открывает окно настроек.
+        """
+        self.logger.info(tr("Проверка обновлений zapret..."))
+        try:
+            # Локальная версия zapret
+            local_version_file = os.path.join(BASE_FOLDER, "version", "version_zapret.ini")
+            config = configparser.ConfigParser()
+            config.read(local_version_file, encoding='utf-8')
+            local_version = config.get('VERSION', 'zapret', fallback='0.0')
+
+            # URL для получения версии zapret с GitHub
+            version_url = "https://raw.githubusercontent.com/zhivem/DPI-Penguin/main/version/version_zapret.ini"
+            response = requests.get(version_url)
+            if response.status_code == 200:
+                remote_config = configparser.ConfigParser()
+                remote_config.read_string(response.text)
+                remote_version = remote_config.get('VERSION', 'zapret', fallback='0.0')
+
+                self.logger.info(f"Локальная версия zapret: {local_version}")
+                self.logger.info(f"Удалённая версия zapret: {remote_version}")
+
+                if self.is_newer_version(remote_version, local_version):
+                    self.logger.info(tr("Доступна новая версия zapret. Открытие окна настроек для обновления."))
+                    QMessageBox.information(
+                        self,
+                        tr("Обновление zapret"),
+                        tr("Доступна новая версия zapret. Рекомендуется обновить."),
+                        QMessageBox.StandardButton.Ok
+                    )
+                    self.open_settings_dialog()
+                else:
+                    self.logger.info(tr("zapret обновлён до последней версии."))
+            else:
+                self.logger.warning(tr("Не удалось проверить версию zapret. Статус код: {status}").format(status=response.status_code))
+        except Exception as e:
+            self.logger.error(tr("Ошибка при проверке обновлений zapret: {e}").format(e=e))
+
+    def is_newer_version(self, remote, local):
+        """
+        Сравнивает версии. Возвращает True, если remote > local.
+        """
+        from packaging import version
+        try:
+            return version.parse(remote) > version.parse(local)
+        except Exception as e:
+            self.logger.error(tr("Ошибка при сравнении версий: {e}").format(e=e))
+            return False
