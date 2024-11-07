@@ -89,6 +89,15 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             self.updater.update_blacklist()
 
         if self.autorun_with_last_config and not self.config_error:
+            last_selected_script = settings.value("last_selected_script", None)
+            if last_selected_script and last_selected_script in self.script_options:
+                index = self.selected_script.findData(last_selected_script)
+                if index >= 0:
+                    self.selected_script.setCurrentIndex(index)
+            else:
+                if self.selected_script.count() > 0:
+                    self.selected_script.setCurrentIndex(0)
+
             self.logger.info(tr("Автоматический запуск с последним конфигом активирован. Запуск процесса..."))
             self.run_exe(auto_run=True)
             self.hide()
@@ -164,7 +173,7 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             self.tray_icon.show()
             self.tray_icon.showMessage(
                 tr("DPI Penguin by Zhivem"),
-                tr("Приложение свернуто в трей. Для восстановления, нажмите на иконку в трее."),
+                tr("Приложение свернуто в трей. Для восстановления, нажмите на иконку в трее"),
                 QSystemTrayIcon.MessageIcon.Information,
                 1000
             )
@@ -580,6 +589,8 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             self.console_output.append(error_msg)
             self.logger.error(error_msg)
             return
+
+        settings.setValue("last_selected_script", selected_option)
 
         executable, args = self.script_options[selected_option]
 

@@ -164,10 +164,10 @@ def main():
 
     terminate_and_stop_services()
 
-    if not ensure_single_instance():
-        logging.info(tr("Попытка запустить вторую копию приложения"))
-        QMessageBox.warning(None, tr("Предупреждение"), tr("Приложение уже запущено"))
-        sys.exit(0)
+    #if not ensure_single_instance():
+        #logging.info(tr("Попытка запустить вторую копию приложения"))
+        #QMessageBox.warning(None, tr("Предупреждение"), tr("Приложение уже запущено"))
+        #sys.exit(0)
 
     ensure_module_installed('packaging')
 
