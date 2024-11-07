@@ -1,3 +1,5 @@
+# gui.py
+
 import logging
 import os
 import configparser
@@ -37,7 +39,7 @@ from utils.utils import (
 )
 import utils.theme_utils
 
-from gui.settings_dialog import SettingsDialog  # Импортируем SettingsDialog из нового файла
+from gui.updater_manager import SettingsDialog  # Импортируем SettingsDialog из нового файла
 
 TRAY_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "newicon.ico")
 THEME_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "themes.png")
@@ -977,7 +979,7 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         self.logger.info(tr("Проверка обновлений zapret..."))
         try:
             # Локальная версия zapret
-            local_version_file = os.path.join(BASE_FOLDER, "version", "version_zapret.ini")
+            local_version_file = os.path.join(BASE_FOLDER, "zapret", "version_zapret.ini")
             config = configparser.ConfigParser()
             config.read(local_version_file, encoding='utf-8')
             local_version = config.get('VERSION', 'zapret', fallback='0.0')
