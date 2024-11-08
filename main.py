@@ -2,7 +2,6 @@ import logging
 from logging.handlers import RotatingFileHandler
 import os
 import sys
-import webbrowser
 import ctypes
 import atexit
 
@@ -19,7 +18,6 @@ from PyQt6 import QtWidgets
 from PyQt6.QtWidgets import QMessageBox
 
 from gui.gui import GoodbyeDPIApp
-from utils.updater import Updater
 from utils.utils import (
     BASE_FOLDER,
     CURRENT_VERSION,
@@ -27,7 +25,6 @@ from utils.utils import (
     tr,
 )
 
-UPDATE_URL = "https://github.com/zhivem/DPI-Penguin/releases"
 MUTEX_NAME = "ru.github.dpipenguin.mutex"
 LOG_FILENAME = os.path.join(BASE_FOLDER, "logs", f"app_penguin_v{CURRENT_VERSION}.log")
 
@@ -92,23 +89,6 @@ def ensure_single_instance():
         atexit.register(win32api.CloseHandle, handle)
     return True
 
-def check_for_updates_on_startup(updater: Updater):
-    updater.update_available.connect(prompt_update)
-    updater.no_update.connect(lambda: logging.info(tr("Обновления не найдены")))
-    updater.update_error.connect(lambda msg: logging.error(tr("Ошибка проверки обновлений: {msg}").format(msg=msg)))
-    updater.start()
-
-def prompt_update(latest_version: str):
-    reply = QMessageBox.question(
-        None,
-        tr("Обновление"),
-        tr("Доступна новая версия {latest_version}. Хотите перейти на страницу загрузки?").format(latest_version=latest_version),
-        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-        QMessageBox.StandardButton.No
-    )
-    if reply == QMessageBox.StandardButton.Yes:
-        webbrowser.open(UPDATE_URL)
-
 def terminate_processes(process_names):
     logging.info(tr("Попытка завершить указанные процессы"))
     current_process_id = win32api.GetCurrentProcessId()
@@ -164,15 +144,12 @@ def main():
 
     terminate_and_stop_services()
 
-    #if not ensure_single_instance():
-        #logging.info(tr("Попытка запустить вторую копию приложения"))
-        #QMessageBox.warning(None, tr("Предупреждение"), tr("Приложение уже запущено"))
-        #sys.exit(0)
+    if not ensure_single_instance():
+       logging.info(tr("Попытка запустить вторую копию приложения"))
+       QMessageBox.warning(None, tr("Предупреждение"), tr("Приложение уже запущено"))
+       sys.exit(0)
 
     ensure_module_installed('packaging')
-
-    updater = Updater()
-    check_for_updates_on_startup(updater)
 
     window = GoodbyeDPIApp()
 

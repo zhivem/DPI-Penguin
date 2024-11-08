@@ -3,7 +3,6 @@
 import logging
 import os
 import configparser
-import requests  # Добавляем импорт requests для HTTP-запросов
 
 import psutil
 from PyQt6 import QtCore, QtGui, QtWidgets
@@ -20,7 +19,6 @@ from PyQt6.QtWidgets import (
 from qfluentwidgets import ComboBox as QFComboBox, PushButton, TextEdit
 
 from workers.process_worker import WorkerThread
-from utils.updater import Updater
 from utils.utils import (
     BASE_FOLDER,
     WIN_DIVERT_COMMAND,
@@ -39,13 +37,14 @@ from utils.utils import (
 )
 import utils.theme_utils
 
-from gui.updater_manager import SettingsDialog  # Импортируем SettingsDialog из нового файла
+from gui.updater_manager import SettingsDialog
+from utils.update_checker import UpdateChecker  # Импортируем UpdateChecker
 
 TRAY_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "newicon.ico")
 THEME_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "themes.png")
 LOG_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "log.png")
 INI_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "ini.png")
-
+MANAGER_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "manager.png")
 
 class GoodbyeDPIApp(QtWidgets.QMainWindow):
 
@@ -72,10 +71,7 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
 
         self.init_ui()
 
-        self.updater = Updater()
-
         self.init_tray_icon()
-        self.connect_signals()
 
         if self.config_error:
             self.console_output.append(self.config_error)
@@ -85,16 +81,10 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             self.stop_close_button.setEnabled(False)
             self.update_config_button.setEnabled(True)
 
-        self.updating_blacklist_on_startup = False
+        if settings.value("update_blacklists_on_start", False, type=bool):
+            self.update_blacklists(silent=True)
 
-        check_blacklist_on_startup = settings.value("check_blacklist_on_startup", True, type=bool)
-        if check_blacklist_on_startup:
-            self.logger.info(tr("Проверка обновлений черных списков при запуске включена. Начинаем обновление..."))
-            self.updating_blacklist_on_startup = True
-            self.updater.update_blacklist()
-
-        # Проверка обновлений zapret при запуске
-        self.check_zapret_update()
+        self.check_updates()
 
         if self.autorun_with_last_config and not self.config_error:
             last_selected_script = settings.value("last_selected_script", None)
@@ -163,16 +153,6 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
 
         self.tray_icon.setContextMenu(tray_menu)
         self.tray_icon.activated.connect(self.on_tray_icon_activated)
-
-    def connect_signals(self):
-        self.updater.blacklist_updated.connect(self.on_blacklist_updated)
-        self.updater.blacklist_update_error.connect(self.on_blacklist_update_error)
-        self.updater.config_updated.connect(self.on_config_updated)
-        self.updater.config_update_error.connect(self.on_config_update_error)
-        self.updater.update_available.connect(self.notify_update)
-        self.updater.no_update.connect(self.no_update)
-        self.updater.update_error.connect(self.on_update_error)
-        self.updater.finished.connect(self.on_update_finished)
 
     def closeEvent(self, event):
         if self.minimize_to_tray:
@@ -259,22 +239,18 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         self.open_logs_button = self.create_button(
             text=tr("Открыть папку Log"),
             func=lambda: self.handle_open_path(os.path.join(BASE_FOLDER, "logs")),
-            layout=None,
+            layout=log_and_config_layout,
             icon_path=LOG_ICON_PATH,
             icon_size=(16, 16),
-            tooltip=tr("Открыть папку логов")
         )
-        log_and_config_layout.addWidget(self.open_logs_button)
 
         self.open_config_button = self.create_button(
             text=tr("Открыть configs"),
             func=lambda: self.handle_open_path(os.path.join(BASE_FOLDER, "config")),
-            layout=None,
+            layout=log_and_config_layout,
             icon_path=INI_ICON_PATH,
             icon_size=(16, 16),
-            tooltip=tr("Открыть папку конфигураций")
         )
-        log_and_config_layout.addWidget(self.open_config_button)
 
         process_layout.addLayout(log_and_config_layout)
 
@@ -328,12 +304,6 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         autostart_layout = QtWidgets.QVBoxLayout()
         self.autostart_group.setLayout(autostart_layout)
 
-        self.check_blacklist_on_startup_checkbox = QCheckBox(tr("Проверять обновления черных списков при запуске"))
-        check_blacklist_on_startup = settings.value("check_blacklist_on_startup", True, type=bool)
-        self.check_blacklist_on_startup_checkbox.setChecked(check_blacklist_on_startup)
-        self.check_blacklist_on_startup_checkbox.toggled.connect(self.toggle_blacklist_on_startup)
-        autostart_layout.addWidget(self.check_blacklist_on_startup_checkbox)
-
         self.tray_checkbox = QCheckBox(tr("Сворачивать в трей при закрытии приложения"))
         self.tray_checkbox.setChecked(self.minimize_to_tray)
         self.tray_checkbox.toggled.connect(self.toggle_tray_behavior)
@@ -349,12 +319,18 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         self.autorun_with_last_config_checkbox.toggled.connect(self.toggle_autorun_with_last_config)
         autostart_layout.addWidget(self.autorun_with_last_config_checkbox)
 
+        # Добавляем чекбокс "Обновлять черные списки при запуске программы" в группу "Автозапуск"
+        self.update_blacklists_on_start_checkbox = QCheckBox(tr("Проверять обновления черных списков при запуске"))
+        self.update_blacklists_on_start_checkbox.setChecked(settings.value("update_blacklists_on_start", False, type=bool))
+        self.update_blacklists_on_start_checkbox.toggled.connect(self.toggle_update_blacklists_on_start)
+        autostart_layout.addWidget(self.update_blacklists_on_start_checkbox)
+
         font = self.tray_checkbox.font()
         font.setPointSize(9)
         self.tray_checkbox.setFont(font)
         self.autostart_checkbox.setFont(font)
-        self.check_blacklist_on_startup_checkbox.setFont(font)
         self.autorun_with_last_config_checkbox.setFont(font)
+        self.update_blacklists_on_start_checkbox.setFont(font)
 
         settings_layout.addWidget(self.autostart_group)
 
@@ -374,22 +350,23 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         updates_layout = QtWidgets.QVBoxLayout()
         self.updates_group.setLayout(updates_layout)
 
-        self.update_blacklist_button = self.create_button(tr("Обновить черные списки"), self.update_blacklist, updates_layout)
-        self.update_config_settings_button = self.create_button(tr("Обновить конфигурацию"), self.update_config, updates_layout)
-        self.update_button = self.create_button(tr("Проверить обновления"), self.check_for_updates, updates_layout)
-
-        # Новая кнопка "Дополнительные настройки"
         self.open_additional_settings_button = self.create_button(
-            text=tr("Дополнительные настройки"),
+            text=tr("Менеджер загрузок"),
             func=self.open_settings_dialog,
+            layout=updates_layout,
+            icon_path=MANAGER_ICON_PATH,
+            icon_size=(18, 18)
+        )
+
+        # Кнопка "Обновить черные списки"
+        self.update_blacklists_button = self.create_button(
+            text=tr("Обновить черные списки"),
+            func=lambda: self.update_blacklists(silent=False),
             layout=updates_layout
         )
 
-        # Добавляем кнопки в макет обновлений
-        updates_layout.addWidget(self.update_blacklist_button)
-        updates_layout.addWidget(self.update_config_settings_button)
-        updates_layout.addWidget(self.update_button)
-        updates_layout.addWidget(self.open_additional_settings_button)  # Новая кнопка
+        updates_layout.addWidget(self.open_additional_settings_button)
+        updates_layout.addWidget(self.update_blacklists_button)
 
         settings_layout.addWidget(self.updates_group)
 
@@ -417,16 +394,14 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         self.open_config_button.setText(tr("Открыть configs"))
         utils.theme_utils.update_theme_button_text(self, settings)
 
-        self.check_blacklist_on_startup_checkbox.setText(tr("Проверять обновления черных списков при запуске"))
         self.tray_checkbox.setText(tr("Сворачивать в трей при закрытии приложения"))
         self.autostart_checkbox.setText(tr("Запускать программу при старте системы"))
         self.autorun_with_last_config_checkbox.setText(tr("Запускать в тихом режиме"))
+        self.update_blacklists_on_start_checkbox.setText(tr("Проверять обновления черных списков при запуске"))
         self.create_service_button.setText(tr("Создать службу"))
         self.delete_service_button.setText(tr("Удалить службу"))
-        self.update_blacklist_button.setText(tr("Обновить черные списки"))
-        self.update_config_settings_button.setText(tr("Обновить конфигурацию"))
-        self.update_button.setText(tr("Проверить обновления"))
-        self.open_additional_settings_button.setText(tr("Дополнительные настройки"))  # Обновляем текст новой кнопки
+        self.open_additional_settings_button.setText(tr("Менеджер загрузок"))
+        self.update_blacklists_button.setText(tr("Обновить черные списки"))
 
         self.language_group.setTitle(tr("Язык / Language"))
         self.autostart_group.setTitle(tr("Автозапуск"))
@@ -477,7 +452,7 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         layout = QtWidgets.QGridLayout(group)
 
         labels = {
-            tr("Версия"): f"v{CURRENT_VERSION}",
+            tr("Версия"): f"{CURRENT_VERSION}",
             tr("Разработчик"): "Zhivem",
             tr("Репозиторий на GitHub"): f"<a href='https://github.com/zhivem/DPI-Penguin'>{tr('DPI Penguin')}</a>",
             tr("Релизы"): f"<a href='https://github.com/zhivem/DPI-Penguin/releases'>{tr('Релизы')}</a>",
@@ -571,8 +546,12 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         if checked:
             settings.setValue("last_config_path", self.current_config_path)
 
+    def toggle_update_blacklists_on_start(self, checked):
+        settings.setValue("update_blacklists_on_start", checked)
+        self.logger.info(f"{tr('Обновление черных списков при запуске программы')} {'включено' if checked else 'отключено'}")
+
     def create_button(self, text, func, layout, enabled=True, icon_path=None, icon_size=(24, 24), tooltip=None):
-        button = PushButton(tr(text), self)
+        button = PushButton(text, self)
         button.setEnabled(enabled)
         if func:
             button.clicked.connect(func)
@@ -581,7 +560,7 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             self.set_button_icon(button, icon_path, icon_size)
 
         if tooltip:
-            button.setToolTip(tr(tooltip) if tooltip else None)
+            button.setToolTip(tooltip)
 
         if layout is not None:
             layout.addWidget(button)
@@ -614,8 +593,8 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
 
         if not self.is_executable_available(executable, selected_option):
             return
-        
-        translated_option = tr(selected_option) 
+
+        translated_option = tr(selected_option)
         clear_console_text = tr("Установка: {option} запущена...").format(option=translated_option)
 
         command = [executable] + args
@@ -751,11 +730,11 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
                 try:
                     self.worker_thread.output_signal.disconnect(self.update_output)
                 except TypeError:
-                    pass  
+                    pass
                 try:
                     self.worker_thread.finished_signal.disconnect(self.on_finished)
                 except TypeError:
-                    pass 
+                    pass
 
             self.worker_thread = None
 
@@ -796,75 +775,6 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             error_msg = f"{tr('Ошибка завершения процесса')} {display_name}: {str(e)}"
             self.console_output.append(error_msg)
             self.logger.error(error_msg)
-
-    def update_blacklist(self):
-        self.logger.debug(tr("Начата процедура обновления черного списка"))
-        self.updater.update_blacklist()
-
-    def update_config(self):
-        reply = QMessageBox.question(
-            self,
-            tr("Обновление конфигурации"),
-            tr("Вы уверены, что хотите обновить конфигурационный файл на актуальный?"),
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No
-        )
-        if reply == QMessageBox.StandardButton.Yes:
-            self.logger.info(tr("Начато обновление конфигурационного файла"))
-            self.updater.update_config()
-        else:
-            self.logger.info(tr("Обновление конфигурационного файла отменено пользователем"))
-
-    def check_for_updates(self):
-        self.update_button.setEnabled(False)
-        self.updater.start()
-
-    def no_update(self):
-        QMessageBox.information(self, tr("Обновление"), tr("Обновлений не найдено"))
-
-    def on_update_finished(self):
-        self.update_button.setEnabled(True)
-
-    @pyqtSlot()
-    def on_blacklist_updated(self):
-        if self.updating_blacklist_on_startup:
-            self.logger.info(tr("Черный список обновлен автоматически при запуске. Уведомление не отображается"))
-            self.updating_blacklist_on_startup = False
-        else:
-            QMessageBox.information(self, tr("Обновление черного списка"), tr("Черный список успешно обновлен"))
-            self.logger.info(tr("Черный список обновлен вручную. Уведомление отображено через QMessageBox"))
-
-    @pyqtSlot(str)
-    def on_blacklist_update_error(self, error_message):
-        self.console_output.append(error_message)
-        self.logger.error(error_message)
-        QMessageBox.warning(self, tr("Ошибка обновления черного списка"), error_message)
-
-    @pyqtSlot()
-    def on_config_updated(self):
-        QMessageBox.information(self, tr("Обновление конфигурации"), tr("Конфигурационный файл успешно обновлен"))
-        self.logger.info(tr("Конфигурационный файл успешно обновлен"))
-
-    @pyqtSlot(str)
-    def on_config_update_error(self, error_message):
-        self.console_output.append(error_message)
-        self.logger.error(error_message)
-        QMessageBox.warning(self, tr("Ошибка обновления конфигурации"), error_message)
-
-    @pyqtSlot(str)
-    def on_update_error(self, error_message):
-        self.console_output.append(error_message)
-        self.logger.error(error_message)
-        QMessageBox.warning(self, tr("Ошибка обновления"), error_message)
-
-    def notify_update(self, latest_version):
-        self.logger.info(f"{tr('Доступна новая версия')}: {latest_version}")
-        QMessageBox.information(
-            self,
-            tr("Доступно обновление"),
-            tr('Доступна новая версия {latest_version}. <a href="https://github.com/zhivem/DPI-Penguin/releases">Перейдите на страницу загрузки</a>').format(latest_version=latest_version),
-            QMessageBox.StandardButton.Ok
-        )
 
     def clear_console(self, initial_text=""):
         self.console_output.clear()
@@ -961,63 +871,70 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
 
         return None
 
-    def toggle_blacklist_on_startup(self, checked):
-        settings.setValue("check_blacklist_on_startup", checked)
-        self.logger.info(tr("Настройки обновления черного списка при запуске изменены"))
-
-    # Новый метод для открытия диалогового окна настроек
     def open_settings_dialog(self):
         dialog = SettingsDialog(self)
+        dialog.config_updated_signal.connect(self.reload_configuration)
         dialog.exec()
 
-    def check_zapret_update(self):
-        """
-        Метод для проверки наличия обновлений zapret.
-        Сравнивает локальную версию с версией на GitHub.
-        Если доступна новая версия, открывает окно настроек.
-        """
-        self.logger.info(tr("Проверка обновлений zapret..."))
-        try:
-            # Локальная версия zapret
-            local_version_file = os.path.join(BASE_FOLDER, "zapret", "version_zapret.ini")
-            config = configparser.ConfigParser()
-            config.read(local_version_file, encoding='utf-8')
-            local_version = config.get('VERSION', 'zapret', fallback='0.0')
+    def reload_configuration(self):
+        self.logger.info(tr("Перезагрузка конфигурации после обновления default.ini"))
+        # Перезагружаем опции скрипта
+        self.script_options, self.config_error = load_script_options(self.current_config_path)
+        if self.config_error:
+            self.console_output.append(self.config_error)
+            self.logger.error(self.config_error)
+            self.selected_script.setEnabled(False)
+            self.run_button.setEnabled(False)
+        else:
+            self.update_script_options_display()
+            self.selected_script.setEnabled(True)
+            self.run_button.setEnabled(True)
+        # Отображаем сообщение пользователю
+        QMessageBox.information(self, tr("Обновление"), tr("Конфигурация обновлена и перезагружена"))
 
-            # URL для получения версии zapret с GitHub
-            version_url = "https://raw.githubusercontent.com/zhivem/DPI-Penguin/main/version/version_zapret.ini"
-            response = requests.get(version_url)
-            if response.status_code == 200:
-                remote_config = configparser.ConfigParser()
-                remote_config.read_string(response.text)
-                remote_version = remote_config.get('VERSION', 'zapret', fallback='0.0')
+    def check_updates(self):
+        self.logger.info(tr("Проверка обновлений..."))
+        update_checker = UpdateChecker()
+        update_checker.get_local_versions()
+        update_checker.get_remote_versions()
 
-                self.logger.info(f"Локальная версия zapret: {local_version}")
-                self.logger.info(f"Удалённая версия zapret: {remote_version}")
+        updates_available = False
 
-                if self.is_newer_version(remote_version, local_version):
-                    self.logger.info(tr("Доступна новая версия zapret. Открытие окна настроек для обновления."))
-                    QMessageBox.information(
-                        self,
-                        tr("Обновление zapret"),
-                        tr("Доступна новая версия zapret. Рекомендуется обновить."),
-                        QMessageBox.StandardButton.Ok
-                    )
-                    self.open_settings_dialog()
-                else:
-                    self.logger.info(tr("zapret обновлён до последней версии."))
-            else:
-                self.logger.warning(tr("Не удалось проверить версию zapret. Статус код: {status}").format(status=response.status_code))
-        except Exception as e:
-            self.logger.error(tr("Ошибка при проверке обновлений zapret: {e}").format(e=e))
+        # Проверка обновления программы
+        if update_checker.is_update_available('ver_programm'):
+            updates_available = True
 
-    def is_newer_version(self, remote, local):
+        # Проверка обновления zapret
+        if update_checker.is_update_available('zapret'):
+            updates_available = True
+
+        # Проверка обновления config (default.ini)
+        if update_checker.is_update_available('config'):
+            updates_available = True
+
+        if updates_available:
+            QMessageBox.information(
+                self,
+                tr("Обновление"),
+                tr("Доступны новые обновления. Рекомендуется обновить"),
+                QMessageBox.StandardButton.Ok
+            )
+            self.open_settings_dialog()
+        else:
+            self.logger.info(tr("Все компоненты обновлены до последней версии."))
+
+    def update_blacklists(self, silent=False):
         """
-        Сравнивает версии. Возвращает True, если remote > local.
+        Обновляет черные списки.
+        Если silent=True, то не показывает сообщения и не открывает окна.
         """
-        from packaging import version
-        try:
-            return version.parse(remote) > version.parse(local)
-        except Exception as e:
-            self.logger.error(tr("Ошибка при сравнении версий: {e}").format(e=e))
-            return False
+        update_checker = UpdateChecker()
+        success = update_checker.update_blacklists()
+        if success:
+            if not silent:
+                QMessageBox.information(self, tr("Обновление"), tr("Черные списки успешно обновлены"))
+            self.logger.info(tr("Черные списки успешно обновлены"))
+        else:
+            if not silent:
+                QMessageBox.warning(self, tr("Обновление"), tr("Произошли ошибки при обновлении черных списков. Проверьте логи для подробностей."))
+            self.logger.warning(tr("Произошли ошибки при обновлении черных списков"))

@@ -6,9 +6,7 @@ import platform
 import sys
 import winreg
 from typing import Optional, List, Dict, Tuple
-
 from packaging.version import parse as parse_version
-import requests
 
 from PyQt6.QtCore import QSettings
 from PyQt6.QtGui import QColor, QIcon, QPixmap
@@ -30,15 +28,15 @@ def set_language(lang_code: str):
 BASE_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 ZAPRET_FOLDER = os.path.join(BASE_FOLDER, "zapret")
 CONFIG_PATH = os.path.join(BASE_FOLDER, "config", 'default.ini')
-CURRENT_VERSION: str = "1.6.5"
+CURRENT_VERSION: str = "1.7"
 
 BLACKLIST_FOLDER = os.path.join(BASE_FOLDER, "black")
 ICON_FOLDER = os.path.join(BASE_FOLDER, "resources", "icon")
 
 BLACKLIST_FILES: List[str] = [
-    os.path.join(BLACKLIST_FOLDER, "russia-blacklist.txt"), 
-    os.path.join(BLACKLIST_FOLDER, "youtube-blacklist.txt"), 
-    os.path.join(BLACKLIST_FOLDER, "discord-blacklist.txt"), 
+    os.path.join(BLACKLIST_FOLDER, "russia-blacklist.txt"),
+    os.path.join(BLACKLIST_FOLDER, "youtube-blacklist.txt"),
+    os.path.join(BLACKLIST_FOLDER, "discord-blacklist.txt"),
     os.path.join(BLACKLIST_FOLDER, "disk-youtube-blacklist.txt")
 ]
 
@@ -54,9 +52,9 @@ def open_path(path: str) -> Optional[str]:
     try:
         if platform.system() == "Windows":
             os.startfile(path)
-        elif platform.system() == "Darwin": 
+        elif platform.system() == "Darwin":
             subprocess.Popen(["open", path])
-        else: 
+        else:
             subprocess.Popen(["xdg-open", path])
         logging.info(tr("Путь '{path}' открыт.").format(path=path))
         return None
@@ -92,22 +90,6 @@ def install_module(module_name: str, version: Optional[str] = None) -> None:
     except subprocess.CalledProcessError as e:
         logging.error(tr("Ошибка установки модуля '{module_name}': {error}").format(module_name=module_name, error=e))
         raise
-
-def get_latest_version() -> Optional[str]:
-    url = 'https://api.github.com/repos/zhivem/DPI-Penguin/releases/latest'
-    try:
-        response = requests.get(url, timeout=10)
-        if response.status_code == 200:
-            latest_version = response.json().get('tag_name')
-            logging.debug(tr("Получена последняя версия: {version}").format(version=latest_version))
-            return latest_version
-        logging.warning(tr("Не удалось получить последнюю версию. Код ответа: {code}").format(code=response.status_code))
-    except requests.RequestException as e:
-        logging.error(tr("Ошибка запроса к GitHub API: {error}").format(error=e))
-    return None
-
-def is_newer_version(latest: str, current: str) -> bool:
-    return parse_version(latest) > parse_version(current)
 
 def is_autostart_enabled() -> bool:
     try:
@@ -190,7 +172,7 @@ def load_script_options(config_path: str) -> Tuple[Optional[Dict[str, Tuple[str,
     script_options = {}
     for section in config.sections():
         if section == "SCRIPT_OPTIONS":
-            continue 
+            continue
 
         executable = config.get(section, 'executable', fallback=None)
         args = config.get(section, 'args', fallback='')
