@@ -1,8 +1,8 @@
 import configparser
 import logging
 import os
-import subprocess
 import platform
+import subprocess
 import sys
 import winreg
 from typing import Optional, List, Dict, Tuple
@@ -56,10 +56,8 @@ def open_path(path: str) -> Optional[str]:
             subprocess.Popen(["open", path])
         else:
             subprocess.Popen(["xdg-open", path])
-        logging.info(tr("Путь '{path}' открыт.").format(path=path))
         return None
     except Exception as e:
-        logging.error(tr("Не удалось открыть путь '{path}': {error}").format(path=path, error=e))
         return tr("Не удалось открыть путь: {error}").format(error=e)
 
 def create_status_icon(color: str, size: Tuple[int, int] = (12, 12)) -> QIcon:
@@ -148,7 +146,6 @@ def load_script_options(config_path: str) -> Tuple[Optional[Dict[str, Tuple[str,
     try:
         config.read(config_path, encoding='utf-8')
     except configparser.Error as e:
-        logging.error(tr("Ошибка при чтении config.ini: {error}").format(error=e))
         return None, tr("Ошибка при чтении config.ini: {error}").format(error=e)
 
     section_counts = {}
@@ -160,13 +157,11 @@ def load_script_options(config_path: str) -> Tuple[Optional[Dict[str, Tuple[str,
                     section = line[1:-1].strip()
                     section_counts[section] = section_counts.get(section, 0) + 1
     except Exception as e:
-        logging.error(tr("Ошибка при обработке config.ini: {error}").format(error=e))
         return None, tr("Ошибка при обработке config.ini: {error}").format(error=e)
 
     duplicates = [name for name, count in section_counts.items() if count > 1]
     if duplicates:
         error_message = tr("Ошибка: Названия разделов конфигурации не должны повторяться: {duplicates}").format(duplicates=", ".join(duplicates))
-        logging.error(error_message)
         return None, error_message
 
     script_options = {}
@@ -263,10 +258,8 @@ def create_service() -> str:
         logging.info(tr("Служба создана и настроена для автоматического запуска"))
         return tr("Служба создана и настроена для автоматического запуска")
     except subprocess.CalledProcessError as e:
-        logging.error(tr("Не удалось создать службу. Ошибка: {error}").format(error=e))
         return tr("Не удалось создать службу")
     except Exception as e:
-        logging.error(tr("Неизвестная ошибка при создании службы: {error}").format(error=e))
         return tr("Не удалось создать службу из-за неизвестной ошибки")
 
 def delete_service() -> str:
@@ -276,7 +269,6 @@ def delete_service() -> str:
         logging.debug(tr("Команда для удаления службы: {command}").format(command=' '.join(cmd_delete)))
 
         subprocess.run(cmd_delete, check=True)
-        logging.info(tr("Служба успешно удалена"))
         return tr("Служба успешно удалена")
     except subprocess.CalledProcessError as e:
         logging.error(tr("Не удалось удалить службу. Ошибка: {error}").format(error=e))

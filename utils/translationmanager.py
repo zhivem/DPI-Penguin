@@ -1,6 +1,6 @@
-import os
 import json
 import logging
+import os
 
 class TranslationManager:
     def __init__(self, translations_folder):
@@ -8,12 +8,9 @@ class TranslationManager:
         self.translations = {}
         self.current_language = 'ru'
         self.available_languages = ['ru', 'en']
-        self.language_order = ['en'] 
-
+        self.language_order = ['en']
         self.logger = logging.getLogger(self.__class__.__name__)
-
         self.load_translations()
-
         self.language_names = {
             'ru': 'Русский',
             'en': 'English',
@@ -42,14 +39,12 @@ class TranslationManager:
 
     def translate(self, text):
         if self.current_language == 'ru':
-            return text 
-        else:
-            translated_text = self.translations.get(self.current_language, {}).get(text)
+            return text
+        translated_text = self.translations.get(self.current_language, {}).get(text)
+        if translated_text:
+            return translated_text
+        for fallback_lang in self.language_order:
+            translated_text = self.translations.get(fallback_lang, {}).get(text)
             if translated_text:
                 return translated_text
-            else:
-                for fallback_lang in self.language_order:
-                    translated_text = self.translations.get(fallback_lang, {}).get(text)
-                    if translated_text:
-                        return translated_text
-                return text
+        return text

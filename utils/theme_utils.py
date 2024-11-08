@@ -2,9 +2,9 @@ import logging
 import os
 from typing import Any, Optional
 
-from PyQt6.QtWidgets import QApplication, QWidget
 from PyQt6.QtCore import QSettings
-from qfluentwidgets import Theme, setTheme, PushButton
+from PyQt6.QtWidgets import QApplication, QWidget
+from qfluentwidgets import PushButton, Theme, setTheme
 import pywinstyles
 
 from utils.utils import tr

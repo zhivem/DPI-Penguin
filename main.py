@@ -1,29 +1,24 @@
+import atexit
+import ctypes
 import logging
 from logging.handlers import RotatingFileHandler
 import os
 import sys
-import ctypes
-import atexit
 
 if os.name == 'nt':
-    import win32event
     import win32api
     import win32con
-    import winerror
+    import win32event
     import win32process
     import win32service
     import win32serviceutil
+    import winerror
 
 from PyQt6 import QtWidgets
 from PyQt6.QtWidgets import QMessageBox
 
 from gui.gui import GoodbyeDPIApp
-from utils.utils import (
-    BASE_FOLDER,
-    CURRENT_VERSION,
-    ensure_module_installed,
-    tr,
-)
+from utils.utils import BASE_FOLDER, CURRENT_VERSION, ensure_module_installed, tr
 
 MUTEX_NAME = "ru.github.dpipenguin.mutex"
 LOG_FILENAME = os.path.join(BASE_FOLDER, "logs", f"app_penguin_v{CURRENT_VERSION}.log")
@@ -33,22 +28,10 @@ SERVICE_TO_STOP = "WinDivert"
 
 def setup_logging():
     os.makedirs(os.path.dirname(LOG_FILENAME), exist_ok=True)
-
-    handler = RotatingFileHandler(
-        LOG_FILENAME,
-        maxBytes=1 * 1024 * 1024,
-        backupCount=3
-    )
-
+    handler = RotatingFileHandler(LOG_FILENAME, maxBytes=1 * 1024 * 1024, backupCount=3)
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
     handler.setFormatter(formatter)
-
-    logging.basicConfig(
-        handlers=[handler],
-        level=logging.DEBUG,
-        force=True
-    )
-
+    logging.basicConfig(handlers=[handler], level=logging.DEBUG, force=True)
     logging.info(tr("Логирование настроено"))
 
 def is_admin() -> bool:
@@ -98,13 +81,18 @@ def terminate_processes(process_names):
             if pid == current_process_id:
                 continue
             try:
-                h_process = win32api.OpenProcess(win32con.PROCESS_TERMINATE | win32con.PROCESS_QUERY_INFORMATION | win32con.PROCESS_VM_READ, False, pid)
+                h_process = win32api.OpenProcess(
+                    win32con.PROCESS_TERMINATE | win32con.PROCESS_QUERY_INFORMATION | win32con.PROCESS_VM_READ,
+                    False, pid
+                )
                 exe_name = win32process.GetModuleFileNameEx(h_process, 0)
                 exe_base_name = os.path.basename(exe_name).lower()
                 for name in process_names:
                     if exe_base_name == name.lower():
                         win32api.TerminateProcess(h_process, 0)
-                        logging.info(tr("Процесс {exe_base_name} (PID: {pid}) успешно завершён").format(exe_base_name=exe_base_name, pid=pid))
+                        logging.info(tr("Процесс {exe_base_name} (PID: {pid}) успешно завершён").format(
+                            exe_base_name=exe_base_name, pid=pid
+                        ))
                 win32api.CloseHandle(h_process)
             except Exception as e:
                 logging.debug(tr("Не удалось завершить PID {pid}: {e}").format(pid=pid, e=e))
@@ -145,16 +133,14 @@ def main():
     terminate_and_stop_services()
 
     if not ensure_single_instance():
-       logging.info(tr("Попытка запустить вторую копию приложения"))
-       QMessageBox.warning(None, tr("Предупреждение"), tr("Приложение уже запущено"))
-       sys.exit(0)
+        logging.info(tr("Попытка запустить вторую копию приложения"))
+        QMessageBox.warning(None, tr("Предупреждение"), tr("Приложение уже запущено"))
+        sys.exit(0)
 
     ensure_module_installed('packaging')
 
     window = GoodbyeDPIApp()
-
     app.aboutToQuit.connect(window.stop_and_close)
-
     result = app.exec()
 
 if __name__ == '__main__':

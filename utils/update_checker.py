@@ -1,11 +1,11 @@
-# utils/update_checker.py
-
-import os
-import requests
 import configparser
 import logging
+import os
+
+import requests
 from packaging.version import parse as parse_version
-from utils.utils import tr, BASE_FOLDER, CURRENT_VERSION
+
+from utils.utils import BASE_FOLDER, CURRENT_VERSION, tr
 
 class UpdateChecker:
     BLACKLISTS = [
@@ -49,13 +49,11 @@ class UpdateChecker:
             config.read(version_file_path, encoding='utf-8')
             if 'VERSION' in config:
                 versions = {k: v.strip() for k, v in config['VERSION'].items()}
-                # Добавляем текущую версию программы, если её нет в файле
                 versions.setdefault('ver_programm', CURRENT_VERSION)
             else:
-                self.logger.warning(tr(f"Файл версии не содержит секцию [VERSION]"))
+                self.logger.warning(tr("Файл версии не содержит секцию [VERSION]"))
         else:
             self.logger.warning(tr(f"Локальный файл версии не найден: {version_file_path}"))
-            # Если файла нет, устанавливаем текущую версию программы
             versions['ver_programm'] = CURRENT_VERSION
         self.local_versions = versions
 
@@ -82,8 +80,7 @@ class UpdateChecker:
         remote_version = self.remote_versions.get(component)
         if local_version and remote_version:
             return self.is_newer_version(remote_version, local_version)
-        else:
-            return False
+        return False
 
     def is_newer_version(self, latest, current):
         try:
@@ -93,9 +90,6 @@ class UpdateChecker:
             return False
 
     def update_blacklists(self):
-        """
-        Обновляет черные списки из заданных URL.
-        """
         success = True
         for blacklist in self.BLACKLISTS:
             name = blacklist['name']

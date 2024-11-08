@@ -178,7 +178,7 @@
     "Обновление": "Update",
     "Предупреждение": "Warning", 
     "Произошла ошибка при обновлении": "An error occurred during the update",
-    "🔄 Доступна <span style=\"color: red;\">новая версия</span> программы": "🔄 A new <span style=\"color: red;\">version</span> of the program is available",
+    "🔄 Доступна <span style=\"color: red;\">новая версия</span> программы. Перейдите на страницу загрузки": "🔄 A new version of the program is available <span style=\"color: red;\">. Go to the download page",
     "🔄 Доступно <span style=\"color: red;\">обновление</span> Zapret": "🔄 Available <span style=\"color: red;\">update</span> Zapret",
     "🔄 Доступно <span style=\"color: red;\">обновление</span> для конфигурационного файла": "🔄 Available <span style=\"color: red;\">update</span> for the configuration file",
     "✅ Версия Zapret актуальна": "✅ Zapret version is up to date",
