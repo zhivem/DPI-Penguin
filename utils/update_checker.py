@@ -42,7 +42,7 @@ class UpdateChecker:
         self.remote_versions = {}
 
     def get_local_versions(self):
-        version_file_path = os.path.join(BASE_FOLDER, "zapret", "version", "version_zapret.ini")
+        version_file_path = os.path.join(BASE_FOLDER, "setting_version", "version_config.ini")
         versions = {}
         if os.path.exists(version_file_path):
             config = configparser.ConfigParser()
@@ -61,7 +61,7 @@ class UpdateChecker:
 
     def get_remote_versions(self):
         versions = {}
-        version_url = "https://raw.githubusercontent.com/zhivem/DPI-Penguin/main/zapret/version/version_zapret.ini"
+        version_url = "https://raw.githubusercontent.com/zhivem/DPI-Penguin/refs/heads/main/setting_version/version_config.ini"
         try:
             response = requests.get(version_url, timeout=10)
             if response.status_code == 200:

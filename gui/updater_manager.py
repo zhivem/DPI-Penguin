@@ -16,7 +16,7 @@ from PyQt6.QtWidgets import (
     QMessageBox,
 )
 from PyQt6.QtCore import pyqtSlot, pyqtSignal
-from utils.utils import tr, BASE_FOLDER, CURRENT_VERSION
+from utils.utils import tr, BASE_FOLDER
 from utils.update_checker import UpdateChecker
 from qfluentwidgets import PushButton, TextEdit
 
@@ -230,21 +230,21 @@ class SettingsDialog(QDialog):
 
     def update_local_version_file(self):
         """
-        Загружает последнюю версию version_zapret.ini с GitHub и обновляет локальный файл.
+        Загружает последнюю версию version_config.ini с GitHub и обновляет локальный файл.
         """
         self.logger.info(tr("Обновление локального version_zapret.ini..."))
         try:
-            version_url = "https://raw.githubusercontent.com/zhivem/DPI-Penguin/main/setting_version/version_zapret.ini"
+            version_url = "https://raw.githubusercontent.com/zhivem/DPI-Penguin/refs/heads/main/setting_version/version_config.ini"
             response = requests.get(version_url)
             if response.status_code == 200:
-                version_dir = os.path.join(BASE_FOLDER, "zapret", "version")
+                version_dir = os.path.join(BASE_FOLDER, "setting_version")
                 os.makedirs(version_dir, exist_ok=True)
-                local_version_file = os.path.join(version_dir, "version_zapret.ini")
+                local_version_file = os.path.join(version_dir, "version_config.ini")
                 with open(local_version_file, "w", encoding='utf-8') as f:
                     f.write(response.text)
-                self.logger.info(tr("Локальный version_zapret.ini успешно обновлён."))
+                self.logger.info(tr("Локальный version_config.ini успешно обновлён."))
             else:
-                self.logger.warning(tr(f"Не удалось скачать version_zapret.ini. Статус код: {response.status_code}"))
+                self.logger.warning(tr(f"Не удалось скачать version_config.ini. Статус код: {response.status_code}"))
         except Exception as e:
             self.logger.error(tr(f"Произошла ошибка при обновлении version_zapret.ini: {e}"))
             raise e
