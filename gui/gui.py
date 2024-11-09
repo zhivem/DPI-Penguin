@@ -3,7 +3,7 @@ import logging
 import os
 
 from PyQt6 import QtCore, QtGui, QtWidgets
-from PyQt6.QtCore import pyqtSlot
+from PyQt6.QtCore import pyqtSlot, QTimer
 from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWidgets import (
     QCheckBox,
@@ -58,6 +58,7 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         self.minimize_to_tray = settings.value("minimize_to_tray", True, type=bool)
         self.autostart_enabled = is_autostart_enabled()
         self.autorun_with_last_config = settings.value("autorun_with_last_config", False, type=bool)
+        self.logger.debug(f"autorun_with_last_config: {self.autorun_with_last_config}")
 
         if self.autorun_with_last_config:
             last_config_path = settings.value("last_config_path", os.path.join(BASE_FOLDER, "config", "default.ini"))
@@ -88,27 +89,30 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         self.check_updates()
 
         if self.autorun_with_last_config and not self.config_error:
-            last_selected_script = settings.value("last_selected_script", None)
-            if last_selected_script and last_selected_script in self.script_options:
-                index = self.selected_script.findData(last_selected_script)
-                if index >= 0:
-                    self.selected_script.setCurrentIndex(index)
-            else:
-                if self.selected_script.count() > 0:
-                    self.selected_script.setCurrentIndex(0)
-
-            self.logger.info(tr("Автоматический запуск с последним конфигом активирован. Запуск процесса..."))
-            self.run_exe(auto_run=True)
-            self.hide()
-            self.tray_icon.show()
-            self.tray_icon.showMessage(
-                tr("DPI Penguin by Zhivem"),
-                tr("Приложение запущено с последней выбранной конфигурацией"),
-                QSystemTrayIcon.MessageIcon.Information,
-                3000
-            )
+            QTimer.singleShot(0, self.run_autorun)
         else:
             self.show()
+
+    def run_autorun(self):
+        last_selected_script = settings.value("last_selected_script", None)
+        if last_selected_script and last_selected_script in self.script_options:
+            index = self.selected_script.findData(last_selected_script)
+            if index >= 0:
+                self.selected_script.setCurrentIndex(index)
+        else:
+            if self.selected_script.count() > 0:
+                self.selected_script.setCurrentIndex(0)
+
+        self.logger.info(tr("Автоматический запуск с последним конфигом активирован. Запуск процесса..."))
+        self.run_exe(auto_run=True)
+        self.hide()
+        self.tray_icon.show()
+        self.tray_icon.showMessage(
+            tr("DPI Penguin by Zhivem"),
+            tr("Приложение запущено с последней выбранной конфигурацией"),
+            QSystemTrayIcon.MessageIcon.Information,
+            3000
+        )
 
     def ensure_logs_folder_exists(self):
         logs_folder = os.path.join(BASE_FOLDER, "logs")

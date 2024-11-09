@@ -29,7 +29,7 @@
     "Приложение запущено с последней выбранной конфигурацией": "The application is running with the last selected configuration",
     "Завершение работы WorkerThread перед загрузкой новой конфигурации": "Shutting down WorkerThread before uploading a new configuration",
     "Выберите файл конфигурации": "Select Configuration File",
-    "INI Files (*.ini)": "INI Files (*.ini)",
+    "INI файлы (*.ini)": "INI Files (*.ini)",
     "Ошибка загрузки конфигурации": "Configuration Load Error",
     "Обход блокировки YouTube": "YouTube Block Bypass",
     "Обход Discord + YouTube": "Discord + YouTube Bypass",

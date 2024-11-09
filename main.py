@@ -94,8 +94,6 @@ def main():
     initializer_thread.error_signal.connect(lambda msg: QMessageBox.critical(None, tr("Ошибка инициализации"), msg))
     initializer_thread.start()
 
-    window.show()
-
     result = app.exec()
 
     initializer_thread.quit()
