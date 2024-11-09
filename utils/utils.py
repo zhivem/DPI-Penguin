@@ -28,7 +28,8 @@ def set_language(lang_code: str):
 BASE_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 ZAPRET_FOLDER = os.path.join(BASE_FOLDER, "zapret")
 CONFIG_PATH = os.path.join(BASE_FOLDER, "config", 'default.ini')
-CURRENT_VERSION: str = "1.7"
+
+CURRENT_VERSION: str = "1.7.1"
 
 BLACKLIST_FOLDER = os.path.join(BASE_FOLDER, "black")
 ICON_FOLDER = os.path.join(BASE_FOLDER, "resources", "icon")

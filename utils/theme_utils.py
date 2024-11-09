@@ -16,6 +16,7 @@ LIGHT_STYLESHEET = "light_theme.qss"
 STYLES_FOLDER = "resources/styles"
 ICON_FOLDER = "resources/icon"
 
+
 def apply_theme(
     app_instance: QApplication,
     theme_name: str,
@@ -35,6 +36,7 @@ def apply_theme(
     settings.setValue("theme", theme_name)
     logging.info(tr("Тема '{theme_name}' применена").format(theme_name=theme_name))
 
+
 def apply_stylesheet(
     app_instance: QApplication,
     stylesheet_name: str,
@@ -50,6 +52,7 @@ def apply_stylesheet(
         logging.error(tr("Файл стилей не найден: {style_path}").format(style_path=style_path))
     except Exception as e:
         logging.error(tr("Не удалось загрузить файл стилей {style_path}: {e}").format(style_path=style_path, e=e))
+
 
 def update_theme_button_text(
     app_instance: QWidget,
@@ -71,6 +74,7 @@ def update_theme_button_text(
 
     logging.debug(tr("Текст кнопки переключения темы обновлён на '{text}'").format(text=theme_button.text()))
 
+
 def toggle_theme(
     app_instance: Any,
     settings: Any,
@@ -82,8 +86,10 @@ def toggle_theme(
     update_theme_button_text(app_instance, settings)
     logging.info(tr("Тема переключена с '{current_theme}' на '{new_theme}'.").format(current_theme=current_theme, new_theme=new_theme))
 
+
 def get_stylesheet_path(base_folder: str, stylesheet_name: str) -> str:
     return os.path.join(base_folder, STYLES_FOLDER, stylesheet_name)
+
 
 def get_stylesheet(
     stylesheet_name: str,

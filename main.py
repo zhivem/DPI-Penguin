@@ -9,9 +9,6 @@ if os.name == 'nt':
     import win32api
     import win32con
     import win32event
-    import win32process
-    import win32service
-    import win32serviceutil
     import winerror
 
 from PyQt6 import QtWidgets
@@ -19,6 +16,7 @@ from PyQt6.QtWidgets import QMessageBox
 
 from gui.gui import GoodbyeDPIApp
 from utils.utils import BASE_FOLDER, CURRENT_VERSION, ensure_module_installed, tr
+from workers.process_worker import InitializerThread 
 
 MUTEX_NAME = "ru.github.dpipenguin.mutex"
 LOG_FILENAME = os.path.join(BASE_FOLDER, "logs", f"app_penguin_v{CURRENT_VERSION}.log")
@@ -72,65 +70,12 @@ def ensure_single_instance():
         atexit.register(win32api.CloseHandle, handle)
     return True
 
-def terminate_processes(process_names):
-    logging.info(tr("Попытка завершить указанные процессы"))
-    current_process_id = win32api.GetCurrentProcessId()
-    try:
-        process_ids = win32process.EnumProcesses()
-        for pid in process_ids:
-            if pid == current_process_id:
-                continue
-            try:
-                h_process = win32api.OpenProcess(
-                    win32con.PROCESS_TERMINATE | win32con.PROCESS_QUERY_INFORMATION | win32con.PROCESS_VM_READ,
-                    False, pid
-                )
-                exe_name = win32process.GetModuleFileNameEx(h_process, 0)
-                exe_base_name = os.path.basename(exe_name).lower()
-                for name in process_names:
-                    if exe_base_name == name.lower():
-                        win32api.TerminateProcess(h_process, 0)
-                        logging.info(tr("Процесс {exe_base_name} (PID: {pid}) успешно завершён").format(
-                            exe_base_name=exe_base_name, pid=pid
-                        ))
-                win32api.CloseHandle(h_process)
-            except Exception as e:
-                logging.debug(tr("Не удалось завершить PID {pid}: {e}").format(pid=pid, e=e))
-    except Exception as e:
-        logging.error(tr("Ошибка при перечислении процессов: {e}").format(e=e))
-
-def stop_service(service_name):
-    logging.info(tr("Попытка остановить службу {service_name}.").format(service_name=service_name))
-    try:
-        status = win32serviceutil.QueryServiceStatus(service_name)[1]
-        if status == win32service.SERVICE_RUNNING:
-            win32serviceutil.StopService(service_name)
-            win32serviceutil.WaitForServiceStatus(service_name, win32service.SERVICE_STOPPED, 30)
-            logging.info(tr("Служба {service_name} успешно остановлена.").format(service_name=service_name))
-        else:
-            logging.info(tr("Служба {service_name} не запущена").format(service_name=service_name))
-    except win32service.error as e:
-        if e.winerror == winerror.ERROR_SERVICE_DOES_NOT_EXIST:
-            logging.warning(tr("Служба {service_name} не найдена").format(service_name=service_name))
-        else:
-            logging.error(tr("Не удалось остановить службу {service_name}: {e}").format(service_name=service_name, e=e))
-    except Exception as e:
-        logging.error(tr("Неожиданная ошибка при остановке службы {service_name}: {e}").format(service_name=service_name, e=e))
-
-def terminate_and_stop_services():
-    if os.name == 'nt':
-        terminate_processes(PROCESSES_TO_TERMINATE)
-        stop_service(SERVICE_TO_STOP)
-
 def main():
     setup_logging()
-    app = QtWidgets.QApplication(sys.argv)
 
     if not is_admin():
         logging.info(tr("Перезапуск программы с правами администратора"))
         run_as_admin()
-
-    terminate_and_stop_services()
 
     if not ensure_single_instance():
         logging.info(tr("Попытка запустить вторую копию приложения"))
@@ -139,9 +84,22 @@ def main():
 
     ensure_module_installed('packaging')
 
+    app = QtWidgets.QApplication(sys.argv)
+
     window = GoodbyeDPIApp()
     app.aboutToQuit.connect(window.stop_and_close)
+
+    initializer_thread = InitializerThread(PROCESSES_TO_TERMINATE, SERVICE_TO_STOP)
+    initializer_thread.initialization_complete.connect(lambda: logging.info(tr("Инициализация завершена")))
+    initializer_thread.error_signal.connect(lambda msg: QMessageBox.critical(None, tr("Ошибка инициализации"), msg))
+    initializer_thread.start()
+
+    window.show()
+
     result = app.exec()
+
+    initializer_thread.quit()
+    initializer_thread.wait()
 
 if __name__ == '__main__':
     main()

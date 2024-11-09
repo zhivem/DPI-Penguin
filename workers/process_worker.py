@@ -4,9 +4,16 @@ import os
 import subprocess
 from typing import List, Optional
 
+import psutil
 from PyQt6 import QtCore
 
 from utils.utils import tr
+
+if os.name == 'nt':
+    import win32api
+    import win32service
+    import win32serviceutil
+    import winerror
 
 class WorkerThread(QtCore.QThread):
     output_signal = QtCore.pyqtSignal(str)
@@ -108,3 +115,81 @@ class WorkerThread(QtCore.QThread):
                     process_name=self.process_name,
                     error=e
                 ))
+
+    def close_winws(self):
+        self.logger.info(tr("Попытка завершить процесс winws.exe"))
+        self._close_process("winws.exe", "winws.exe")
+
+    def _close_process(self, process_name: str, display_name: str):
+        try:
+            for proc in psutil.process_iter(['pid', 'name']):
+                if proc.info['name'] and proc.info['name'].lower() == process_name.lower():
+                    psutil.Process(proc.info['pid']).terminate()
+                    self.output_signal.emit(tr("Обход остановлен"))
+                    self.logger.debug(f"{tr('Процесс')} {display_name} (PID: {proc.info['pid']}) {tr('завершён')}")
+        except psutil.NoSuchProcess:
+            self.logger.warning(f"{tr('Процесс')} {display_name} {tr('не найден.')}")
+        except psutil.AccessDenied:
+            error_msg = f"{tr('Недостаточно прав для завершения процесса')} {display_name}"
+            self.logger.error(error_msg)
+            self.output_signal.emit(f"{tr('Ошибка')}: {tr('Недостаточно прав для завершения процесса')} {display_name}")
+        except Exception as e:
+            error_msg = f"{tr('Ошибка завершения процесса')} {display_name}: {str(e)}"
+            self.output_signal.emit(error_msg)
+            self.logger.error(error_msg)
+
+class InitializerThread(QtCore.QThread):
+    initialization_complete = QtCore.pyqtSignal()
+    error_signal = QtCore.pyqtSignal(str)
+
+    def __init__(self, processes_to_terminate: List[str], service_to_stop: str):
+        super().__init__()
+        self.processes_to_terminate = processes_to_terminate
+        self.service_to_stop = service_to_stop
+        self.logger = logging.getLogger(self.__class__.__name__)
+
+    def run(self):
+        try:
+            self.logger.info(tr("Инициализация: завершение процессов и остановка службы"))
+            self.terminate_processes(self.processes_to_terminate)
+            self.stop_service(self.service_to_stop)
+            self.logger.info(tr("Инициализация завершена"))
+            self.initialization_complete.emit()
+        except Exception as e:
+            error_msg = tr("Ошибка инициализации: {e}").format(e=e)
+            self.logger.error(error_msg, exc_info=True)
+            self.error_signal.emit(error_msg)
+
+    def terminate_processes(self, process_names: List[str]):
+        current_process_id = win32api.GetCurrentProcessId()
+        for proc in psutil.process_iter(['pid', 'name']):
+            pid = proc.info['pid']
+            exe_name = proc.info['name']
+            if exe_name is None:
+                continue
+            exe_base_name = os.path.basename(exe_name).lower()
+            if exe_base_name in [name.lower() for name in process_names] and pid != current_process_id:
+                try:
+                    proc.terminate()
+                    proc.wait(timeout=5)
+                    self.logger.info(tr("Процесс {exe_base_name} (PID: {pid}) успешно завершён").format(
+                        exe_base_name=exe_base_name, pid=pid
+                    ))
+                except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.TimeoutExpired) as e:
+                    self.logger.warning(tr("Не удалось завершить PID {pid}: {e}").format(pid=pid, e=e))
+
+    def stop_service(self, service_name: str):
+        try:
+            status = win32serviceutil.QueryServiceStatus(service_name)[1]
+            if status == win32service.SERVICE_RUNNING:
+                win32serviceutil.StopService(service_name)
+                win32serviceutil.WaitForServiceStatus(service_name, win32service.SERVICE_STOPPED, 30)
+            else:
+                self.logger.info(tr("Служба {service_name} не запущена").format(service_name=service_name))
+        except win32service.error as e:
+            if e.winerror == winerror.ERROR_SERVICE_DOES_NOT_EXIST:
+                self.logger.warning(tr("Служба {service_name} не найдена").format(service_name=service_name))
+            else:
+                self.logger.error(tr("Не удалось остановить службу {service_name}: {e}").format(service_name=service_name, e=e))
+        except Exception as e:
+            self.logger.error(tr("Неожиданная ошибка при остановке службы {service_name}: {e}").format(service_name=service_name, e=e))

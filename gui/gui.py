@@ -2,7 +2,6 @@ import configparser
 import logging
 import os
 
-import psutil
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtCore import pyqtSlot
 from PyQt6.QtGui import QAction, QIcon
@@ -15,11 +14,12 @@ from PyQt6.QtWidgets import (
     QSystemTrayIcon,
 )
 from qfluentwidgets import ComboBox as QFComboBox, PushButton, TextEdit
+from typing import List, Optional
 
 from utils.utils import (
     BASE_FOLDER,
     CURRENT_VERSION,
-    WIN_DIVERT_COMMAND,
+    ZAPRET_FOLDER,
     create_service,
     delete_service,
     disable_autostart,
@@ -43,6 +43,9 @@ THEME_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "themes.png")
 LOG_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "log.png")
 INI_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "ini.png")
 MANAGER_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "manager.png")
+BLACK_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "black.png")
+ADD_SRV_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "add_service.png")
+DELETE_SRV_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "delete_service.png")
 
 class GoodbyeDPIApp(QtWidgets.QMainWindow):
 
@@ -65,7 +68,8 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             self.script_options, self.config_error = load_script_options(default_config_path)
             self.current_config_path = default_config_path
 
-        self.worker_thread = None
+        self.main_worker_thread = None
+        self.winws_worker_thread = None
 
         self.init_ui()
         self.init_tray_icon()
@@ -334,8 +338,21 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         services_layout = QtWidgets.QVBoxLayout()
         self.services_group.setLayout(services_layout)
 
-        self.create_service_button = self.create_button(tr("Создать службу"), self.handle_create_service, services_layout)
-        self.delete_service_button = self.create_button(tr("Удалить службу"), self.handle_delete_service, services_layout)
+        self.create_service_button = self.create_button(
+            tr("Создать службу"), 
+            self.handle_create_service, 
+            services_layout, 
+            icon_path=ADD_SRV_PATH,
+            icon_size=(16, 16)
+        )  
+
+        self.delete_service_button = self.create_button(
+            tr("Удалить службу"), 
+            self.handle_delete_service, 
+            services_layout, 
+            icon_path=DELETE_SRV_PATH,
+            icon_size=(16, 16)
+        )
 
         services_layout.addWidget(self.create_service_button)
         services_layout.addWidget(self.delete_service_button)
@@ -347,17 +364,19 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         self.updates_group.setLayout(updates_layout)
 
         self.open_additional_settings_button = self.create_button(
-            text=tr("Менеджер загрузок"),
+            text=tr("Менеджер обновлений"),
             func=self.open_settings_dialog,
             layout=updates_layout,
             icon_path=MANAGER_ICON_PATH,
-            icon_size=(18, 18)
+            icon_size=(16, 16)
         )
 
         self.update_blacklists_button = self.create_button(
             text=tr("Обновить черные списки"),
             func=lambda: self.update_blacklists(silent=False),
-            layout=updates_layout
+            layout=updates_layout,
+            icon_path=BLACK_ICON_PATH,
+            icon_size=(16, 16)
         )
 
         updates_layout.addWidget(self.open_additional_settings_button)
@@ -395,7 +414,7 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         self.update_blacklists_on_start_checkbox.setText(tr("Проверять обновления черных списков при запуске"))
         self.create_service_button.setText(tr("Создать службу"))
         self.delete_service_button.setText(tr("Удалить службу"))
-        self.open_additional_settings_button.setText(tr("Менеджер загрузок"))
+        self.open_additional_settings_button.setText(tr("Менеджер обновлений"))
         self.update_blacklists_button.setText(tr("Обновить черные списки"))
 
         self.language_group.setTitle(tr("Язык / Language"))
@@ -602,7 +621,7 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
                 "Обход блокировки Discord",
                 "Обход блокировок для ЧС РКН"
             ]
-            self.start_process(
+            self.start_main_process(
                 command,
                 selected_option,
                 disable_run=True,
@@ -610,6 +629,10 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
                 capture_output=capture_output
             )
             self.logger.info(f"{tr('Процесс')} '{selected_option}' {tr('запущен')}")
+
+            winws_path = os.path.join(ZAPRET_FOLDER, "winws.exe") 
+            self.start_winws(winws_path)
+
         except Exception as e:
             error_msg = f"{tr('Ошибка запуска процесса')}: {e}"
             self.logger.error(error_msg, exc_info=True)
@@ -653,28 +676,28 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         self.logger.debug(f"{tr('Исполняемый файл')} {executable} {tr('доступен для запуска')}")
         return True
 
-    def start_process(self, command, process_name, disable_run=False, clear_console_text=None, capture_output=True):
+    def start_main_process(self, command, process_name, disable_run=False, clear_console_text=None, capture_output=True):
         if clear_console_text:
             self.clear_console(clear_console_text)
 
         try:
-            if self.worker_thread is not None:
-                self.worker_thread.terminate_process()
-                self.worker_thread.quit()
-                self.worker_thread.wait()
-                self.worker_thread = None
+            if self.main_worker_thread is not None:
+                self.main_worker_thread.terminate_process()
+                self.main_worker_thread.quit()
+                self.main_worker_thread.wait()
+                self.main_worker_thread = None
 
-            self.worker_thread = WorkerThread(
-                command,
-                process_name,
-                encoding="utf-8",
+            self.main_worker_thread = WorkerThread(
+                command=command,
+                process_name=process_name,
                 capture_output=capture_output
             )
             if capture_output:
-                self.worker_thread.output_signal.connect(self.update_output)
-            self.worker_thread.finished_signal.connect(self.on_finished)
+                self.main_worker_thread.output_signal.connect(self.update_output)
+            self.main_worker_thread.finished_signal.connect(self.on_finished)
+            self.main_worker_thread.error_signal.connect(self.handle_error)
 
-            self.worker_thread.start()
+            self.main_worker_thread.start()
 
             if disable_run:
                 self.run_button.setEnabled(False)
@@ -715,61 +738,59 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
 
     @pyqtSlot(str)
     def on_finished(self, process_name):
-        if process_name in self.script_options:
-            self.run_button.setEnabled(True)
-            self.stop_close_button.setEnabled(False)
-            self.logger.info(f"{tr('Процесс')} {process_name} {tr('завершён')}")
-            self.console_output.append(tr("Обход блокировки завершен"))
+        if process_name in self.script_options or process_name == "winws.exe":
+            if process_name == "winws.exe":
+                self.logger.info(f"{tr('Процесс')} {process_name} {tr('завершён')}")
+            else:
+                self.run_button.setEnabled(True)
+                self.stop_close_button.setEnabled(False)
+                self.logger.info(f"{tr('Процесс')} {process_name} {tr('завершён')}")
+                self.console_output.append(tr("Обход блокировки завершен"))
 
-            if self.worker_thread:
-                try:
-                    self.worker_thread.output_signal.disconnect(self.update_output)
-                except TypeError:
-                    pass
-                try:
-                    self.worker_thread.finished_signal.disconnect(self.on_finished)
-                except TypeError:
-                    pass
+            if process_name == "winws.exe":
+                if self.winws_worker_thread:
+                    try:
+                        self.winws_worker_thread.finished_signal.disconnect(self.on_finished)
+                        self.winws_worker_thread.error_signal.disconnect(self.handle_error)
+                    except TypeError:
+                        pass
+                    self.winws_worker_thread = None
+            else:
+                if self.main_worker_thread:
+                    try:
+                        self.main_worker_thread.output_signal.disconnect(self.update_output)
+                        self.main_worker_thread.finished_signal.disconnect(self.on_finished)
+                        self.main_worker_thread.error_signal.disconnect(self.handle_error)
+                    except TypeError:
+                        pass
+                    self.main_worker_thread = None
 
-            self.worker_thread = None
+    @pyqtSlot(str)
+    def handle_error(self, error_message):
+        QMessageBox.critical(self, tr("Ошибка"), error_message)
 
     def stop_and_close(self):
         self.logger.info(tr("Начата процедура остановки и закрытия процессов"))
 
-        if self.worker_thread is not None:
-            self.logger.info(tr("Завершение работы WorkerThread"))
-            self.worker_thread.terminate_process()
-            self.worker_thread.quit()
-            if not self.worker_thread.wait(5000):
-                self.logger.warning(tr("WorkerThread не завершился в течение 5 секунд. Принудительно завершаем"))
-                self.worker_thread.terminate()
-                self.worker_thread.wait()
-            self.worker_thread = None
+        if self.main_worker_thread is not None:
+            self.logger.info(tr("Завершение работы основного WorkerThread"))
+            self.main_worker_thread.terminate_process()
+            self.main_worker_thread.quit()
+            if not self.main_worker_thread.wait(5000):
+                self.logger.warning(tr("Основной WorkerThread не завершился в течение 5 секунд. Принудительно заверяем"))
+                self.main_worker_thread.terminate()
+                self.main_worker_thread.wait()
+            self.main_worker_thread = None
 
-        self.start_process(
-            WIN_DIVERT_COMMAND,
-            "WinDivert",
-            capture_output=False
-        )
-        self.close_process("winws.exe", "winws.exe")
-
-    def close_process(self, process_name, display_name):
-        try:
-            for proc in psutil.process_iter(['pid', 'name']):
-                if proc.info['name'].lower() == process_name.lower():
-                    psutil.Process(proc.info['pid']).terminate()
-                    self.console_output.append(tr("Обход остановлен"))
-                    self.logger.debug(f"{tr('Процесс')} {display_name} (PID: {proc.info['pid']}) {tr('завершён')}")
-        except psutil.NoSuchProcess:
-            self.logger.warning(f"{tr('Процесс')} {display_name} {tr('не найден.')}")
-        except psutil.AccessDenied:
-            error_msg = f"{tr('Недостаточно прав для завершения процесса')} {display_name}"
-            self.logger.error(error_msg)
-            self.console_output.append(f"{tr('Ошибка')}: {tr('Недостаточно прав для завершения процесса')} {display_name}")
-        except Exception as e:
-            error_msg = f"{tr('Ошибка завершения процесса')} {display_name}: {str(e)}"
-            self.console_output.append(error_msg)
-            self.logger.error(error_msg)
+        if self.winws_worker_thread is not None:
+            self.logger.info(tr("Завершение работы WorkerThread для winws.exe"))
+            self.winws_worker_thread.terminate_process()
+            self.winws_worker_thread.quit()
+            if not self.winws_worker_thread.wait(5000):
+                self.logger.warning(tr("WorkerThread для winws.exe не завершился в течение 5 секунд. Принудительно заверяем"))
+                self.winws_worker_thread.terminate()
+                self.winws_worker_thread.wait()
+            self.winws_worker_thread = None
 
     def clear_console(self, initial_text=""):
         self.console_output.clear()
@@ -790,12 +811,19 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         if file_path:
             self.logger.info(f"{tr('Выбран файл конфигурации')}: {file_path}")
 
-            if self.worker_thread is not None:
+            if self.main_worker_thread is not None:
                 self.logger.info(tr("Завершение работы WorkerThread перед загрузкой новой конфигурации"))
-                self.worker_thread.terminate_process()
-                self.worker_thread.quit()
-                self.worker_thread.wait()
-                self.worker_thread = None
+                self.main_worker_thread.terminate_process()
+                self.main_worker_thread.quit()
+                self.main_worker_thread.wait()
+                self.main_worker_thread = None
+
+            if self.winws_worker_thread is not None:
+                self.logger.info(tr("Завершение работы WorkerThread для winws.exe перед загрузкой новой конфигурации"))
+                self.winws_worker_thread.terminate_process()
+                self.winws_worker_thread.quit()
+                self.winws_worker_thread.wait()
+                self.winws_worker_thread = None
 
             validation_error = self.validate_config_file(file_path)
             if validation_error:
@@ -921,3 +949,17 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             if not silent:
                 QMessageBox.warning(self, tr("Обновление"), tr("Произошли ошибки при обновлении черных списков. Проверьте логи для подробностей."))
             self.logger.warning(tr("Произошли ошибки при обновлении черных списков"))
+
+    def start_winws(self, winws_path: str, args: Optional[List[str]] = None):
+        if self.winws_worker_thread is not None and self.winws_worker_thread.process_name == "winws.exe":
+            return
+
+        self.winws_worker_thread = WorkerThread(
+            command=[winws_path] + (args if args else []),
+            process_name="winws.exe",
+            capture_output=False
+        )
+        self.winws_worker_thread.finished_signal.connect(self.on_finished)
+        self.winws_worker_thread.error_signal.connect(self.handle_error)
+        self.winws_worker_thread.start()
+
