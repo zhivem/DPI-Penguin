@@ -91,8 +91,8 @@ The program archive contains configurations you can use instead of the regular `
 You can edit `.qss` files in the `.._internal\resources\styles` folder according to your preferences if you dislike the default program interface.
 
 ```py
-dark_theme.qss - темный интерфейс
-light_theme.qss - светлый интерфейс
+dark_theme.qss - dark interface
+light_theme.qss - light interface
 ```
 
 ## Installation
