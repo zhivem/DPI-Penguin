@@ -20,6 +20,8 @@ from utils.utils import (
     BASE_FOLDER,
     CURRENT_VERSION,
     ZAPRET_FOLDER,
+    CONFIG_VERSION,
+    ZAPRET_VERSION,
     create_service,
     delete_service,
     disable_autostart,
@@ -501,7 +503,7 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             {
                 "title": "Discord Fix [howdyho]",
                 "description": tr("Конфигурации"),
-                "version": "5.8",
+                "version": f"{CONFIG_VERSION}",
                 "developer": "Абрахам",
                 "links": [
                     "https://howdyho.net",
@@ -511,7 +513,7 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             {
                 "title": "Zapret",
                 "description": tr("Основа для работы Discord и YouTube"),
-                "version": "67",
+                "version": f"{ZAPRET_VERSION}",
                 "developer": "bol-van",
                 "links": [
                     "https://github.com/bol-van/zapret",
