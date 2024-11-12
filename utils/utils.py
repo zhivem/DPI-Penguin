@@ -28,10 +28,14 @@ def set_language(lang_code: str):
 BASE_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 ZAPRET_FOLDER = os.path.join(BASE_FOLDER, "zapret")
 CONFIG_PATH = os.path.join(BASE_FOLDER, "config", 'default.ini')
+SETTING_VER = os.path.join('setting_version', 'version_config.ini')
 
-CURRENT_VERSION: str = "1.7.2" # Версия приложения
-ZAPRET_VERSION: str = "68"     # Версия Zapret
-CONFIG_VERSION: str = "5.9"    # Версия Config
+config = configparser.ConfigParser()
+config.read(SETTING_VER)
+
+CURRENT_VERSION = config.get('VERSION', 'ver_programm')
+ZAPRET_VERSION = config.get('VERSION', 'zapret')
+CONFIG_VERSION = config.get('VERSION', 'config')
 
 BLACKLIST_FOLDER = os.path.join(BASE_FOLDER, "black")
 ICON_FOLDER = os.path.join(BASE_FOLDER, "resources", "icon")
