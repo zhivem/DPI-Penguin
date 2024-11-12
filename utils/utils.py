@@ -28,7 +28,7 @@ def set_language(lang_code: str):
 BASE_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 ZAPRET_FOLDER = os.path.join(BASE_FOLDER, "zapret")
 CONFIG_PATH = os.path.join(BASE_FOLDER, "config", 'default.ini')
-SETTING_VER = os.path.join('setting_version', 'version_config.ini')
+SETTING_VER = os.path.join(BASE_FOLDER, "setting_version", "version_config.ini")
 
 config = configparser.ConfigParser()
 config.read(SETTING_VER)
