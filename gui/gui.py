@@ -475,7 +475,7 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             tr("Версия"): f"{CURRENT_VERSION}",
             tr("Разработчик"): "Zhivem",
             tr("Репозиторий на GitHub"): f"<a href='https://github.com/zhivem/DPI-Penguin'>{tr('DPI Penguin')}</a>",
-            tr("Релизы"): f"<a href='https://github.com/zhivem/DPI-Penguin/releases'>{tr('Релизы')}</a>",
+            tr("Релизы"): f"<a href='https://github.com/zhivem/DPI-Penguin/releases'>{tr('Все версии')}</a>",
             tr("Лицензия"): tr("© 2024 Zhivem. Лицензия: Apache")
         }
 

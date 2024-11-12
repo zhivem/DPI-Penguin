@@ -56,3 +56,10 @@ cdn.7tv.gg
 emotes.7tv.app
 events.7tv.app
 static.7tv.app
+betterttv.net
+frankerfacez.com
+cdn.betterttv.net
+cdn2.frankerfacez.com
+cdn.frankerfacez.com
+api.ffzap.com
+api.frankerfacez.com
