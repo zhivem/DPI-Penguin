@@ -121,5 +121,4 @@ light_theme.qss - светлый интерфейс
 
 ## Лицензия 
 
-Этот проект лицензирован под [Apache License, Version 2.0.](https://raw.githubusercontent.com/zhivem/DPI-Penguin/refs/heads/main/LICENSE)
-
+Этот проект лицензирован под [Apache License, Version 2.0.](https://raw.githubusercontent.com/zhivem/DPI-Penguin/refs/heads/main/LICENSE.md)
