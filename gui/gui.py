@@ -501,13 +501,13 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
 
         dependencies = [
             {
-                "title": "Discord Fix [howdyho]",
-                "description": tr("Конфигурации"),
+                "title": "Конфигурации",
+                "description": tr("Версия основных конфигурационных файлов"),
                 "version": f"{CONFIG_VERSION}",
-                "developer": "Абрахам",
+                "developer": "Zhivem",
                 "links": [
-                    "https://howdyho.net",
-                    "https://vk.com/howdyho_net"
+                    "https://github.com/zhivem",
+                    "https://github.com/zhivem/DPI-Penguin"
                 ]
             },
             {
