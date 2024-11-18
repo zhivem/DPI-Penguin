@@ -5,7 +5,7 @@ from typing import Any, Optional
 from PyQt6.QtCore import QSettings
 from PyQt6.QtWidgets import QApplication, QWidget
 from qfluentwidgets import PushButton, Theme, setTheme
-import pywinstyles
+# import pywinstyles // Импортируем модуль для шапки 
 
 from utils.utils import tr
 
@@ -25,11 +25,11 @@ def apply_theme(
 ) -> None:
     if theme_name == DARK_THEME_NAME:
         setTheme(Theme.DARK)
-        pywinstyles.apply_style(app_instance, DARK_THEME_NAME)
+        # pywinstyles.apply_style(app_instance, DARK_THEME_NAME) Настройка темы шапки 
         stylesheet = DARK_STYLESHEET
     else:
         setTheme(Theme.LIGHT)
-        pywinstyles.apply_style(app_instance, LIGHT_THEME_NAME)
+        # pywinstyles.apply_style(app_instance, LIGHT_THEME_NAME) Настройка темы шапки 
         stylesheet = LIGHT_STYLESHEET
 
     apply_stylesheet(app_instance, stylesheet, base_folder)
