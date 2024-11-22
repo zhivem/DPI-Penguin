@@ -7,18 +7,11 @@ import winerror
 import win32serviceutil
 import subprocess
 from PyQt6.QtCore import pyqtSignal, pyqtSlot
-from PyQt6.QtWidgets import (
-    QDialog,
-    QHBoxLayout,
-    QMessageBox,
-    QVBoxLayout,
-    QProgressDialog
-)
+from PyQt6.QtWidgets import QDialog, QHBoxLayout, QMessageBox, QVBoxLayout
 from qfluentwidgets import PushButton, TextEdit
 
 from utils.update_checker import UpdateChecker
 from utils.utils import tr
-
 
 class SettingsDialog(QDialog):
     config_updated_signal = pyqtSignal()
@@ -28,20 +21,28 @@ class SettingsDialog(QDialog):
         self.setWindowTitle(tr("Менеджер обновлений"))
         self.setFixedSize(500, 400)
         self.logger = logging.getLogger(self.__class__.__name__)
+
         layout = QVBoxLayout()
+
+        # Место для отображения информации
         self.text_edit = TextEdit(self)
         self.text_edit.setReadOnly(True)
         self.text_edit.setPlaceholderText(tr("Информация об обновлении будет отображена здесь..."))
         layout.addWidget(self.text_edit)
+
+        # Кнопки управления
         button_layout = QHBoxLayout()
         self.update_button = PushButton(tr("Обновить компоненты"), self)
         self.update_button.clicked.connect(self.on_update)
         button_layout.addWidget(self.update_button)
+
         self.close_button = PushButton(tr("Закрыть"), self)
         self.close_button.clicked.connect(self.close)
         button_layout.addWidget(self.close_button)
+
         layout.addLayout(button_layout)
         self.setLayout(layout)
+
         self.initial_check_done = False
         self.update_checker = UpdateChecker()
         self.update_checker.get_local_versions()
@@ -50,39 +51,48 @@ class SettingsDialog(QDialog):
 
     @pyqtSlot()
     def on_update(self):
-        progress_dialog = QProgressDialog(self)
-        progress_dialog.setWindowTitle(tr("Обновление программы"))
-        progress_dialog.setLabelText(tr("Обновление в процессе..."))
-        progress_dialog.setRange(0, 0) 
-        progress_dialog.setCancelButton(None) 
-        progress_dialog.setModal(True)
-        progress_dialog.show()
-
         try:
+            # Начинаем обновление компонентов
+            update_success = True
 
-            if getattr(sys, 'frozen', False):
-                base_path = os.path.dirname(sys.executable)
-                updater_exe = os.path.join(base_path, 'update.exe')
-            else:
-                base_path = os.path.dirname(os.path.abspath(__file__))
-                updater_exe = os.path.join(base_path, 'update.exe')
+            # Обновление Zapret
+            if self.update_checker.is_update_available('zapret'):
+                if not self.update_checker.download_and_update('zapret', dialog=self):
+                    raise Exception("Не удалось обновить Zapret")
+            
+            # Обновление конфигурации
+            if self.update_checker.is_update_available('config'):
+                if not self.update_checker.download_and_update('config', dialog=self):
+                    raise Exception("Не удалось обновить конфигурацию")
 
-            if not os.path.exists(updater_exe):
-                QMessageBox.critical(self, tr("Ошибка"), tr("Файл обновления не найден"))
-                return
+            # Если обновления прошли успешно
+            QMessageBox.information(self, tr("Обновление"), tr("Обновление выполнено успешно!"))
 
-            subprocess.Popen([updater_exe], shell=True)
+            # Закрыть окно обновлений
+            self.close()
 
-            progress_dialog.close()
-
+            # Открыть главное окно
             if self.parent():
-                self.parent().close()
+                self.parent().show()
             else:
-                self.close()
+                from gui import MainWindow  # Импорт главного окна
+                self.main_window = MainWindow()
+                self.main_window.show()
 
         except Exception as e:
-            progress_dialog.close()
-            QMessageBox.critical(self, tr("Ошибка"), tr(f"Не удалось запустить обновление: {e}"))
+            # В случае ошибки показать уведомление
+            QMessageBox.critical(self, tr("Ошибка обновления"), tr(f"Ошибка обновления: {e}"))
+
+            # Закрыть окно обновлений
+            self.close()
+
+            # Открыть главное окно
+            if self.parent():
+                self.parent().show()
+            else:
+                from gui import MainWindow  # Импорт главного окна
+                self.main_window = MainWindow()
+                self.main_window.show()
 
     def check_for_updates(self):
         self.text_edit.clear()
@@ -162,31 +172,36 @@ class SettingsDialog(QDialog):
         except Exception as e:
             QMessageBox.critical(self, tr("Ошибка"), tr(f"Не удалось запустить обновление: {e}"))
 
-    def terminate_process(self, process_name):
-        process_found = False
-        for proc in psutil.process_iter(['pid', 'name']):
-            if proc.info['name'].lower() == process_name.lower():
-                process_found = True
-                try:
-                    proc.terminate()
-                    proc.wait(timeout=5)
-                    self.logger.info(tr(f"Процесс {process_name} успешно завершён."))
-                except Exception as e:
-                    self.logger.error(tr(f"Ошибка при завершении процесса {process_name}: {e}"))
+    def terminate_process(self, process_name=None, service_name=None):
+        if process_name:
+            process_found = False
+            for proc in psutil.process_iter(['pid', 'name']):
+                if proc.info['name'].lower() == process_name.lower():
+                    process_found = True
+                    try:
+                        self.logger.info(f"Попытка завершить процесс {process_name} с PID {proc.info['pid']}")
+                        proc.terminate()
+                        proc.wait(timeout=5)
+                        self.logger.info(f"Процесс {process_name} успешно завершён.")
+                    except Exception as e:
+                        self.logger.error(f"Ошибка при завершении процесса {process_name}: {e}")
+                        raise e
+            if not process_found:
+                self.logger.info(f"Процесс {process_name} не найден.")
+        
+        elif service_name:
+            try:
+                self.logger.info(f"Остановка службы {service_name}...")
+                service_status = win32serviceutil.QueryServiceStatus(service_name)
+                if service_status[1] == win32service.SERVICE_RUNNING:
+                    win32serviceutil.StopService(service_name)
+                    self.logger.info(f"Служба {service_name} успешно остановлена.")
+                else:
+                    self.logger.info(f"Служба {service_name} не запущена.")
+            except Exception as e:
+                if hasattr(e, 'winerror') and e.winerror == winerror.ERROR_SERVICE_DOES_NOT_EXIST:
+                    self.logger.warning(f"Служба {service_name} не установлена.")
+                else:
+                    self.logger.error(f"Ошибка при остановке службы {service_name}: {e}")
                     raise e
-        if not process_found:
-            self.logger.info(tr(f"Процесс {process_name} не найден."))
 
-    def stop_service(self, service_name):
-        try:
-            service_status = win32serviceutil.QueryServiceStatus(service_name)
-            if service_status[1] == win32service.SERVICE_RUNNING:
-                win32serviceutil.StopService(service_name)
-            else:
-                self.logger.info(tr(f"Служба {service_name} не запущена."))
-        except Exception as e:
-            if hasattr(e, 'winerror') and e.winerror == winerror.ERROR_SERVICE_DOES_NOT_EXIST:
-                self.logger.warning(tr(f"Служба {service_name} не установлена."))
-            else:
-                self.logger.error(tr(f"Ошибка при остановке службы {service_name}: {e}"))
-                raise e
