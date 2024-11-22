@@ -70,6 +70,11 @@ def ensure_single_instance():
         atexit.register(win32api.CloseHandle, handle)
     return True
 
+def show_single_instance_warning():
+    app = QtWidgets.QApplication(sys.argv)
+    QMessageBox.warning(None, tr("Предупреждение"), tr("Приложение уже запущено"))
+    sys.exit(0)
+
 def main():
     setup_logging()
 
@@ -79,8 +84,7 @@ def main():
 
     if not ensure_single_instance():
         logging.info(tr("Попытка запустить вторую копию приложения"))
-        QMessageBox.warning(None, tr("Предупреждение"), tr("Приложение уже запущено"))
-        sys.exit(0)
+        show_single_instance_warning()
 
     ensure_module_installed('packaging')
 

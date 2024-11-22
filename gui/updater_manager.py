@@ -1,14 +1,18 @@
 import logging
+import os
+import sys
 import psutil
 import win32service
-import win32serviceutil
 import winerror
+import win32serviceutil
+import subprocess
 from PyQt6.QtCore import pyqtSignal, pyqtSlot
 from PyQt6.QtWidgets import (
     QDialog,
     QHBoxLayout,
     QMessageBox,
     QVBoxLayout,
+    QProgressDialog
 )
 from qfluentwidgets import PushButton, TextEdit
 
@@ -30,7 +34,7 @@ class SettingsDialog(QDialog):
         self.text_edit.setPlaceholderText(tr("Информация об обновлении будет отображена здесь..."))
         layout.addWidget(self.text_edit)
         button_layout = QHBoxLayout()
-        self.update_button = PushButton(tr("Обновить"), self)
+        self.update_button = PushButton(tr("Обновить компоненты"), self)
         self.update_button.clicked.connect(self.on_update)
         button_layout.addWidget(self.update_button)
         self.close_button = PushButton(tr("Закрыть"), self)
@@ -46,33 +50,46 @@ class SettingsDialog(QDialog):
 
     @pyqtSlot()
     def on_update(self):
+        progress_dialog = QProgressDialog(self)
+        progress_dialog.setWindowTitle(tr("Обновление программы"))
+        progress_dialog.setLabelText(tr("Обновление в процессе..."))
+        progress_dialog.setRange(0, 0) 
+        progress_dialog.setCancelButton(None) 
+        progress_dialog.setModal(True)
+        progress_dialog.show()
+
         try:
-            updates_applied = False
-            if self.update_checker.is_update_available('zapret'):
-                self.update_checker.download_and_update('zapret')
-                updates_applied = True
-            if self.update_checker.is_update_available('config'):
-                self.update_checker.download_and_update('config')
-                updates_applied = True
-            if updates_applied:
-                self.logger.info(tr("Обновление успешно"))
-                self.update_checker.get_local_versions()
-                self.update_checker.get_remote_versions()
-                self.check_for_updates()
-                QMessageBox.information(self, tr("Обновление"), tr("Обновление успешно завершено"))
+
+            if getattr(sys, 'frozen', False):
+                base_path = os.path.dirname(sys.executable)
+                updater_exe = os.path.join(base_path, 'update.exe')
             else:
-                QMessageBox.information(self, tr("Обновление"), tr("Нет доступных обновлений для установки"))
+                base_path = os.path.dirname(os.path.abspath(__file__))
+                updater_exe = os.path.join(base_path, 'update.exe')
+
+            if not os.path.exists(updater_exe):
+                QMessageBox.critical(self, tr("Ошибка"), tr("Файл обновления не найден"))
+                return
+
+            subprocess.Popen([updater_exe], shell=True)
+
+            progress_dialog.close()
+
+            if self.parent():
+                self.parent().close()
+            else:
+                self.close()
+
         except Exception as e:
-            error_message = f"{tr('Произошла ошибка при обновлении')}: {e}"
-            self.logger.error(error_message)
-            QMessageBox.critical(self, tr("Обновление"), error_message)
+            progress_dialog.close()
+            QMessageBox.critical(self, tr("Ошибка"), tr(f"Не удалось запустить обновление: {e}"))
 
     def check_for_updates(self):
         self.text_edit.clear()
         if not self.initial_check_done:
             self.text_edit.clear()
             if self.update_checker.is_update_available('ver_programm'):
-                self.text_edit.append(tr("🔄 Доступна <span style=\"color: red;\">новая версия</span> программы. Перейдите на страницу загрузки"))
+                self.text_edit.append(tr("🔄 Доступна <span style=\"color: red;\">новая версия</span> программы"))
                 self.add_download_button()
             else:
                 self.text_edit.append(tr("✅ Актуальная версия программы. Обновлений не требуется"))
@@ -118,14 +135,32 @@ class SettingsDialog(QDialog):
 
     def add_download_button(self):
         if not hasattr(self, 'download_button'):
-            self.download_button = PushButton(tr("Перейти на сайт загрузки"), self)
+            self.download_button = PushButton(tr("Загрузить и обновить программу"), self)
             self.download_button.clicked.connect(self.open_download_site)
             self.layout().addWidget(self.download_button)
 
     def open_download_site(self):
-        import webbrowser
-        download_url = "https://github.com/zhivem/DPI-Penguin/releases"
-        webbrowser.open(download_url)
+        try:
+            if getattr(sys, 'frozen', False):
+                base_path = os.path.dirname(sys.executable)
+                updater_exe = os.path.join(base_path, 'update.exe') 
+            else:
+                base_path = os.path.dirname(os.path.abspath(__file__))
+                updater_exe = os.path.join(base_path, 'update.exe')  
+
+            if not os.path.exists(updater_exe):
+                QMessageBox.critical(self, tr("Ошибка"), tr("Файл обновления не найден"))
+                return
+
+            subprocess.Popen([updater_exe], shell=True)
+
+            if self.parent():
+                self.parent().close()
+            else:
+                self.close()
+
+        except Exception as e:
+            QMessageBox.critical(self, tr("Ошибка"), tr(f"Не удалось запустить обновление: {e}"))
 
     def terminate_process(self, process_name):
         process_found = False
@@ -147,7 +182,6 @@ class SettingsDialog(QDialog):
             service_status = win32serviceutil.QueryServiceStatus(service_name)
             if service_status[1] == win32service.SERVICE_RUNNING:
                 win32serviceutil.StopService(service_name)
-                self.logger.info(tr(f"Служба {service_name} успешно остановлена."))
             else:
                 self.logger.info(tr(f"Служба {service_name} не запущена."))
         except Exception as e:
