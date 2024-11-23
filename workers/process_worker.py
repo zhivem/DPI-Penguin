@@ -15,6 +15,7 @@ if os.name == 'nt':
     import win32serviceutil
     import winerror
 
+
 class WorkerThread(QtCore.QThread):
     output_signal = QtCore.pyqtSignal(str)
     finished_signal = QtCore.pyqtSignal(str)
@@ -137,6 +138,7 @@ class WorkerThread(QtCore.QThread):
             error_msg = f"{tr('Ошибка завершения процесса')} {display_name}: {str(e)}"
             self.output_signal.emit(error_msg)
             self.logger.error(error_msg)
+
 
 class InitializerThread(QtCore.QThread):
     initialization_complete = QtCore.pyqtSignal()

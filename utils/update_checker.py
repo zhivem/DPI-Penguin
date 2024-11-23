@@ -1,20 +1,23 @@
 import configparser
+import io
 import logging
 import os
 import zipfile
-import io
-import psutil
-import win32serviceutil
-import win32service
-import winerror
+import time
+from typing import Dict, List, Optional
 
+import psutil
 import requests
+import win32service
+import win32serviceutil
+import winerror
 from packaging.version import parse as parse_version
 
 from utils.utils import BASE_FOLDER, CURRENT_VERSION, tr
 
+
 class UpdateChecker:
-    BLACKLISTS = [
+    BLACKLISTS: List[Dict[str, str]] = [
         {
             "name": "russia-blacklist",
             "url": "https://p.thenewone.lol/domains-export.txt",
@@ -42,7 +45,7 @@ class UpdateChecker:
         }
     ]
 
-    COMPONENTS = {
+    COMPONENTS: Dict[str, Dict[str, Optional[str]]] = {
         "zapret": {
             "url": "https://github.com/zhivem/DPI-Penguin/raw/refs/heads/main/zapret/zapret.zip",
             "destination": os.path.join(BASE_FOLDER, "zapret", "zapret.zip"),
@@ -60,12 +63,12 @@ class UpdateChecker:
 
     def __init__(self):
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.local_versions = {}
-        self.remote_versions = {}
+        self.local_versions: Dict[str, str] = {}
+        self.remote_versions: Dict[str, str] = {}
 
-    def get_local_versions(self):
+    def get_local_versions(self) -> None:
         version_file_path = os.path.join(BASE_FOLDER, "setting_version", "version_config.ini")
-        versions = {}
+        versions: Dict[str, str] = {}
         if os.path.exists(version_file_path):
             config = configparser.ConfigParser()
             config.read(version_file_path, encoding='utf-8')
@@ -79,9 +82,9 @@ class UpdateChecker:
             versions['ver_programm'] = CURRENT_VERSION
         self.local_versions = versions
 
-    def get_remote_versions(self):
-        versions = {}
-        version_url = "https://raw.githubusercontent.com/zhivem/DPI-Penguin/refs/heads/main/setting_version/version_config.ini"
+    def get_remote_versions(self) -> None:
+        versions: Dict[str, str] = {}
+        version_url = f"https://raw.githubusercontent.com/zhivem/DPI-Penguin/main/setting_version/version_config.ini?t={int(time.time())}"
         try:
             response = requests.get(version_url, timeout=10)
             if response.status_code == 200:
@@ -97,28 +100,28 @@ class UpdateChecker:
             self.logger.error(tr(f"Ошибка запроса к GitHub: {e}"))
         self.remote_versions = versions
 
-    def is_update_available(self, component):
+    def is_update_available(self, component: str) -> bool:
         local_version = self.local_versions.get(component)
         remote_version = self.remote_versions.get(component)
         if local_version and remote_version:
             return self.is_newer_version(remote_version, local_version)
         return False
 
-    def is_newer_version(self, latest, current):
+    def is_newer_version(self, latest: str, current: str) -> bool:
         try:
             return parse_version(latest) > parse_version(current)
         except Exception as e:
             self.logger.error(f"Ошибка при сравнении версий: {e}")
             return False
 
-    def download_and_update(self, component, dialog=None):
+    def download_and_update(self, component: str, dialog=None) -> bool:
         component_info = self.COMPONENTS.get(component)
         if not component_info:
             self.logger.error(tr(f"Неизвестный компонент для обновления: {component}"))
             return False
         try:
             self.logger.info(tr(f"Скачивание {component} с {component_info['url']}"))
-            response = requests.get(component_info['url'], stream=True)
+            response = requests.get(component_info['url'], stream=True, timeout=30)
             if response.status_code == 200:
                 os.makedirs(os.path.dirname(component_info['destination']), exist_ok=True)
                 if component_info.get('extract'):
@@ -130,12 +133,13 @@ class UpdateChecker:
                 self.logger.info(tr(f"{component} успешно обновлён."))
 
                 if 'pre_update' in component_info:
-                    method = getattr(dialog, component_info['pre_update'][0], None)
+                    method_name = component_info['pre_update'][0]
+                    method = getattr(self, method_name, None)
                     if method:
-                        method(**component_info['pre_update_args'])
+                        method(**component_info.get('pre_update_args', {}))
 
                 if 'post_update' in component_info and component_info['post_update'] == "emit_config_updated":
-                    if hasattr(dialog, 'config_updated_signal'):
+                    if dialog and hasattr(dialog, 'config_updated_signal'):
                         dialog.config_updated_signal.emit()
 
                 self.update_local_version_file()
@@ -147,11 +151,11 @@ class UpdateChecker:
             self.logger.error(tr(f"Ошибка при обновлении {component}: {e}"))
             return False
 
-    def update_local_version_file(self):
+    def update_local_version_file(self) -> None:
         self.logger.info(tr("Обновление локального version_config.ini..."))
         try:
-            version_url = "https://raw.githubusercontent.com/zhivem/DPI-Penguin/refs/heads/main/setting_version/version_config.ini"
-            response = requests.get(version_url)
+            version_url = "https://raw.githubusercontent.com/zhivem/DPI-Penguin/main/setting_version/version_config.ini"
+            response = requests.get(version_url, timeout=10)
             if response.status_code == 200:
                 version_dir = os.path.join(BASE_FOLDER, "setting_version")
                 os.makedirs(version_dir, exist_ok=True)
@@ -162,10 +166,10 @@ class UpdateChecker:
             else:
                 self.logger.warning(tr(f"Не удалось скачать version_config.ini. Статус код: {response.status_code}"))
         except Exception as e:
-            self.logger.error(tr(f"Произошла ошибка при обновлении version_zapret.ini: {e}"))
+            self.logger.error(tr(f"Произошла ошибка при обновлении version_config.ini: {e}"))
             raise e
 
-    def update_blacklists(self):
+    def update_blacklists(self) -> bool:
         success = True
         for blacklist in self.BLACKLISTS:
             name = blacklist['name']
@@ -178,7 +182,7 @@ class UpdateChecker:
                     os.makedirs(os.path.dirname(output_file), exist_ok=True)
                     with open(output_file, 'w', encoding='utf-8') as f:
                         f.write(response.text)
-                    self.logger.info(tr(f"{name} успешно обновлен."))
+                    self.logger.info(tr(f"{name} успешно обновлён."))
                 else:
                     self.logger.warning(tr(f"Не удалось обновить {name}. Статус код: {response.status_code}"))
                     success = False
@@ -187,11 +191,11 @@ class UpdateChecker:
                 success = False
         return success
 
-    def terminate_process(self, process_name):
+    def terminate_process(self, process_name: str) -> None:
         try:
             self.logger.info(tr(f"Завершение процесса {process_name}..."))
             for proc in psutil.process_iter(['pid', 'name']):
-                if proc.info['name'].lower() == process_name.lower():
+                if proc.info['name'] and proc.info['name'].lower() == process_name.lower():
                     proc.terminate()
                     proc.wait(timeout=5)
                     self.logger.info(tr(f"Процесс {process_name} успешно завершён."))
@@ -199,7 +203,7 @@ class UpdateChecker:
             self.logger.error(tr(f"Ошибка при завершении процесса {process_name}: {e}"))
             raise e
 
-    def stop_service(self, service_name):
+    def stop_service(self, service_name: str) -> None:
         try:
             self.logger.info(tr(f"Остановка службы {service_name}..."))
             service_status = win32serviceutil.QueryServiceStatus(service_name)
@@ -215,5 +219,9 @@ class UpdateChecker:
                 self.logger.error(tr(f"Ошибка при остановке службы {service_name}: {e}"))
                 raise e
 
-    def emit_config_updated(self):
+    def emit_config_updated(self) -> None:
+        """
+        Метод для эмита сигнала обновления конфигурации.
+        """
+        # Здесь можно реализовать эмиссию сигнала, если используется механизм сигналов, например, через PyQt или другой фреймворк. Пусть будет
         pass

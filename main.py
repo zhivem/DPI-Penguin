@@ -1,9 +1,9 @@
 import atexit
 import ctypes
 import logging
-from logging.handlers import RotatingFileHandler
 import os
 import sys
+from logging.handlers import RotatingFileHandler
 
 if os.name == 'nt':
     import win32api
@@ -16,13 +16,14 @@ from PyQt6.QtWidgets import QMessageBox
 
 from gui.gui import GoodbyeDPIApp
 from utils.utils import BASE_FOLDER, CURRENT_VERSION, ensure_module_installed, tr
-from workers.process_worker import InitializerThread 
+from workers.process_worker import InitializerThread
 
 MUTEX_NAME = "ru.github.dpipenguin.mutex"
 LOG_FILENAME = os.path.join(BASE_FOLDER, "logs", f"app_penguin_v{CURRENT_VERSION}.log")
 
 PROCESSES_TO_TERMINATE = ["winws.exe", "goodbyedpi.exe"]
 SERVICE_TO_STOP = "WinDivert"
+
 
 def setup_logging():
     os.makedirs(os.path.dirname(LOG_FILENAME), exist_ok=True)
@@ -31,6 +32,7 @@ def setup_logging():
     handler.setFormatter(formatter)
     logging.basicConfig(handlers=[handler], level=logging.DEBUG, force=True)
     logging.info(tr("Логирование настроено"))
+
 
 def is_admin() -> bool:
     if os.name == 'nt':
@@ -42,6 +44,7 @@ def is_admin() -> bool:
     elif os.name == 'posix':
         return os.geteuid() == 0
     return False
+
 
 def run_as_admin(argv=None):
     if os.name != 'nt':
@@ -60,6 +63,7 @@ def run_as_admin(argv=None):
         sys.exit(1)
     sys.exit(0)
 
+
 def ensure_single_instance():
     if os.name == 'nt':
         handle = win32event.CreateMutex(None, False, MUTEX_NAME)
@@ -70,10 +74,12 @@ def ensure_single_instance():
         atexit.register(win32api.CloseHandle, handle)
     return True
 
+
 def show_single_instance_warning():
     app = QtWidgets.QApplication(sys.argv)
     QMessageBox.warning(None, tr("Предупреждение"), tr("Приложение уже запущено"))
     sys.exit(0)
+
 
 def main():
     setup_logging()
@@ -102,6 +108,7 @@ def main():
 
     initializer_thread.quit()
     initializer_thread.wait()
+
 
 if __name__ == '__main__':
     main()

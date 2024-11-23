@@ -1,10 +1,11 @@
 import configparser
 import logging
 import os
+from typing import Any, List, Optional
 
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtCore import pyqtSlot, QTimer
-from PyQt6.QtGui import QAction, QIcon
+from PyQt6.QtGui import QAction, QIcon, QTextCursor
 from PyQt6.QtWidgets import (
     QCheckBox,
     QFileDialog,
@@ -12,10 +13,16 @@ from PyQt6.QtWidgets import (
     QMenu,
     QMessageBox,
     QSystemTrayIcon,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLabel,
+    QTabWidget,
+    QWidget,
+    QGridLayout
 )
 from qfluentwidgets import ComboBox as QFComboBox, PushButton, TextEdit
-from typing import List, Optional
 
+from utils.update_checker import UpdateChecker
 from utils.utils import (
     BASE_FOLDER,
     CURRENT_VERSION,
@@ -35,11 +42,10 @@ from utils.utils import (
     translation_manager,
 )
 import utils.theme_utils
-from utils.update_checker import UpdateChecker
-
 from gui.updater_manager import SettingsDialog
 from workers.process_worker import WorkerThread
 
+# Пути к иконкам
 TRAY_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "newicon.ico")
 THEME_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "themes.png")
 LOG_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "log.png")
@@ -49,7 +55,11 @@ BLACK_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "black.png")
 ADD_SRV_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "add_service.png")
 DELETE_SRV_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "delete_service.png")
 
+
 class GoodbyeDPIApp(QtWidgets.QMainWindow):
+    """
+    Главное окно приложения DPI Penguin.
+    """
 
     def __init__(self):
         super().__init__()
@@ -57,13 +67,18 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
 
         self.ensure_logs_folder_exists()
 
-        self.minimize_to_tray = settings.value("minimize_to_tray", True, type=bool)
-        self.autostart_enabled = is_autostart_enabled()
-        self.autorun_with_last_config = settings.value("autorun_with_last_config", False, type=bool)
+        self.minimize_to_tray: bool = settings.value("minimize_to_tray", True, type=bool)
+        self.autostart_enabled: bool = is_autostart_enabled()
+        self.autorun_with_last_config: bool = settings.value(
+            "autorun_with_last_config", False, type=bool
+        )
         self.logger.debug(f"autorun_with_last_config: {self.autorun_with_last_config}")
 
         if self.autorun_with_last_config:
-            last_config_path = settings.value("last_config_path", os.path.join(BASE_FOLDER, "config", "default.ini"))
+            last_config_path = settings.value(
+                "last_config_path",
+                os.path.join(BASE_FOLDER, "config", "default.ini"),
+            )
             self.script_options, self.config_error = load_script_options(last_config_path)
             self.current_config_path = last_config_path
         else:
@@ -71,8 +86,8 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             self.script_options, self.config_error = load_script_options(default_config_path)
             self.current_config_path = default_config_path
 
-        self.main_worker_thread = None
-        self.winws_worker_thread = None
+        self.main_worker_thread: Optional[WorkerThread] = None
+        self.winws_worker_thread: Optional[WorkerThread] = None
 
         self.init_ui()
         self.init_tray_icon()
@@ -95,7 +110,10 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         else:
             self.show()
 
-    def run_autorun(self):
+    def run_autorun(self) -> None:
+        """
+        Выполняет автоматический запуск с последней выбранной конфигурацией.
+        """
         last_selected_script = settings.value("last_selected_script", None)
         if last_selected_script and last_selected_script in self.script_options:
             index = self.selected_script.findData(last_selected_script)
@@ -116,7 +134,10 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             3000
         )
 
-    def ensure_logs_folder_exists(self):
+    def ensure_logs_folder_exists(self) -> None:
+        """
+        Убедиться, что папка для логов существует, иначе создать её.
+        """
         logs_folder = os.path.join(BASE_FOLDER, "logs")
         if not os.path.exists(logs_folder):
             try:
@@ -125,7 +146,10 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             except Exception as e:
                 self.logger.error(f"{tr('Не удалось создать папку logs')}: {e}", exc_info=True)
 
-    def init_ui(self):
+    def init_ui(self) -> None:
+        """
+        Инициализирует пользовательский интерфейс главного окна.
+        """
         self.setWindowTitle(tr("DPI Penguin v{version}").format(version=CURRENT_VERSION))
         self.setFixedSize(420, 570)
         self.set_window_icon(TRAY_ICON_PATH)
@@ -139,12 +163,21 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         tab_widget = self.create_tabs()
         layout.addWidget(tab_widget)
 
-    def set_window_icon(self, icon_path):
+    def set_window_icon(self, icon_path: str) -> None:
+        """
+        Устанавливает иконку окна приложения.
+
+        :param icon_path: Путь к иконке.
+        """
         if not os.path.exists(icon_path):
             self.logger.error(f"{tr('Файл иконки приложения не найден')}: {icon_path}")
-        self.setWindowIcon(QIcon(icon_path))
+        else:
+            self.setWindowIcon(QIcon(icon_path))
 
-    def init_tray_icon(self):
+    def init_tray_icon(self) -> None:
+        """
+        Инициализирует иконку в системном трее с контекстным меню.
+        """
         self.tray_icon = QSystemTrayIcon(self)
         self.tray_icon.setIcon(QIcon(TRAY_ICON_PATH))
 
@@ -161,7 +194,12 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         self.tray_icon.setContextMenu(tray_menu)
         self.tray_icon.activated.connect(self.on_tray_icon_activated)
 
-    def closeEvent(self, event):
+    def closeEvent(self, event: QtGui.QCloseEvent) -> None:
+        """
+        Обработчик события закрытия окна. Если включено, сворачивает приложение в трей.
+
+        :param event: Событие закрытия.
+        """
         if self.minimize_to_tray:
             event.ignore()
             self.hide()
@@ -176,36 +214,58 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             self.stop_and_close()
             event.accept()
 
-    def restore_from_tray(self):
+    def restore_from_tray(self) -> None:
+        """
+        Восстанавливает окно приложения из трея.
+        """
         self.showNormal()
         self.raise_()
         self.activateWindow()
         self.tray_icon.hide()
 
-    def on_tray_icon_activated(self, reason):
+    def on_tray_icon_activated(self, reason: QSystemTrayIcon.ActivationReason) -> None:
+        """
+        Обработчик активации иконки в трее.
+
+        :param reason: Причина активации.
+        """
         if reason == QSystemTrayIcon.ActivationReason.Trigger:
             if self.isHidden():
                 self.restore_from_tray()
             else:
                 self.hide()
 
-    def exit_app(self):
+    def exit_app(self) -> None:
+        """
+        Завершает работу приложения.
+        """
         self.stop_and_close()
         self.tray_icon.hide()
         QtWidgets.QApplication.quit()
 
-    def create_tabs(self):
-        tab_widget = QtWidgets.QTabWidget(self)
+    def create_tabs(self) -> QTabWidget:
+        """
+        Создаёт вкладки в главном окне.
+
+        :return: Экземпляр QTabWidget с добавленными вкладками.
+        """
+        tab_widget = QTabWidget(self)
         tab_widget.addTab(self.create_process_tab(), tr("Основное"))
         tab_widget.addTab(self.create_settings_tab(), tr("Настройки"))
         tab_widget.addTab(self.create_info_tab(), tr("О программе"))
         return tab_widget
 
-    def create_process_tab(self):
-        process_tab = QtWidgets.QWidget()
-        process_layout = QtWidgets.QVBoxLayout(process_tab)
+    def create_process_tab(self) -> QWidget:
+        """
+        Создаёт вкладку "Основное" с элементами управления процессами.
 
-        script_layout = QtWidgets.QHBoxLayout()
+        :return: Экземпляр QWidget для вкладки "Основное".
+        """
+        process_tab = QWidget()
+        process_layout = QVBoxLayout(process_tab)
+
+        # Выбор скрипта
+        script_layout = QHBoxLayout()
 
         self.selected_script = QFComboBox()
         if not self.config_error:
@@ -227,7 +287,8 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
 
         process_layout.addLayout(script_layout)
 
-        buttons_layout = QtWidgets.QHBoxLayout()
+        # Кнопки управления процессами
+        buttons_layout = QHBoxLayout()
         self.run_button = self.create_button(tr("Запустить"), self.run_exe, buttons_layout)
         self.stop_close_button = self.create_button(
             tr("Остановить и закрыть"),
@@ -237,11 +298,13 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         )
         process_layout.addLayout(buttons_layout)
 
+        # Консоль вывода
         self.console_output = TextEdit(self)
         self.console_output.setReadOnly(True)
         process_layout.addWidget(self.console_output)
 
-        log_and_config_layout = QtWidgets.QHBoxLayout()
+        # Кнопки для открытия папок логов и конфигураций
+        log_and_config_layout = QHBoxLayout()
 
         self.open_logs_button = self.create_button(
             text=tr("Открыть папку Log"),
@@ -261,6 +324,7 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
 
         process_layout.addLayout(log_and_config_layout)
 
+        # Кнопка переключения темы
         self.theme_toggle_button = PushButton()
         utils.theme_utils.update_theme_button_text(self, settings)
         self.set_button_icon(self.theme_toggle_button, THEME_ICON_PATH, (16, 16))
@@ -269,12 +333,24 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
 
         return process_tab
 
-    def handle_open_path(self, path: str):
+    def handle_open_path(self, path: str) -> None:
+        """
+        Открывает заданную папку или файл в проводнике.
+
+        :param path: Путь к папке или файлу.
+        """
         error = open_path(path)
         if error:
             QMessageBox.warning(self, tr("Ошибка"), error)
 
-    def set_button_icon(self, button, icon_path, icon_size):
+    def set_button_icon(self, button: PushButton, icon_path: str, icon_size: tuple) -> None:
+        """
+        Устанавливает иконку на кнопку.
+
+        :param button: Экземпляр PushButton.
+        :param icon_path: Путь к иконке.
+        :param icon_size: Размер иконки (ширина, высота).
+        """
         if not os.path.exists(icon_path):
             self.logger.error(f"{tr('Файл иконки приложения не найден')}: {icon_path}")
         else:
@@ -282,15 +358,24 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             button.setIcon(icon)
             button.setIconSize(QtCore.QSize(*icon_size))
 
-    def toggle_theme_button_clicked(self):
+    def toggle_theme_button_clicked(self) -> None:
+        """
+        Обработчик нажатия кнопки переключения темы.
+        """
         utils.theme_utils.toggle_theme(self, settings, BASE_FOLDER)
 
-    def create_settings_tab(self):
-        settings_tab = QtWidgets.QWidget()
-        settings_layout = QtWidgets.QVBoxLayout(settings_tab)
+    def create_settings_tab(self) -> QWidget:
+        """
+        Создаёт вкладку "Настройки" с различными настройками приложения.
 
+        :return: Экземпляр QWidget для вкладки "Настройки".
+        """
+        settings_tab = QWidget()
+        settings_layout = QVBoxLayout(settings_tab)
+
+        # Группа выбора языка
         self.language_group = QGroupBox(tr("Язык / Language"))
-        language_layout = QtWidgets.QVBoxLayout()
+        language_layout = QVBoxLayout()
         self.language_group.setLayout(language_layout)
 
         self.language_combo = QFComboBox()
@@ -307,8 +392,9 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         language_layout.addWidget(self.language_combo)
         settings_layout.addWidget(self.language_group)
 
+        # Группа автозапуска
         self.autostart_group = QGroupBox(tr("Автозапуск"))
-        autostart_layout = QtWidgets.QVBoxLayout()
+        autostart_layout = QVBoxLayout()
         self.autostart_group.setLayout(autostart_layout)
 
         self.tray_checkbox = QCheckBox(tr("Сворачивать в трей при закрытии приложения"))
@@ -331,6 +417,7 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         self.update_blacklists_on_start_checkbox.toggled.connect(self.toggle_update_blacklists_on_start)
         autostart_layout.addWidget(self.update_blacklists_on_start_checkbox)
 
+        # Настройка шрифта для чекбоксов
         font = self.tray_checkbox.font()
         font.setPointSize(9)
         self.tray_checkbox.setFont(font)
@@ -340,22 +427,23 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
 
         settings_layout.addWidget(self.autostart_group)
 
+        # Группа управления службами
         self.services_group = QGroupBox(tr("Службы"))
-        services_layout = QtWidgets.QVBoxLayout()
+        services_layout = QVBoxLayout()
         self.services_group.setLayout(services_layout)
 
         self.create_service_button = self.create_button(
-            tr("Создать службу"), 
-            self.handle_create_service, 
-            services_layout, 
+            tr("Создать службу"),
+            self.handle_create_service,
+            services_layout,
             icon_path=ADD_SRV_PATH,
             icon_size=(16, 16)
-        )  
+        )
 
         self.delete_service_button = self.create_button(
-            tr("Удалить службу"), 
-            self.handle_delete_service, 
-            services_layout, 
+            tr("Удалить службу"),
+            self.handle_delete_service,
+            services_layout,
             icon_path=DELETE_SRV_PATH,
             icon_size=(16, 16)
         )
@@ -365,8 +453,9 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
 
         settings_layout.addWidget(self.services_group)
 
+        # Группа обновлений
         self.updates_group = QGroupBox(tr("Обновления"))
-        updates_layout = QtWidgets.QVBoxLayout()
+        updates_layout = QVBoxLayout()
         self.updates_group.setLayout(updates_layout)
 
         self.open_additional_settings_button = self.create_button(
@@ -394,13 +483,19 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
 
         return settings_tab
 
-    def change_language(self):
+    def change_language(self) -> None:
+        """
+        Обработчик изменения языка приложения.
+        """
         lang_code = self.language_combo.currentData()
         set_language(lang_code)
         settings.setValue("language", lang_code)
         self.update_ui_texts()
 
-    def update_ui_texts(self):
+    def update_ui_texts(self) -> None:
+        """
+        Обновляет тексты интерфейса в соответствии с выбранным языком.
+        """
         self.setWindowTitle(tr("DPI Penguin v{version}").format(version=CURRENT_VERSION))
         tab_widget = self.centralWidget().layout().itemAt(0).widget()
         tab_widget.setTabText(0, tr("Основное"))
@@ -439,7 +534,10 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
 
         self.update_script_options_display()
 
-    def update_script_options_display(self):
+    def update_script_options_display(self) -> None:
+        """
+        Обновляет список доступных скриптов в комбобоксе.
+        """
         current_data = self.selected_script.currentData()
         self.selected_script.clear()
         for script_name in self.script_options.keys():
@@ -450,9 +548,14 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             if index >= 0:
                 self.selected_script.setCurrentIndex(index)
 
-    def create_info_tab(self):
-        info_tab = QtWidgets.QWidget()
-        info_layout = QtWidgets.QVBoxLayout(info_tab)
+    def create_info_tab(self) -> QWidget:
+        """
+        Создаёт вкладку "О программе" с информацией о приложении и зависимостях.
+
+        :return: Экземпляр QWidget для вкладки "О программе".
+        """
+        info_tab = QWidget()
+        info_layout = QVBoxLayout(info_tab)
 
         self.details_group = self.create_details_group()
         info_layout.addWidget(self.details_group)
@@ -463,11 +566,19 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         info_layout.addStretch(1)
         return info_tab
 
-    def update_info_tab_texts(self):
+    def update_info_tab_texts(self) -> None:
+        """
+        Обновляет тексты в вкладке "О программе" в соответствии с выбранным языком.
+        """
         self.details_group.setTitle(tr("Подробности"))
         self.acknowledgements_group.setTitle(tr("Зависимости"))
 
-    def create_details_group(self):
+    def create_details_group(self) -> QGroupBox:
+        """
+        Создаёт группу с подробностями о приложении.
+
+        :return: Экземпляр QGroupBox с подробностями.
+        """
         group = QGroupBox(tr("Подробности"))
         layout = QtWidgets.QGridLayout(group)
 
@@ -480,24 +591,29 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         }
 
         widgets = {
-            tr("Версия"): QtWidgets.QLabel(labels[tr("Версия")]),
-            tr("Разработчик"): QtWidgets.QLabel(labels[tr("Разработчик")]),
-            tr("Репозиторий на GitHub"): QtWidgets.QLabel(labels[tr("Репозиторий на GitHub")]),
-            tr("Релизы"): QtWidgets.QLabel(labels[tr("Релизы")]),
-            tr("Лицензия"): QtWidgets.QLabel(labels[tr("Лицензия")])
+            tr("Версия"): QLabel(labels[tr("Версия")]),
+            tr("Разработчик"): QLabel(labels[tr("Разработчик")]),
+            tr("Репозиторий на GitHub"): QLabel(labels[tr("Репозиторий на GitHub")]),
+            tr("Релизы"): QLabel(labels[tr("Релизы")]),
+            tr("Лицензия"): QLabel(labels[tr("Лицензия")])
         }
 
         for row, (key, widget) in enumerate(widgets.items()):
             if key in [tr("Репозиторий на GitHub"), tr("Релизы")]:
                 widget.setOpenExternalLinks(True)
-            layout.addWidget(QtWidgets.QLabel(key), row, 0)
+            layout.addWidget(QLabel(key), row, 0)
             layout.addWidget(widget, row, 1)
 
         return group
 
-    def create_acknowledgements_group(self):
+    def create_acknowledgements_group(self) -> QGroupBox:
+        """
+        Создаёт группу с информацией о зависимостях приложения.
+
+        :return: Экземпляр QGroupBox с зависимостями.
+        """
         group = QGroupBox(tr("Зависимости"))
-        layout = QtWidgets.QVBoxLayout(group)
+        layout = QVBoxLayout(group)
 
         dependencies = [
             {
@@ -528,30 +644,50 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
 
         return group
 
-    def create_acknowledgement_section(self, title, description, version, developer, links):
-        section = QtWidgets.QWidget()
-        layout = QtWidgets.QGridLayout(section)
+    def create_acknowledgement_section(self, title: str, description: str, version: str, developer: str, links: List[str]) -> QWidget:
+        """
+        Создаёт секцию с информацией о конкретной зависимости.
 
-        layout.addWidget(QtWidgets.QLabel(f"<b>{title}</b>"), 0, 0, 1, 2)
-        layout.addWidget(QtWidgets.QLabel(f"{tr('Описание')}: {description}"), 1, 0, 1, 2)
-        layout.addWidget(QtWidgets.QLabel(f"{tr('Версия')}: {version}"), 2, 0)
-        layout.addWidget(QtWidgets.QLabel(f"{tr('Разработчик')}: {developer}"), 2, 1)
+        :param title: Название зависимости.
+        :param description: Описание зависимости.
+        :param version: Версия зависимости.
+        :param developer: Разработчик зависимости.
+        :param links: Ссылки на репозиторий или документацию.
+        :return: Экземпляр QWidget с информацией о зависимости.
+        """
+        section = QWidget()
+        layout = QGridLayout(section)
+
+        layout.addWidget(QLabel(f"<b>{title}</b>"), 0, 0, 1, 2)
+        layout.addWidget(QLabel(f"{tr('Описание')}: {description}"), 1, 0, 1, 2)
+        layout.addWidget(QLabel(f"{tr('Версия')}: {version}"), 2, 0)
+        layout.addWidget(QLabel(f"{tr('Разработчик')}: {developer}"), 2, 1)
 
         for i, link in enumerate(links, start=3):
-            link_label = QtWidgets.QLabel(f"<a href='{link}'>{link}</a>")
+            link_label = QLabel(f"<a href='{link}'>{link}</a>")
             link_label.setOpenExternalLinks(True)
             layout.addWidget(link_label, i, 0, 1, 2)
 
         return section
 
-    def toggle_tray_behavior(self, checked):
+    def toggle_tray_behavior(self, checked: bool) -> None:
+        """
+        Переключает поведение приложения при закрытии (сворачивание в трей).
+
+        :param checked: Состояние чекбокса.
+        """
         self.minimize_to_tray = checked
         settings.setValue("minimize_to_tray", self.minimize_to_tray)
 
         if not checked and self.tray_icon.isVisible():
             self.tray_icon.hide()
 
-    def toggle_autostart(self, checked):
+    def toggle_autostart(self, checked: bool) -> None:
+        """
+        Включает или отключает автозапуск приложения при старте системы.
+
+        :param checked: Состояние чекбокса.
+        """
         if checked:
             enable_autostart()
             self.logger.info(tr("Автозапуск включен"))
@@ -559,18 +695,49 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             disable_autostart()
             self.logger.info(tr("Автозапуск отключен"))
 
-    def toggle_autorun_with_last_config(self, checked):
+    def toggle_autorun_with_last_config(self, checked: bool) -> None:
+        """
+        Включает или отключает автоматический запуск с последней конфигурацией.
+
+        :param checked: Состояние чекбокса.
+        """
         self.autorun_with_last_config = checked
         settings.setValue("autorun_with_last_config", self.autorun_with_last_config)
         self.logger.info(f"{tr('Автозапуск с последним конфигом')} {'включен' if checked else 'отключен'}")
         if checked:
             settings.setValue("last_config_path", self.current_config_path)
 
-    def toggle_update_blacklists_on_start(self, checked):
+    def toggle_update_blacklists_on_start(self, checked: bool) -> None:
+        """
+        Включает или отключает автоматическое обновление черных списков при запуске приложения.
+
+        :param checked: Состояние чекбокса.
+        """
         settings.setValue("update_blacklists_on_start", checked)
         self.logger.info(f"{tr('Обновление черных списков при запуске программы')} {'включено' if checked else 'отключено'}")
 
-    def create_button(self, text, func, layout, enabled=True, icon_path=None, icon_size=(24, 24), tooltip=None):
+    def create_button(
+        self,
+        text: str,
+        func: Optional[Any],
+        layout: QHBoxLayout,
+        enabled: bool = True,
+        icon_path: Optional[str] = None,
+        icon_size: tuple = (24, 24),
+        tooltip: Optional[str] = None
+    ) -> PushButton:
+        """
+        Создаёт и настраивает кнопку.
+
+        :param text: Текст на кнопке.
+        :param func: Функция, вызываемая при нажатии.
+        :param layout: Макет, в который добавляется кнопка.
+        :param enabled: Состояние кнопки (включена/выключена).
+        :param icon_path: Путь к иконке для кнопки.
+        :param icon_size: Размер иконки.
+        :param tooltip: Подсказка для кнопки.
+        :return: Экземпляр PushButton.
+        """
         button = PushButton(text, self)
         button.setEnabled(enabled)
         if func:
@@ -586,15 +753,26 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             layout.addWidget(button)
         return button
 
-    def handle_create_service(self):
+    def handle_create_service(self) -> None:
+        """
+        Обработчик создания службы.
+        """
         result = create_service()
         QMessageBox.information(self, tr("Создание службы"), result)
 
-    def handle_delete_service(self):
+    def handle_delete_service(self) -> None:
+        """
+        Обработчик удаления службы.
+        """
         result = delete_service()
         QMessageBox.information(self, tr("Удаление службы"), result)
 
-    def run_exe(self, auto_run=False):
+    def run_exe(self, auto_run: bool = False) -> None:
+        """
+        Запускает выбранный скрипт.
+
+        :param auto_run: Если True, запускает скрипт в автоматическом режиме.
+        """
         if self.config_error:
             self.console_output.append(tr("Не удалось загрузить конфигурацию из-за ошибок"))
             self.logger.error(tr("Не удалось загрузить конфигурацию из-за ошибок"))
@@ -636,7 +814,7 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             )
             self.logger.info(f"{tr('Процесс')} '{selected_option}' {tr('запущен')}")
 
-            winws_path = os.path.join(ZAPRET_FOLDER, "winws.exe") 
+            winws_path = os.path.join(ZAPRET_FOLDER, "winws.exe")
             self.start_winws(winws_path)
 
         except Exception as e:
@@ -647,7 +825,14 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         if auto_run:
             settings.setValue("last_config_path", self.current_config_path)
 
-    def is_executable_available(self, executable, selected_option):
+    def is_executable_available(self, executable: str, selected_option: str) -> bool:
+        """
+        Проверяет доступность исполняемого файла и необходимых зависимостей.
+
+        :param executable: Путь к исполняемому файлу.
+        :param selected_option: Выбранный скрипт.
+        :return: True, если исполняемый файл доступен и все зависимости выполнены, иначе False.
+        """
         if not os.path.exists(executable):
             error_msg = f"{tr('Файл')} {executable} {tr('не найден')}"
             self.logger.error(error_msg)
@@ -682,7 +867,23 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         self.logger.debug(f"{tr('Исполняемый файл')} {executable} {tr('доступен для запуска')}")
         return True
 
-    def start_main_process(self, command, process_name, disable_run=False, clear_console_text=None, capture_output=True):
+    def start_main_process(
+        self,
+        command: List[str],
+        process_name: str,
+        disable_run: bool = False,
+        clear_console_text: Optional[str] = None,
+        capture_output: bool = True
+    ) -> None:
+        """
+        Запускает основной процесс через WorkerThread.
+
+        :param command: Команда для запуска.
+        :param process_name: Имя процесса.
+        :param disable_run: Если True, отключает кнопку запуска.
+        :param clear_console_text: Текст для очистки консоли перед запуском.
+        :param capture_output: Если True, захватывает вывод процесса.
+        """
         if clear_console_text:
             self.clear_console(clear_console_text)
 
@@ -713,7 +914,12 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             self.logger.error(error_msg, exc_info=True)
             self.console_output.append(error_msg)
 
-    def update_output(self, text):
+    def update_output(self, text: str) -> None:
+        """
+        Обновляет консоль вывода, фильтруя нежелательные сообщения.
+
+        :param text: Текст для обновления консоли.
+        """
         ignore_keywords = [
             "loading hostlist",
             "we have",
@@ -737,13 +943,18 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         document = self.console_output.document()
         while document.blockCount() > max_lines:
             cursor = self.console_output.textCursor()
-            cursor.movePosition(QtGui.QTextCursor.MoveOperation.Start)
-            cursor.select(QtGui.QTextCursor.SelectionType.BlockUnderCursor)
+            cursor.movePosition(QTextCursor.MoveOperation.Start)
+            cursor.select(QTextCursor.SelectionType.BlockUnderCursor)
             cursor.removeSelectedText()
             cursor.deleteChar()
 
     @pyqtSlot(str)
-    def on_finished(self, process_name):
+    def on_finished(self, process_name: str) -> None:
+        """
+        Обработчик завершения процесса.
+
+        :param process_name: Имя завершившегося процесса.
+        """
         if process_name in self.script_options or process_name == "winws.exe":
             if process_name == "winws.exe":
                 self.logger.info(f"{tr('Процесс')} {process_name} {tr('завершён')}")
@@ -772,10 +983,18 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
                     self.main_worker_thread = None
 
     @pyqtSlot(str)
-    def handle_error(self, error_message):
+    def handle_error(self, error_message: str) -> None:
+        """
+        Обработчик ошибок процессов.
+
+        :param error_message: Сообщение об ошибке.
+        """
         QMessageBox.critical(self, tr("Ошибка"), error_message)
 
-    def stop_and_close(self):
+    def stop_and_close(self) -> None:
+        """
+        Завершает все запущенные процессы и закрывает приложение.
+        """
         self.logger.info(tr("Начата процедура остановки и закрытия процессов"))
 
         if self.main_worker_thread is not None:
@@ -798,12 +1017,20 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
                 self.winws_worker_thread.wait()
             self.winws_worker_thread = None
 
-    def clear_console(self, initial_text=""):
+    def clear_console(self, initial_text: str = "") -> None:
+        """
+        Очищает консоль вывода и добавляет начальный текст, если указан.
+
+        :param initial_text: Текст для добавления после очистки консоли.
+        """
         self.console_output.clear()
         if initial_text:
             self.console_output.append(initial_text)
 
-    def load_config_via_dialog(self):
+    def load_config_via_dialog(self) -> None:
+        """
+        Открывает диалог выбора файла конфигурации и загружает выбранную конфигурацию.
+        """
         dialog = QFileDialog(self)
         dialog.setOption(QFileDialog.Option.ReadOnly, True)
 
@@ -859,7 +1086,13 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             if self.autorun_with_last_config:
                 settings.setValue("last_config_path", file_path)
 
-    def validate_config_file(self, file_path):
+    def validate_config_file(self, file_path: str) -> Optional[str]:
+        """
+        Валидирует файл конфигурации на соответствие необходимым требованиям.
+
+        :param file_path: Путь к файлу конфигурации.
+        :return: Сообщение об ошибке или None, если ошибок нет.
+        """
         if not os.path.exists(file_path):
             error_msg = f"{tr('Файл не найден')}: {file_path}"
             self.logger.error(error_msg)
@@ -899,12 +1132,18 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
 
         return None
 
-    def open_settings_dialog(self):
+    def open_settings_dialog(self) -> None:
+        """
+        Открывает диалоговое окно настроек обновлений.
+        """
         dialog = SettingsDialog(self)
         dialog.config_updated_signal.connect(self.reload_configuration)
         dialog.exec()
 
-    def reload_configuration(self):
+    def reload_configuration(self) -> None:
+        """
+        Перезагружает конфигурацию после обновления.
+        """
         self.script_options, self.config_error = load_script_options(self.current_config_path)
         if self.config_error:
             self.console_output.append(self.config_error)
@@ -917,7 +1156,10 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             self.run_button.setEnabled(True)
         QMessageBox.information(self, tr("Обновление"), tr("Конфигурация обновлена и перезагружена"))
 
-    def check_updates(self):
+    def check_updates(self) -> None:
+        """
+        Проверяет наличие доступных обновлений и уведомляет пользователя.
+        """
         self.logger.info(tr("Проверка обновлений..."))
         update_checker = UpdateChecker()
         update_checker.get_local_versions()
@@ -945,7 +1187,12 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         else:
             self.logger.info(tr("Все компоненты обновлены до последней версии."))
 
-    def update_blacklists(self, silent=False):
+    def update_blacklists(self, silent: bool = False) -> None:
+        """
+        Обновляет черные списки.
+
+        :param silent: Если True, не отображает сообщения пользователю.
+        """
         update_checker = UpdateChecker()
         success = update_checker.update_blacklists()
         if success:
@@ -956,7 +1203,13 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
                 QMessageBox.warning(self, tr("Обновление"), tr("Произошли ошибки при обновлении черных списков. Проверьте логи для подробностей."))
             self.logger.warning(tr("Произошли ошибки при обновлении черных списков"))
 
-    def start_winws(self, winws_path: str, args: Optional[List[str]] = None):
+    def start_winws(self, winws_path: str, args: Optional[List[str]] = None) -> None:
+        """
+        Запускает процесс winws.exe.
+
+        :param winws_path: Путь к исполняемому файлу winws.exe.
+        :param args: Дополнительные аргументы для запуска.
+        """
         if self.winws_worker_thread is not None and self.winws_worker_thread.process_name == "winws.exe":
             return
 
@@ -969,3 +1222,20 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         self.winws_worker_thread.error_signal.connect(self.handle_error)
         self.winws_worker_thread.start()
 
+    def create_info_tab(self) -> QWidget:
+        """
+        Создаёт вкладку "О программе" с информацией о приложении и зависимостях.
+
+        :return: Экземпляр QWidget для вкладки "О программе".
+        """
+        info_tab = QWidget()
+        info_layout = QVBoxLayout(info_tab)
+
+        self.details_group = self.create_details_group()
+        info_layout.addWidget(self.details_group)
+
+        self.acknowledgements_group = self.create_acknowledgements_group()
+        info_layout.addWidget(self.acknowledgements_group)
+
+        info_layout.addStretch(1)
+        return info_tab

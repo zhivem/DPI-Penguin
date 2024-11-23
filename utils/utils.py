@@ -6,6 +6,7 @@ import subprocess
 import sys
 import winreg
 from typing import Optional, List, Dict, Tuple
+
 from packaging.version import parse as parse_version
 
 from PyQt6.QtCore import QSettings
@@ -13,29 +14,12 @@ from PyQt6.QtGui import QColor, QIcon, QPixmap
 
 from utils.translationmanager import TranslationManager
 
-TRANSLATIONS_FOLDER = os.path.join(os.path.dirname(__file__), '..', 'translations')
-settings = QSettings("Zhivem", "DPI Penguin")
-translation_manager = TranslationManager(TRANSLATIONS_FOLDER)
-saved_language = settings.value("language", "ru")
-translation_manager.set_language(saved_language)
-
-def tr(text: str) -> str:
-    return translation_manager.translate(text)
-
-def set_language(lang_code: str):
-    translation_manager.set_language(lang_code)
-
+# Константы и глобальные настройки
 BASE_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 ZAPRET_FOLDER = os.path.join(BASE_FOLDER, "zapret")
 CONFIG_PATH = os.path.join(BASE_FOLDER, "config", 'default.ini')
 SETTING_VER = os.path.join(BASE_FOLDER, "setting_version", "version_config.ini")
-
-config = configparser.ConfigParser()
-config.read(SETTING_VER)
-
-CURRENT_VERSION = config.get('VERSION', 'ver_programm')
-ZAPRET_VERSION = config.get('VERSION', 'zapret')
-CONFIG_VERSION = config.get('VERSION', 'config')
+TRANSLATIONS_FOLDER = os.path.join(os.path.dirname(__file__), '..', 'translations')
 
 BLACKLIST_FOLDER = os.path.join(BASE_FOLDER, "black")
 ICON_FOLDER = os.path.join(BASE_FOLDER, "resources", "icon")
@@ -49,12 +33,48 @@ BLACKLIST_FILES: List[str] = [
 
 WIN_DIVERT_COMMAND: List[str] = ["net", "stop", "WinDivert"]
 
+# Настройка логирования
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+# Инициализация менеджера переводов и настроек
+settings = QSettings("Zhivem", "DPI Penguin")
+translation_manager = TranslationManager(TRANSLATIONS_FOLDER)
+saved_language = settings.value("language", "ru")
+translation_manager.set_language(saved_language)
+
+
+def tr(text: str) -> str:
+    """
+    Функция для перевода текста.
+    """
+    return translation_manager.translate(text)
+
+
+def set_language(lang_code: str):
+    """
+    Устанавливает язык приложения.
+    """
+    translation_manager.set_language(lang_code)
+
+
+# Загрузка конфигурации
+config = configparser.ConfigParser()
+config.read(SETTING_VER)
+
+CURRENT_VERSION = config.get('VERSION', 'ver_programm')
+ZAPRET_VERSION = config.get('VERSION', 'zapret')
+CONFIG_VERSION = config.get('VERSION', 'config')
+
+
 def open_path(path: str) -> Optional[str]:
+    """
+    Открывает указанный путь в файловом менеджере.
+    Возвращает сообщение об ошибке, если путь не существует или не удалось открыть.
+    """
     if not os.path.exists(path):
-        logging.warning(tr("Путь не существует: {path}").format(path=path))
-        return tr("Путь не существует: {path}").format(path=path)
+        message = tr("Путь не существует: {path}").format(path=path)
+        logging.warning(message)
+        return message
 
     try:
         if platform.system() == "Windows":
@@ -67,12 +87,20 @@ def open_path(path: str) -> Optional[str]:
     except Exception as e:
         return tr("Не удалось открыть путь: {error}").format(error=e)
 
+
 def create_status_icon(color: str, size: Tuple[int, int] = (12, 12)) -> QIcon:
+    """
+    Создаёт иконку статуса заданного цвета и размера.
+    """
     pixmap = QPixmap(*size)
     pixmap.fill(QColor(color))
     return QIcon(pixmap)
 
+
 def ensure_module_installed(module_name: str, version: Optional[str] = None) -> None:
+    """
+    Проверяет, установлен ли модуль с указанной версией. Если нет, устанавливает его.
+    """
     try:
         __import__(module_name)
         if version:
@@ -84,7 +112,11 @@ def ensure_module_installed(module_name: str, version: Optional[str] = None) -> 
         logging.warning(tr("Модуль '{module_name}' не найден или версия не соответствует, установка...").format(module_name=module_name))
         install_module(module_name, version)
 
+
 def install_module(module_name: str, version: Optional[str] = None) -> None:
+    """
+    Устанавливает указанный модуль через pip.
+    """
     try:
         cmd = [
             sys.executable, "-m", "pip", "install",
@@ -96,7 +128,11 @@ def install_module(module_name: str, version: Optional[str] = None) -> None:
         logging.error(tr("Ошибка установки модуля '{module_name}': {error}").format(module_name=module_name, error=e))
         raise
 
+
 def is_autostart_enabled() -> bool:
+    """
+    Проверяет, включен ли автозапуск приложения.
+    """
     try:
         with winreg.OpenKey(
             winreg.HKEY_CURRENT_USER,
@@ -111,7 +147,11 @@ def is_autostart_enabled() -> bool:
         logging.error(tr("Ошибка при проверке автозапуска: {error}").format(error=e))
         return False
 
+
 def enable_autostart() -> None:
+    """
+    Включает автозапуск приложения.
+    """
     try:
         with winreg.OpenKey(
             winreg.HKEY_CURRENT_USER,
@@ -125,7 +165,11 @@ def enable_autostart() -> None:
         logging.error(tr("Ошибка при установке автозапуска: {error}").format(error=e))
         raise
 
+
 def disable_autostart() -> None:
+    """
+    Отключает автозапуск приложения.
+    """
     try:
         with winreg.OpenKey(
             winreg.HKEY_CURRENT_USER,
@@ -140,14 +184,23 @@ def disable_autostart() -> None:
         logging.error(tr("Ошибка при отключении автозапуска: {error}").format(error=e))
         raise
 
+
 def get_executable_path() -> str:
+    """
+    Возвращает путь к исполняемому файлу приложения.
+    """
     if getattr(sys, 'frozen', False):
         return sys.executable
     else:
         script_path = os.path.abspath(sys.argv[0])
         return f'"{sys.executable}" "{script_path}"'
 
+
 def load_script_options(config_path: str) -> Tuple[Optional[Dict[str, Tuple[str, List[str]]]], Optional[str]]:
+    """
+    Загружает опции скрипта из конфигурационного файла.
+    Возвращает словарь опций и сообщение об ошибке, если оно произошло.
+    """
     config = configparser.ConfigParser()
     config.optionxform = str
     try:
@@ -155,6 +208,7 @@ def load_script_options(config_path: str) -> Tuple[Optional[Dict[str, Tuple[str,
     except configparser.Error as e:
         return None, tr("Ошибка при чтении config.ini: {error}").format(error=e)
 
+    # Проверка на дублирующиеся секции
     section_counts = {}
     try:
         with open(config_path, 'r', encoding='utf-8') as f:
@@ -168,7 +222,9 @@ def load_script_options(config_path: str) -> Tuple[Optional[Dict[str, Tuple[str,
 
     duplicates = [name for name, count in section_counts.items() if count > 1]
     if duplicates:
-        error_message = tr("Ошибка: Названия разделов конфигурации не должны повторяться: {duplicates}").format(duplicates=", ".join(duplicates))
+        error_message = tr("Ошибка: Названия разделов конфигурации не должны повторяться: {duplicates}").format(
+            duplicates=", ".join(duplicates)
+        )
         return None, error_message
 
     script_options = {}
@@ -205,7 +261,12 @@ def load_script_options(config_path: str) -> Tuple[Optional[Dict[str, Tuple[str,
     logging.info(tr("SCRIPT_OPTIONS загружены: {options}").format(options=script_options))
     return script_options, None
 
+
 def create_service() -> str:
+    """
+    Создаёт и настраивает службу Windows.
+    Возвращает сообщение об успехе или ошибке.
+    """
     try:
         binary_path = os.path.join(ZAPRET_FOLDER, "winws.exe")
         blacklist_path = BLACKLIST_FILES[3]
@@ -265,17 +326,25 @@ def create_service() -> str:
         logging.info(tr("Служба создана и настроена для автоматического запуска"))
         return tr("Служба создана и настроена для автоматического запуска")
     except subprocess.CalledProcessError as e:
+        logging.error(tr("Ошибка при создании службы: {error}").format(error=e))
         return tr("Не удалось создать службу")
     except Exception as e:
+        logging.error(tr("Не удалось создать службу из-за неизвестной ошибки: {error}").format(error=e))
         return tr("Не удалось создать службу из-за неизвестной ошибки")
 
+
 def delete_service() -> str:
+    """
+    Удаляет службу Windows.
+    Возвращает сообщение об успехе или ошибке.
+    """
     try:
         cmd_delete = ['sc', 'delete', 'Penguin']
 
         logging.debug(tr("Команда для удаления службы: {command}").format(command=' '.join(cmd_delete)))
 
         subprocess.run(cmd_delete, check=True)
+        logging.info(tr("Служба успешно удалена"))
         return tr("Служба успешно удалена")
     except subprocess.CalledProcessError as e:
         logging.error(tr("Не удалось удалить службу. Ошибка: {error}").format(error=e))
