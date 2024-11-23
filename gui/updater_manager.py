@@ -30,7 +30,7 @@ class SettingsDialog(QDialog):
     def __init__(self, parent: Optional[Any] = None):
         """
         Инициализирует диалоговое окно настроек обновлений.
-        
+
         :param parent: Родительский виджет.
         """
         super().__init__(parent)
@@ -142,7 +142,7 @@ class SettingsDialog(QDialog):
     def update_zapret_message(self, message: str) -> None:
         """
         Обновляет сообщение об обновлении Zapret в текстовом редакторе.
-        
+
         :param message: Новое сообщение для отображения.
         """
         self.replace_message_in_text_edit("Zapret", message)
@@ -150,7 +150,7 @@ class SettingsDialog(QDialog):
     def update_config_message(self, message: str) -> None:
         """
         Обновляет сообщение об обновлении конфигурационного файла в текстовом редакторе.
-        
+
         :param message: Новое сообщение для отображения.
         """
         self.replace_message_in_text_edit("default.ini", message)
@@ -158,7 +158,7 @@ class SettingsDialog(QDialog):
     def replace_message_in_text_edit(self, keyword: str, new_message: str) -> None:
         """
         Заменяет сообщение в текстовом редакторе на основе ключевого слова.
-        
+
         :param keyword: Ключевое слово для поиска строки.
         :param new_message: Новое сообщение для вставки.
         """
@@ -216,7 +216,7 @@ class SettingsDialog(QDialog):
     def terminate_process(self, process_name: Optional[str] = None, service_name: Optional[str] = None) -> None:
         """
         Завершает указанный процесс или останавливает службу.
-        
+
         :param process_name: Имя процесса для завершения.
         :param service_name: Имя службы для остановки.
         """

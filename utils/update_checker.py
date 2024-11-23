@@ -51,7 +51,10 @@ class UpdateChecker:
             "destination": os.path.join(BASE_FOLDER, "zapret", "zapret.zip"),
             "extract": True,
             "pre_update": ["terminate_process", "stop_service"],
-            "pre_update_args": {"process_name": "winws.exe", "service_name": "WinDivert"}
+            "pre_update_args": {
+                "terminate_process": {"process_name": "winws.exe"},
+                "stop_service": {"service_name": "WinDivert"}
+            }
         },
         "config": {
             "url": "https://raw.githubusercontent.com/zhivem/DPI-Penguin/main/config/default.ini",
@@ -132,11 +135,13 @@ class UpdateChecker:
                         f.write(response.text)
                 self.logger.info(tr(f"{component} успешно обновлён."))
 
+                # Обработка pre_update
                 if 'pre_update' in component_info:
-                    method_name = component_info['pre_update'][0]
-                    method = getattr(self, method_name, None)
-                    if method:
-                        method(**component_info.get('pre_update_args', {}))
+                    for method_name in component_info['pre_update']:
+                        method = getattr(self, method_name, None)
+                        if method:
+                            args = component_info.get('pre_update_args', {}).get(method_name, {})
+                            method(**args)
 
                 if 'post_update' in component_info and component_info['post_update'] == "emit_config_updated":
                     if dialog and hasattr(dialog, 'config_updated_signal'):
@@ -223,5 +228,5 @@ class UpdateChecker:
         """
         Метод для эмита сигнала обновления конфигурации.
         """
-        # Здесь можно реализовать эмиссию сигнала, если используется механизм сигналов, например, через PyQt или другой фреймворк. Пусть будет
+        # Здесь можно реализовать эмиссию сигнала, если используется механизм сигналов, например, через PyQt или другой фреймворк.
         pass
