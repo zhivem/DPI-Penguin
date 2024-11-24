@@ -4,10 +4,6 @@ import sys
 import subprocess
 from typing import Any, Optional
 
-import psutil
-import win32service
-import win32serviceutil
-import winerror
 from PyQt6.QtCore import pyqtSignal, pyqtSlot
 from PyQt6.QtWidgets import (
     QDialog,
@@ -64,6 +60,9 @@ class SettingsDialog(QDialog):
         self.update_checker.get_local_versions()
         self.update_checker.get_remote_versions()
         self.check_for_updates()
+
+        # Подключение сигнала обновления конфигурации
+        self.update_checker.config_updated_signal.connect(self.on_config_updated)
 
     @pyqtSlot()
     def on_update(self) -> None:
@@ -213,41 +212,9 @@ class SettingsDialog(QDialog):
         except Exception as e:
             QMessageBox.critical(self, tr("Ошибка"), tr(f"Не удалось запустить обновление: {e}"))
 
-    def terminate_process(self, process_name: Optional[str] = None, service_name: Optional[str] = None) -> None:
+    @pyqtSlot()
+    def on_config_updated(self):
         """
-        Завершает указанный процесс или останавливает службу.
-
-        :param process_name: Имя процесса для завершения.
-        :param service_name: Имя службы для остановки.
+        Обработчик сигнала обновления конфигурации.
         """
-        if process_name:
-            process_found = False
-            for proc in psutil.process_iter(['pid', 'name']):
-                if proc.info['name'] and proc.info['name'].lower() == process_name.lower():
-                    process_found = True
-                    try:
-                        self.logger.info(f"Попытка завершить процесс {process_name} с PID {proc.info['pid']}")
-                        proc.terminate()
-                        proc.wait(timeout=5)
-                        self.logger.info(f"Процесс {process_name} успешно завершён.")
-                    except Exception as e:
-                        self.logger.error(f"Ошибка при завершении процесса {process_name}: {e}")
-                        raise e
-            if not process_found:
-                self.logger.info(f"Процесс {process_name} не найден.")
-
-        elif service_name:
-            try:
-                self.logger.info(f"Остановка службы {service_name}...")
-                service_status = win32serviceutil.QueryServiceStatus(service_name)
-                if service_status[1] == win32service.SERVICE_RUNNING:
-                    win32serviceutil.StopService(service_name)
-                    self.logger.info(f"Служба {service_name} успешно остановлена.")
-                else:
-                    self.logger.info(f"Служба {service_name} не запущена.")
-            except Exception as e:
-                if hasattr(e, 'winerror') and e.winerror == winerror.ERROR_SERVICE_DOES_NOT_EXIST:
-                    self.logger.warning(f"Служба {service_name} не установлена.")
-                else:
-                    self.logger.error(f"Ошибка при остановке службы {service_name}: {e}")
-                    raise e
+        self.logger.info("Конфигурация обновлена.")

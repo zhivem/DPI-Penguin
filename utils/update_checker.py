@@ -12,11 +12,14 @@ import win32service
 import win32serviceutil
 import winerror
 from packaging.version import parse as parse_version
+from PyQt6.QtCore import QObject, pyqtSignal 
 
 from utils.utils import BASE_FOLDER, CURRENT_VERSION, tr
 
 
-class UpdateChecker:
+class UpdateChecker(QObject): 
+    config_updated_signal = pyqtSignal()
+
     BLACKLISTS: List[Dict[str, str]] = [
         {
             "name": "russia-blacklist",
@@ -65,6 +68,7 @@ class UpdateChecker:
     }
 
     def __init__(self):
+        super().__init__()  # Инициализируем QObject
         self.logger = logging.getLogger(self.__class__.__name__)
         self.local_versions: Dict[str, str] = {}
         self.remote_versions: Dict[str, str] = {}
@@ -123,6 +127,14 @@ class UpdateChecker:
             self.logger.error(tr(f"Неизвестный компонент для обновления: {component}"))
             return False
         try:
+            
+            if 'pre_update' in component_info:
+                for method_name in component_info['pre_update']:
+                    method = getattr(self, method_name, None)
+                    if method:
+                        args = component_info.get('pre_update_args', {}).get(method_name, {})
+                        method(**args)
+
             self.logger.info(tr(f"Скачивание {component} с {component_info['url']}"))
             response = requests.get(component_info['url'], stream=True, timeout=30)
             if response.status_code == 200:
@@ -135,17 +147,11 @@ class UpdateChecker:
                         f.write(response.text)
                 self.logger.info(tr(f"{component} успешно обновлён."))
 
-                # Обработка pre_update
-                if 'pre_update' in component_info:
-                    for method_name in component_info['pre_update']:
-                        method = getattr(self, method_name, None)
-                        if method:
-                            args = component_info.get('pre_update_args', {}).get(method_name, {})
-                            method(**args)
-
+                # Обработка post_update
                 if 'post_update' in component_info and component_info['post_update'] == "emit_config_updated":
                     if dialog and hasattr(dialog, 'config_updated_signal'):
                         dialog.config_updated_signal.emit()
+                        self.emit_config_updated()
 
                 self.update_local_version_file()
                 return True
@@ -201,9 +207,16 @@ class UpdateChecker:
             self.logger.info(tr(f"Завершение процесса {process_name}..."))
             for proc in psutil.process_iter(['pid', 'name']):
                 if proc.info['name'] and proc.info['name'].lower() == process_name.lower():
+                    self.logger.info(tr(f"Попытка завершить процесс {process_name} с PID {proc.info['pid']}"))
                     proc.terminate()
-                    proc.wait(timeout=5)
-                    self.logger.info(tr(f"Процесс {process_name} успешно завершён."))
+                    try:
+                        proc.wait(timeout=10)
+                        self.logger.info(tr(f"Процесс {process_name} успешно завершён."))
+                    except psutil.TimeoutExpired:
+                        self.logger.warning(tr(f"Процесс {process_name} не завершился вовремя, пытаемся принудительно завершить."))
+                        proc.kill()
+                        proc.wait(timeout=5)
+                        self.logger.info(tr(f"Процесс {process_name} принудительно завершён."))
         except Exception as e:
             self.logger.error(tr(f"Ошибка при завершении процесса {process_name}: {e}"))
             raise e
@@ -214,7 +227,16 @@ class UpdateChecker:
             service_status = win32serviceutil.QueryServiceStatus(service_name)
             if service_status[1] == win32service.SERVICE_RUNNING:
                 win32serviceutil.StopService(service_name)
-                self.logger.info(tr(f"Служба {service_name} успешно остановлена."))
+                self.logger.info(tr(f"Служба {service_name} отправлена на остановку."))
+                # Ожидание остановки службы
+                for _ in range(15):
+                    service_status = win32serviceutil.QueryServiceStatus(service_name)
+                    if service_status[1] == win32service.SERVICE_STOPPED:
+                        self.logger.info(tr(f"Служба {service_name} успешно остановлена."))
+                        break
+                    time.sleep(1)
+                else:
+                    self.logger.warning(tr(f"Служба {service_name} не остановилась вовремя."))
             else:
                 self.logger.info(tr(f"Служба {service_name} не запущена."))
         except Exception as e:
@@ -228,5 +250,5 @@ class UpdateChecker:
         """
         Метод для эмита сигнала обновления конфигурации.
         """
-        # Здесь можно реализовать эмиссию сигнала, если используется механизм сигналов, например, через PyQt или другой фреймворк.
-        pass
+        self.logger.info(tr("Эмит сигнал обновления конфигурации."))
+        self.config_updated_signal.emit()
