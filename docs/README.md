@@ -8,8 +8,8 @@
 **DPI Penguin** — это графическое приложение на Python, разработанное для обхода сетевых ограничений, таких как глубокий анализ пакетов (DPI). Приложение предоставляет интуитивно понятный интерфейс для управления скриптами, позволяющими получать доступ к платформам таким как YouTube и Discord. Работа приложения основана на интеграции с [Zapret](https://github.com/bol-van/zapret). Загрузить `exe` можно c [Releases](https://github.com/zhivem/DPI-Penguin/releases). Посмотреть исходный код загрузчика обновлений `->` [Loader for DPI Penguin](https://github.com/zhivem/Loader-for-DPI-Penguin)
 
 ## Интерфейс
-![image](https://github.com/user-attachments/assets/8b581b9f-1986-4c10-b40c-d72bcf49f49e)
-![image](https://github.com/user-attachments/assets/8e427a7f-f0e8-4f09-a443-716daafe6a72)
+![image](https://github.com/user-attachments/assets/2aaab6c3-b314-4637-9aab-245e0b45b21b)
+![image](https://github.com/user-attachments/assets/8782afdb-ca87-4e11-8a79-73e508ef75de)
 
 ## Особенности
 
