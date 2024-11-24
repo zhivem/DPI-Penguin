@@ -926,7 +926,8 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             "loaded hosts",
             "loading plain text list",
             "loaded",
-            "loading ipset"
+            "loading ipset",
+            "github version"
         ]
 
         text_lower = text.lower()
@@ -1140,6 +1141,21 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         dialog.exec()
 
     def reload_configuration(self) -> None:
+        """
+        Перезагружает конфигурацию после обновления.
+        """
+        # Останавливаем текущие запущенные процессы
+        if self.main_worker_thread is not None:
+            self.main_worker_thread.terminate_process()
+            self.main_worker_thread.quit()
+            self.main_worker_thread.wait()
+            self.main_worker_thread = None
+
+        if self.winws_worker_thread is not None:
+            self.winws_worker_thread.terminate_process()
+            self.winws_worker_thread.quit()
+            self.winws_worker_thread.wait()
+            self.winws_worker_thread = None
         """
         Перезагружает конфигурацию после обновления.
         """
