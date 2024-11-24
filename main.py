@@ -35,11 +35,12 @@ def setup_logging():
 
 
 def is_admin() -> bool:
+    """Проверка прав администратора"""
     if os.name == 'nt':
         try:
             return ctypes.windll.shell32.IsUserAnAdmin()
         except Exception as e:
-            logging.error(tr("Ошибка при проверке прав администратора: {e}").format(e=e))
+            logging.error(tr("Ошибка при проверке прав администратора: {error}").format(error=e))
             return False
     elif os.name == 'posix':
         return os.geteuid() == 0
@@ -47,6 +48,7 @@ def is_admin() -> bool:
 
 
 def run_as_admin(argv=None):
+    """Перезапуск приложения с правами администратора"""
     if os.name != 'nt':
         logging.error(tr("Функция run_as_admin доступна только на Windows."))
         sys.exit(1)
@@ -58,13 +60,15 @@ def run_as_admin(argv=None):
     params = ' '.join([f'"{arg}"' for arg in argv])
     show_cmd = win32con.SW_NORMAL
     ret = shell32.ShellExecuteW(None, "runas", executable, params, None, show_cmd)
+
     if int(ret) <= 32:
         logging.error(tr("Не удалось перезапустить программу с правами администратора"))
         sys.exit(1)
     sys.exit(0)
 
 
-def ensure_single_instance():
+def ensure_single_instance() -> bool:
+    """Обеспечить, чтобы приложение работало только в одном экземпляре"""
     if os.name == 'nt':
         handle = win32event.CreateMutex(None, False, MUTEX_NAME)
         last_error = win32api.GetLastError()
@@ -76,6 +80,7 @@ def ensure_single_instance():
 
 
 def show_single_instance_warning():
+    """Показать предупреждение о запущенном экземпляре приложения"""
     app = QtWidgets.QApplication(sys.argv)
     QMessageBox.warning(None, tr("Предупреждение"), tr("Приложение уже запущено"))
     sys.exit(0)

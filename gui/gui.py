@@ -1221,21 +1221,3 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         self.winws_worker_thread.finished_signal.connect(self.on_finished)
         self.winws_worker_thread.error_signal.connect(self.handle_error)
         self.winws_worker_thread.start()
-
-    def create_info_tab(self) -> QWidget:
-        """
-        Создаёт вкладку "О программе" с информацией о приложении и зависимостях.
-
-        :return: Экземпляр QWidget для вкладки "О программе".
-        """
-        info_tab = QWidget()
-        info_layout = QVBoxLayout(info_tab)
-
-        self.details_group = self.create_details_group()
-        info_layout.addWidget(self.details_group)
-
-        self.acknowledgements_group = self.create_acknowledgements_group()
-        info_layout.addWidget(self.acknowledgements_group)
-
-        info_layout.addStretch(1)
-        return info_tab

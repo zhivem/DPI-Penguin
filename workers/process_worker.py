@@ -103,6 +103,7 @@ class WorkerThread(QtCore.QThread):
         self.error_signal.emit(message)
 
     def terminate_process(self) -> None:
+        """Общий метод для завершения процесса."""
         if self.process and self.process.poll() is None:
             try:
                 self.process.terminate()
@@ -112,16 +113,17 @@ class WorkerThread(QtCore.QThread):
                     process_name=self.process_name
                 ))
             except Exception as e:
-                self.logger.error(tr("Не удалось завершить процесс {process_name}: {error}").format(
+                self._handle_error(tr("Не удалось завершить процесс {process_name}: {error}").format(
                     process_name=self.process_name,
                     error=e
                 ))
 
     def close_winws(self):
-        self.logger.info(tr("Попытка завершить процесс winws.exe"))
+        """Завершаем процесс winws.exe с помощью общей логики."""
         self._close_process("winws.exe", "winws.exe")
 
     def _close_process(self, process_name: str, display_name: str):
+        """Общий метод для завершения процессов через psutil."""
         try:
             for proc in psutil.process_iter(['pid', 'name']):
                 if proc.info['name'] and proc.info['name'].lower() == process_name.lower():
@@ -132,13 +134,9 @@ class WorkerThread(QtCore.QThread):
             self.logger.warning(f"{tr('Процесс')} {display_name} {tr('не найден.')}")
         except psutil.AccessDenied:
             error_msg = f"{tr('Недостаточно прав для завершения процесса')} {display_name}"
-            self.logger.error(error_msg)
-            self.output_signal.emit(f"{tr('Ошибка')}: {tr('Недостаточно прав для завершения процесса')} {display_name}")
+            self._handle_error(error_msg)
         except Exception as e:
-            error_msg = f"{tr('Ошибка завершения процесса')} {display_name}: {str(e)}"
-            self.output_signal.emit(error_msg)
-            self.logger.error(error_msg)
-
+            self._handle_error(f"{tr('Ошибка завершения процесса')} {display_name}: {str(e)}")
 
 class InitializerThread(QtCore.QThread):
     initialization_complete = QtCore.pyqtSignal()
@@ -163,6 +161,7 @@ class InitializerThread(QtCore.QThread):
             self.error_signal.emit(error_msg)
 
     def terminate_processes(self, process_names: List[str]):
+        """Общий метод для завершения нескольких процессов."""
         current_process_id = win32api.GetCurrentProcessId()
         for proc in psutil.process_iter(['pid', 'name']):
             pid = proc.info['pid']
@@ -181,6 +180,7 @@ class InitializerThread(QtCore.QThread):
                     self.logger.warning(tr("Не удалось завершить PID {pid}: {e}").format(pid=pid, e=e))
 
     def stop_service(self, service_name: str):
+        """Остановка службы с помощью win32serviceutil."""
         try:
             status = win32serviceutil.QueryServiceStatus(service_name)[1]
             if status == win32service.SERVICE_RUNNING:

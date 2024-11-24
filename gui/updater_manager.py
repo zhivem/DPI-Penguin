@@ -189,7 +189,7 @@ class SettingsDialog(QDialog):
 
     def open_download_site(self) -> None:
         """
-        Открывает сайт загрузки обновления или запускает локальный установщик обновлений.
+        Запускает локальный установщик обновлений.
         """
         try:
             if getattr(sys, 'frozen', False):

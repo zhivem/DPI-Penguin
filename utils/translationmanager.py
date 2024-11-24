@@ -19,7 +19,7 @@ class TranslationManager:
         self.translations: Dict[str, Dict[str, str]] = {}
         self.current_language: str = 'ru'
         self.available_languages: List[str] = ['ru', 'en']
-        self.language_order: List[str] = ['en']  # Порядок языков для фолбэков
+        self.language_order: List[str] = ['en'] 
         self.logger = logging.getLogger(self.__class__.__name__)
         self.language_names: Dict[str, str] = {
             'ru': 'Русский',
