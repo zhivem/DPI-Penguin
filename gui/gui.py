@@ -123,7 +123,6 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             if self.selected_script.count() > 0:
                 self.selected_script.setCurrentIndex(0)
 
-        self.logger.info(tr("Автоматический запуск с последним конфигом активирован. Запуск процесса..."))
         self.run_exe(auto_run=True)
         self.hide()
         self.tray_icon.show()

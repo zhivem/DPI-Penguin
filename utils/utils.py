@@ -87,16 +87,6 @@ def open_path(path: str) -> Optional[str]:
     except Exception as e:
         return tr("Не удалось открыть путь: {error}").format(error=e)
 
-
-def create_status_icon(color: str, size: Tuple[int, int] = (12, 12)) -> QIcon:
-    """
-    Создаёт иконку статуса заданного цвета и размера.
-    """
-    pixmap = QPixmap(*size)
-    pixmap.fill(QColor(color))
-    return QIcon(pixmap)
-
-
 def ensure_module_installed(module_name: str, version: Optional[str] = None) -> None:
     """
     Проверяет, установлен ли модуль с указанной версией. Если нет, устанавливает его.
