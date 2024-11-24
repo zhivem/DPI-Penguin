@@ -10,7 +10,6 @@ from typing import Optional, List, Dict, Tuple
 from packaging.version import parse as parse_version
 
 from PyQt6.QtCore import QSettings
-from PyQt6.QtGui import QColor, QIcon, QPixmap
 
 from utils.translationmanager import TranslationManager
 
@@ -86,37 +85,6 @@ def open_path(path: str) -> Optional[str]:
         return None
     except Exception as e:
         return tr("Не удалось открыть путь: {error}").format(error=e)
-
-def ensure_module_installed(module_name: str, version: Optional[str] = None) -> None:
-    """
-    Проверяет, установлен ли модуль с указанной версией. Если нет, устанавливает его.
-    """
-    try:
-        __import__(module_name)
-        if version:
-            import pkg_resources
-            installed_version = pkg_resources.get_distribution(module_name).version
-            if parse_version(installed_version) != parse_version(version):
-                raise ImportError
-    except ImportError:
-        logging.warning(tr("Модуль '{module_name}' не найден или версия не соответствует, установка...").format(module_name=module_name))
-        install_module(module_name, version)
-
-
-def install_module(module_name: str, version: Optional[str] = None) -> None:
-    """
-    Устанавливает указанный модуль через pip.
-    """
-    try:
-        cmd = [
-            sys.executable, "-m", "pip", "install",
-            f"{module_name}=={version}" if version else module_name
-        ]
-        subprocess.check_call(cmd)
-        logging.info(tr("Модуль '{module_name}' успешно установлен.").format(module_name=module_name))
-    except subprocess.CalledProcessError as e:
-        logging.error(tr("Ошибка установки модуля '{module_name}': {error}").format(module_name=module_name, error=e))
-        raise
 
 
 def is_autostart_enabled() -> bool:

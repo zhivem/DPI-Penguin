@@ -15,7 +15,7 @@ from PyQt6 import QtWidgets
 from PyQt6.QtWidgets import QMessageBox
 
 from gui.gui import GoodbyeDPIApp
-from utils.utils import BASE_FOLDER, CURRENT_VERSION, ensure_module_installed, tr
+from utils.utils import BASE_FOLDER, CURRENT_VERSION, tr
 from workers.process_worker import InitializerThread
 
 MUTEX_NAME = "ru.github.dpipenguin.mutex"
@@ -96,8 +96,6 @@ def main():
     if not ensure_single_instance():
         logging.info(tr("Попытка запустить вторую копию приложения"))
         show_single_instance_warning()
-
-    ensure_module_installed('packaging')
 
     app = QtWidgets.QApplication(sys.argv)
 

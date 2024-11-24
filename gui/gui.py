@@ -348,7 +348,7 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
 
         :param button: Экземпляр PushButton.
         :param icon_path: Путь к иконке.
-        :param icon_size: Размер иконки (ширина, высота).
+        :param icon_size: Размер иконки.
         """
         if not os.path.exists(icon_path):
             self.logger.error(f"{tr('Файл иконки приложения не найден')}: {icon_path}")
