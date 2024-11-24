@@ -149,7 +149,7 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         """
         Инициализирует пользовательский интерфейс главного окна.
         """
-        self.setWindowTitle(tr("DPI Penguin v{version}").format(version=CURRENT_VERSION))
+        self.setWindowTitle("DPI Penguin v{version}".format(version=CURRENT_VERSION))
         self.setFixedSize(420, 570)
         self.set_window_icon(TRAY_ICON_PATH)
 
@@ -373,7 +373,7 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         settings_layout = QVBoxLayout(settings_tab)
 
         # Группа выбора языка
-        self.language_group = QGroupBox(tr("Язык / Language"))
+        self.language_group = QGroupBox("Язык / Language")
         language_layout = QVBoxLayout()
         self.language_group.setLayout(language_layout)
 

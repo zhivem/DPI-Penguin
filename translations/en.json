@@ -1,5 +1,4 @@
 {
-    "DPI Penguin v{version}": "DPI Penguin v{version}",
     "Развернуть": "Restore",
     "Выход": "Exit",
     "Основное": "Main",
@@ -78,9 +77,7 @@
     "Конфигурационный файл успешно обновлен": "Configuration file updated successfully.",
     "Ошибка обновления конфигурации": "Error updating configuration",
     "Ошибка обновления": "Update Error",
-    "Доступна новая версия {latest_version}. <a href=\"https://github.com/zhivem/DPI-Penguin/releases\">Перейдите на страницу загрузки</a>": "A new version {latest_version} is available. <a href=\"https://github.com/zhivem/DPI-Penguin/releases\">Go to the download page</a>.",
     "Обновлений не найдено": "No updates found.",
-    "Основные сайты YouTube": "Main YouTube Sites",
     "Подробности": "Details",
     "Зависимости": "Dependencies",
     "Версия": "Version",
@@ -97,7 +94,6 @@
     "Связанные ссылки": "Related Links",
     "Менеджер обновлений": "Update Manager",
     "Файл иконки приложения не найден": "Application icon file not found",
-    "Язык / Language": "Язык / Language",
     "Автозапуск": "Autostart",
     "Службы": "Services",
     "Обновления": "Updates",
