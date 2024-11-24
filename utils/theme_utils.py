@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Any, Optional, Tuple
+from typing import Optional
 
 from PyQt6.QtCore import QSettings
 from PyQt6.QtWidgets import QApplication, QWidget

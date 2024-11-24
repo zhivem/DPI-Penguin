@@ -7,8 +7,6 @@ import sys
 import winreg
 from typing import Optional, List, Dict, Tuple
 
-from packaging.version import parse as parse_version
-
 from PyQt6.QtCore import QSettings
 
 from utils.translationmanager import TranslationManager
