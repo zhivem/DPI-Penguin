@@ -127,14 +127,6 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             self.stop_close_button.setEnabled(False)
             self.update_config_button.setEnabled(True)
 
-        # Отложенный запуск
-        QtCore.QTimer.singleShot(0, self.post_init)
-
-    def post_init(self):
-        """
-        Выполняет тяжёлые операции после инициализации интерфейса.
-        """
-        # Обновления выполняются в отдельных потоках
         if settings.value("update_blacklists_on_start", False, type=bool):
             self.start_update_blacklists_thread(silent=True)
 
