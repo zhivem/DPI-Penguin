@@ -6,14 +6,52 @@ from typing import List, Optional
 
 import psutil
 from PyQt6 import QtCore
+from utils.service_utils import stop_service
 
 from utils.utils import tr
 
 if os.name == 'nt':
     import win32api
-    import win32service
-    import win32serviceutil
-    import winerror
+
+
+class ProcessUtils:
+    logger = logging.getLogger('ProcessUtils')
+
+    @staticmethod
+    def terminate_process(process_name: str) -> None:
+        """
+        Завершает процесс по имени.
+        """
+        try:
+            ProcessUtils.logger.info(tr(f"Завершение процесса {process_name}..."))
+            for proc in psutil.process_iter(['pid', 'name']):
+                if proc.info['name'] and proc.info['name'].lower() == process_name.lower():
+                    ProcessUtils.logger.info(tr(f"Попытка завершить процесс {process_name} с PID {proc.info['pid']}"))
+                    proc.terminate()
+                    try:
+                        proc.wait(timeout=10)
+                        ProcessUtils.logger.info(tr(f"Процесс {process_name} успешно завершён."))
+                    except psutil.TimeoutExpired:
+                        ProcessUtils.logger.warning(tr(f"Процесс {process_name} не завершился вовремя, пытаемся принудительно завершить."))
+                        proc.kill()
+                        proc.wait(timeout=5)
+                        ProcessUtils.logger.info(tr(f"Процесс {process_name} принудительно завершён."))
+        except Exception as e:
+            ProcessUtils.logger.error(tr(f"Ошибка при завершении процесса {process_name}: {e}"))
+            raise e
+
+    @staticmethod
+    def stop_service(service_name: str) -> None:
+        """
+        Останавливает службу по имени, используя внешнюю функцию stop_service.
+        """
+        try:
+            ProcessUtils.logger.info(tr(f"Остановка службы {service_name}..."))
+            stop_service(service_name)
+            ProcessUtils.logger.info(tr(f"Служба {service_name} успешно остановлена."))
+        except Exception as e:
+            ProcessUtils.logger.error(tr(f"Ошибка при остановке службы {service_name}: {e}"))
+            raise e
 
 
 class WorkerThread(QtCore.QThread):
@@ -138,6 +176,7 @@ class WorkerThread(QtCore.QThread):
         except Exception as e:
             self._handle_error(f"{tr('Ошибка завершения процесса')} {display_name}: {str(e)}")
 
+
 class InitializerThread(QtCore.QThread):
     initialization_complete = QtCore.pyqtSignal()
     error_signal = QtCore.pyqtSignal(str)
@@ -180,18 +219,7 @@ class InitializerThread(QtCore.QThread):
                     self.logger.warning(tr("Не удалось завершить PID {pid}: {e}").format(pid=pid, e=e))
 
     def stop_service(self, service_name: str):
-        """Остановка службы с помощью win32serviceutil."""
-        try:
-            status = win32serviceutil.QueryServiceStatus(service_name)[1]
-            if status == win32service.SERVICE_RUNNING:
-                win32serviceutil.StopService(service_name)
-                win32serviceutil.WaitForServiceStatus(service_name, win32service.SERVICE_STOPPED, 30)
-            else:
-                self.logger.info(tr("Служба {service_name} не запущена").format(service_name=service_name))
-        except win32service.error as e:
-            if e.winerror == winerror.ERROR_SERVICE_DOES_NOT_EXIST:
-                self.logger.warning(tr("Служба {service_name} не найдена").format(service_name=service_name))
-            else:
-                self.logger.error(tr("Не удалось остановить службу {service_name}: {e}").format(service_name=service_name, e=e))
-        except Exception as e:
-            self.logger.error(tr("Неожиданная ошибка при остановке службы {service_name}: {e}").format(service_name=service_name, e=e))
+        """
+        Останавливает службу, используя ProcessUtils.
+        """
+        ProcessUtils.stop_service(service_name)

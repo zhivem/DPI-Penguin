@@ -9,7 +9,10 @@ from typing import Optional, List, Dict, Tuple
 
 from PyQt6.QtCore import QSettings
 
-from utils.translationmanager import TranslationManager
+from utils.translation_utils import TranslationManager
+
+# Создаем логгер
+logger = logging.getLogger(__name__)
 
 # Константы и глобальные настройки
 BASE_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -27,11 +30,6 @@ BLACKLIST_FILES: List[str] = [
     os.path.join(BLACKLIST_FOLDER, "discord-blacklist.txt"),
     os.path.join(BLACKLIST_FOLDER, "disk-youtube-blacklist.txt")
 ]
-
-WIN_DIVERT_COMMAND: List[str] = ["net", "stop", "WinDivert"]
-
-# Настройка логирования
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Инициализация менеджера переводов и настроек
 settings = QSettings("Zhivem", "DPI Penguin")
@@ -70,7 +68,7 @@ def open_path(path: str) -> Optional[str]:
     """
     if not os.path.exists(path):
         message = tr("Путь не существует: {path}").format(path=path)
-        logging.warning(message)
+        logger.warning(message)
         return message
 
     try:
@@ -82,7 +80,9 @@ def open_path(path: str) -> Optional[str]:
             subprocess.Popen(["xdg-open", path])
         return None
     except Exception as e:
-        return tr("Не удалось открыть путь: {error}").format(error=e)
+        error_message = tr("Не удалось открыть путь: {error}").format(error=e)
+        logger.error(error_message)
+        return error_message
 
 
 def is_autostart_enabled() -> bool:
@@ -100,7 +100,7 @@ def is_autostart_enabled() -> bool:
     except FileNotFoundError:
         return False
     except Exception as e:
-        logging.error(tr("Ошибка при проверке автозапуска: {error}").format(error=e))
+        logger.error(tr("Ошибка при проверке автозапуска: {error}").format(error=e))
         return False
 
 
@@ -116,9 +116,9 @@ def enable_autostart() -> None:
         ) as key:
             executable_path = get_executable_path()
             winreg.SetValueEx(key, "WinWSApp", 0, winreg.REG_SZ, executable_path)
-            logging.info(tr("Автозапуск успешно установлен"))
+            logger.info(tr("Автозапуск успешно установлен"))
     except Exception as e:
-        logging.error(tr("Ошибка при установке автозапуска: {error}").format(error=e))
+        logger.error(tr("Ошибка при установке автозапуска: {error}").format(error=e))
         raise
 
 
@@ -133,11 +133,11 @@ def disable_autostart() -> None:
             0, winreg.KEY_SET_VALUE
         ) as key:
             winreg.DeleteValue(key, "WinWSApp")
-            logging.info(tr("Автозапуск успешно отключен"))
+            logger.info(tr("Автозапуск успешно отключен"))
     except FileNotFoundError:
-        logging.info(tr("Автозапуск уже отключен"))
+        logger.info(tr("Автозапуск уже отключен"))
     except Exception as e:
-        logging.error(tr("Ошибка при отключении автозапуска: {error}").format(error=e))
+        logger.error(tr("Ошибка при отключении автозапуска: {error}").format(error=e))
         raise
 
 
@@ -214,13 +214,13 @@ def load_script_options(config_path: str) -> Tuple[Optional[Dict[str, Tuple[str,
 
         script_options[section] = (executable, args_list)
 
-    logging.info(tr("SCRIPT_OPTIONS загружены: {options}").format(options=script_options))
+    logger.info(tr("SCRIPT_OPTIONS загружены: {options}").format(options=script_options))
     return script_options, None
 
 
 def create_service() -> str:
     """
-    Создаёт и настраивает службу Windows.
+    Создает и настраивает службу Windows.
     Возвращает сообщение об успехе или ошибке.
     """
     try:
@@ -233,7 +233,7 @@ def create_service() -> str:
         required_files = [binary_path, blacklist_path, quic_initial, ipset, ts]
         missing_files = [f for f in required_files if not os.path.exists(f)]
         if missing_files:
-            logging.error(tr("Отсутствуют необходимые файлы: {files}").format(files=", ".join(missing_files)))
+            logger.error(tr("Отсутствуют необходимые файлы: {files}").format(files=", ".join(missing_files)))
             return tr("Не удалось создать службу: отсутствуют файлы {files}.").format(files=", ".join(missing_files))
 
         bin_path_with_args = (
@@ -266,7 +266,7 @@ def create_service() -> str:
             f'binPath= {bin_path_with_args}',
         ]
 
-        logging.debug(tr("Команда для создания службы: {command}").format(command=' '.join(cmd_create)))
+        logger.debug(tr("Команда для создания службы: {command}").format(command=' '.join(cmd_create)))
 
         subprocess.run(cmd_create, check=True)
 
@@ -275,17 +275,17 @@ def create_service() -> str:
             'Passive Deep Packet Inspection blocker and Active DPI circumvention utility'
         ]
 
-        logging.debug(tr("Команда для добавления описания службы: {command}").format(command=' '.join(cmd_description)))
+        logger.debug(tr("Команда для добавления описания службы: {command}").format(command=' '.join(cmd_description)))
 
         subprocess.run(cmd_description, check=True)
 
-        logging.info(tr("Служба создана и настроена для автоматического запуска"))
+        logger.info(tr("Служба создана и настроена для автоматического запуска"))
         return tr("Служба создана и настроена для автоматического запуска")
     except subprocess.CalledProcessError as e:
-        logging.error(tr("Ошибка при создании службы: {error}").format(error=e))
+        logger.error(tr("Ошибка при создании службы: {error}").format(error=e))
         return tr("Не удалось создать службу")
     except Exception as e:
-        logging.error(tr("Не удалось создать службу из-за неизвестной ошибки: {error}").format(error=e))
+        logger.error(tr("Не удалось создать службу из-за неизвестной ошибки: {error}").format(error=e))
         return tr("Не удалось создать службу из-за неизвестной ошибки")
 
 
@@ -297,14 +297,14 @@ def delete_service() -> str:
     try:
         cmd_delete = ['sc', 'delete', 'Penguin']
 
-        logging.debug(tr("Команда для удаления службы: {command}").format(command=' '.join(cmd_delete)))
+        logger.debug(tr("Команда для удаления службы: {command}").format(command=' '.join(cmd_delete)))
 
         subprocess.run(cmd_delete, check=True)
-        logging.info(tr("Служба успешно удалена"))
+        logger.info(tr("Служба успешно удалена"))
         return tr("Служба успешно удалена")
     except subprocess.CalledProcessError as e:
-        logging.error(tr("Не удалось удалить службу. Ошибка: {error}").format(error=e))
+        logger.error(tr("Не удалось удалить службу. Ошибка: {error}").format(error=e))
         return tr("Не удалось удалить службу")
     except Exception as e:
-        logging.error(tr("Неизвестная ошибка при удалении службы: {error}").format(error=e))
+        logger.error(tr("Неизвестная ошибка при удалении службы: {error}").format(error=e))
         return tr("Не удалось удалить службу из-за неизвестной ошибки")

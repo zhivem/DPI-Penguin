@@ -5,19 +5,15 @@ import os
 import zipfile
 import time
 from typing import Dict, List, Optional
-
-import psutil
 import requests
-import win32service
-import win32serviceutil
-import winerror
 from packaging.version import parse as parse_version
-from PyQt6.QtCore import QObject, pyqtSignal 
+from PyQt6.QtCore import QObject, pyqtSignal
 
+from utils.process_utils import ProcessUtils
 from utils.utils import BASE_FOLDER, CURRENT_VERSION, tr
 
 
-class UpdateChecker(QObject): 
+class UpdateChecker(QObject):
     config_updated_signal = pyqtSignal()
 
     BLACKLISTS: List[Dict[str, str]] = [
@@ -127,13 +123,14 @@ class UpdateChecker(QObject):
             self.logger.error(tr(f"Неизвестный компонент для обновления: {component}"))
             return False
         try:
-            
             if 'pre_update' in component_info:
                 for method_name in component_info['pre_update']:
                     method = getattr(self, method_name, None)
                     if method:
                         args = component_info.get('pre_update_args', {}).get(method_name, {})
                         method(**args)
+                    else:
+                        self.logger.warning(tr(f"Метод {method_name} не найден в UpdateChecker."))
 
             self.logger.info(tr(f"Скачивание {component} с {component_info['url']}"))
             response = requests.get(component_info['url'], stream=True, timeout=30)
@@ -203,48 +200,16 @@ class UpdateChecker(QObject):
         return success
 
     def terminate_process(self, process_name: str) -> None:
-        try:
-            self.logger.info(tr(f"Завершение процесса {process_name}..."))
-            for proc in psutil.process_iter(['pid', 'name']):
-                if proc.info['name'] and proc.info['name'].lower() == process_name.lower():
-                    self.logger.info(tr(f"Попытка завершить процесс {process_name} с PID {proc.info['pid']}"))
-                    proc.terminate()
-                    try:
-                        proc.wait(timeout=10)
-                        self.logger.info(tr(f"Процесс {process_name} успешно завершён."))
-                    except psutil.TimeoutExpired:
-                        self.logger.warning(tr(f"Процесс {process_name} не завершился вовремя, пытаемся принудительно завершить."))
-                        proc.kill()
-                        proc.wait(timeout=5)
-                        self.logger.info(tr(f"Процесс {process_name} принудительно завершён."))
-        except Exception as e:
-            self.logger.error(tr(f"Ошибка при завершении процесса {process_name}: {e}"))
-            raise e
+        """
+        Метод класса для завершения процесса. Использует ProcessUtils.
+        """
+        ProcessUtils.terminate_process(process_name)
 
     def stop_service(self, service_name: str) -> None:
-        try:
-            self.logger.info(tr(f"Остановка службы {service_name}..."))
-            service_status = win32serviceutil.QueryServiceStatus(service_name)
-            if service_status[1] == win32service.SERVICE_RUNNING:
-                win32serviceutil.StopService(service_name)
-                self.logger.info(tr(f"Служба {service_name} отправлена на остановку."))
-                # Ожидание остановки службы
-                for _ in range(15):
-                    service_status = win32serviceutil.QueryServiceStatus(service_name)
-                    if service_status[1] == win32service.SERVICE_STOPPED:
-                        self.logger.info(tr(f"Служба {service_name} успешно остановлена."))
-                        break
-                    time.sleep(1)
-                else:
-                    self.logger.warning(tr(f"Служба {service_name} не остановилась вовремя."))
-            else:
-                self.logger.info(tr(f"Служба {service_name} не запущена."))
-        except Exception as e:
-            if hasattr(e, 'winerror') and e.winerror == winerror.ERROR_SERVICE_DOES_NOT_EXIST:
-                self.logger.warning(tr(f"Служба {service_name} не установлена."))
-            else:
-                self.logger.error(tr(f"Ошибка при остановке службы {service_name}: {e}"))
-                raise e
+        """
+        Метод класса для остановки службы. Использует ProcessUtils.
+        """
+        ProcessUtils.stop_service(service_name)
 
     def emit_config_updated(self) -> None:
         """

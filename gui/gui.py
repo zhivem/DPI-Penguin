@@ -22,7 +22,7 @@ from PyQt6.QtWidgets import (
 )
 from qfluentwidgets import ComboBox as QFComboBox, PushButton, TextEdit
 
-from utils.update_checker import UpdateChecker
+from utils.update_utils import UpdateChecker
 from utils.utils import (
     BASE_FOLDER,
     CURRENT_VERSION,
@@ -43,7 +43,8 @@ from utils.utils import (
 )
 import utils.theme_utils
 from gui.updater_manager import SettingsDialog
-from workers.process_worker import WorkerThread
+from utils.process_utils import WorkerThread
+from utils.service_utils import stop_service
 
 # Пути к иконкам
 TRAY_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "newicon.ico")
@@ -54,6 +55,32 @@ MANAGER_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "manager.png"
 BLACK_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "black.png")
 ADD_SRV_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "add_service.png")
 DELETE_SRV_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "delete_service.png")
+
+
+class UpdateBlacklistsThread(QtCore.QThread):
+    def __init__(self, parent=None, silent=False):
+        super().__init__(parent)
+        self.silent = silent
+        self.success = False
+
+    def run(self):
+        update_checker = UpdateChecker()
+        self.success = update_checker.update_blacklists()
+
+
+class CheckUpdatesThread(QtCore.QThread):
+    updates_available_signal = QtCore.pyqtSignal(bool)
+
+    def run(self):
+        update_checker = UpdateChecker()
+        update_checker.get_local_versions()
+        update_checker.get_remote_versions()
+        updates_available = any([
+            update_checker.is_update_available('ver_programm'),
+            update_checker.is_update_available('zapret'),
+            update_checker.is_update_available('config')
+        ])
+        self.updates_available_signal.emit(updates_available)
 
 
 class GoodbyeDPIApp(QtWidgets.QMainWindow):
@@ -100,15 +127,55 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             self.stop_close_button.setEnabled(False)
             self.update_config_button.setEnabled(True)
 
-        if settings.value("update_blacklists_on_start", False, type=bool):
-            self.update_blacklists(silent=True)
+        # Отложенный запуск
+        QtCore.QTimer.singleShot(0, self.post_init)
 
-        self.check_updates()
+    def post_init(self):
+        """
+        Выполняет тяжёлые операции после инициализации интерфейса.
+        """
+        # Обновления выполняются в отдельных потоках
+        if settings.value("update_blacklists_on_start", False, type=bool):
+            self.start_update_blacklists_thread(silent=True)
+
+        self.start_check_updates_thread()
 
         if self.autorun_with_last_config and not self.config_error:
             QTimer.singleShot(0, self.run_autorun)
         else:
             self.show()
+
+    def start_update_blacklists_thread(self, silent=False):
+        self.update_blacklists_thread = UpdateBlacklistsThread(silent=silent)
+        self.update_blacklists_thread.finished.connect(self.on_update_blacklists_finished)
+        self.update_blacklists_thread.start()
+
+    def on_update_blacklists_finished(self):
+        success = self.update_blacklists_thread.success
+        if not self.update_blacklists_thread.silent:
+            if success:
+                QMessageBox.information(self, tr("Обновление"), tr("Черные списки успешно обновлены"))
+            else:
+                QMessageBox.warning(self, tr("Обновление"), tr("Произошли ошибки при обновлении черных списков. Проверьте логи для подробностей."))
+        if not success:
+            self.logger.warning(tr("Произошли ошибки при обновлении черных списков"))
+
+    def start_check_updates_thread(self):
+        self.check_updates_thread = CheckUpdatesThread()
+        self.check_updates_thread.updates_available_signal.connect(self.on_updates_checked)
+        self.check_updates_thread.start()
+
+    def on_updates_checked(self, updates_available):
+        if updates_available:
+            QMessageBox.information(
+                self,
+                tr("Обновление"),
+                tr("Доступны новые обновления. Рекомендуется обновить"),
+                QMessageBox.StandardButton.Ok
+            )
+            self.open_settings_dialog()
+        else:
+            self.logger.info(tr("Все компоненты обновлены до последней версии."))
 
     def run_autorun(self) -> None:
         """
@@ -467,7 +534,7 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
 
         self.update_blacklists_button = self.create_button(
             text=tr("Обновить черные списки"),
-            func=lambda: self.update_blacklists(silent=False),
+            func=lambda: self.start_update_blacklists_thread(silent=False),
             layout=updates_layout,
             icon_path=BLACK_ICON_PATH,
             icon_size=(16, 16)
@@ -1017,6 +1084,19 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
                 self.winws_worker_thread.wait()
             self.winws_worker_thread = None
 
+        service_name = "WinDivert"
+        try:
+            self.logger.info(tr(f"Попытка остановить службу '{service_name}'"))
+            stop_service(service_name)
+            self.logger.info(tr(f"Служба '{service_name}' успешно остановлена"))
+        except Exception as e:
+            self.logger.error(tr(f"Ошибка при остановке службы '{service_name}': {e}"))
+            QMessageBox.warning(
+                self,
+                tr("Ошибка"),
+                tr(f"Не удалось остановить службу '{service_name}'. Подробнее в логах."),
+            )
+
     def clear_console(self, initial_text: str = "") -> None:
         """
         Очищает консоль вывода и добавляет начальный текст, если указан.
@@ -1156,9 +1236,8 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             self.winws_worker_thread.quit()
             self.winws_worker_thread.wait()
             self.winws_worker_thread = None
-        """
-        Перезагружает конфигурацию после обновления.
-        """
+
+        # Перезагрузка конфигурации
         self.script_options, self.config_error = load_script_options(self.current_config_path)
         if self.config_error:
             self.console_output.append(self.config_error)
@@ -1170,53 +1249,6 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             self.selected_script.setEnabled(True)
             self.run_button.setEnabled(True)
         QMessageBox.information(self, tr("Обновление"), tr("Конфигурация обновлена и перезагружена"))
-
-    def check_updates(self) -> None:
-        """
-        Проверяет наличие доступных обновлений и уведомляет пользователя.
-        """
-        self.logger.info(tr("Проверка обновлений..."))
-        update_checker = UpdateChecker()
-        update_checker.get_local_versions()
-        update_checker.get_remote_versions()
-
-        updates_available = False
-
-        if update_checker.is_update_available('ver_programm'):
-            updates_available = True
-
-        if update_checker.is_update_available('zapret'):
-            updates_available = True
-
-        if update_checker.is_update_available('config'):
-            updates_available = True
-
-        if updates_available:
-            QMessageBox.information(
-                self,
-                tr("Обновление"),
-                tr("Доступны новые обновления. Рекомендуется обновить"),
-                QMessageBox.StandardButton.Ok
-            )
-            self.open_settings_dialog()
-        else:
-            self.logger.info(tr("Все компоненты обновлены до последней версии."))
-
-    def update_blacklists(self, silent: bool = False) -> None:
-        """
-        Обновляет черные списки.
-
-        :param silent: Если True, не отображает сообщения пользователю.
-        """
-        update_checker = UpdateChecker()
-        success = update_checker.update_blacklists()
-        if success:
-            if not silent:
-                QMessageBox.information(self, tr("Обновление"), tr("Черные списки успешно обновлены"))
-        else:
-            if not silent:
-                QMessageBox.warning(self, tr("Обновление"), tr("Произошли ошибки при обновлении черных списков. Проверьте логи для подробностей."))
-            self.logger.warning(tr("Произошли ошибки при обновлении черных списков"))
 
     def start_winws(self, winws_path: str, args: Optional[List[str]] = None) -> None:
         """

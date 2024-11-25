@@ -13,7 +13,7 @@ from PyQt6.QtWidgets import (
 )
 from qfluentwidgets import PushButton, TextEdit
 
-from utils.update_checker import UpdateChecker
+from utils.update_utils import UpdateChecker
 from utils.utils import tr
 
 
