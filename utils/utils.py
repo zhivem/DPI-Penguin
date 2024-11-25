@@ -75,9 +75,9 @@ def open_path(path: str) -> Optional[str]:
         if platform.system() == "Windows":
             os.startfile(path)
         elif platform.system() == "Darwin":
-            subprocess.Popen(["open", path])
+            subprocess.Popen(["open", path], creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
         else:
-            subprocess.Popen(["xdg-open", path])
+            subprocess.Popen(["xdg-open", path], creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
         return None
     except Exception as e:
         error_message = tr("Не удалось открыть путь: {error}").format(error=e)
@@ -268,7 +268,23 @@ def create_service() -> str:
 
         logger.debug(tr("Команда для создания службы: {command}").format(command=' '.join(cmd_create)))
 
-        subprocess.run(cmd_create, check=True)
+        popen_params = {
+            'args': cmd_create,
+            'check': True,
+            'shell': False,
+            'creationflags': subprocess.CREATE_NO_WINDOW,
+            'stdout': subprocess.PIPE,
+            'stderr': subprocess.PIPE,
+            'text': True
+        }
+
+        if os.name == 'nt':
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = subprocess.SW_HIDE
+            popen_params['startupinfo'] = startupinfo
+
+        subprocess.run(**popen_params)
 
         cmd_description = [
             'sc', 'description', 'Penguin',
@@ -277,7 +293,20 @@ def create_service() -> str:
 
         logger.debug(tr("Команда для добавления описания службы: {command}").format(command=' '.join(cmd_description)))
 
-        subprocess.run(cmd_description, check=True)
+        popen_params_description = {
+            'args': cmd_description,
+            'check': True,
+            'shell': False,
+            'creationflags': subprocess.CREATE_NO_WINDOW,
+            'stdout': subprocess.PIPE,
+            'stderr': subprocess.PIPE,
+            'text': True
+        }
+
+        if os.name == 'nt':
+            popen_params_description['startupinfo'] = startupinfo
+
+        subprocess.run(**popen_params_description)
 
         logger.info(tr("Служба создана и настроена для автоматического запуска"))
         return tr("Служба создана и настроена для автоматического запуска")
@@ -299,7 +328,24 @@ def delete_service() -> str:
 
         logger.debug(tr("Команда для удаления службы: {command}").format(command=' '.join(cmd_delete)))
 
-        subprocess.run(cmd_delete, check=True)
+        popen_params = {
+            'args': cmd_delete,
+            'check': True,
+            'shell': False,
+            'creationflags': subprocess.CREATE_NO_WINDOW,
+            'stdout': subprocess.PIPE,
+            'stderr': subprocess.PIPE,
+            'text': True
+        }
+
+        if os.name == 'nt':
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = subprocess.SW_HIDE
+            popen_params['startupinfo'] = startupinfo
+
+        subprocess.run(**popen_params)
+
         logger.info(tr("Служба успешно удалена"))
         return tr("Служба успешно удалена")
     except subprocess.CalledProcessError as e:
