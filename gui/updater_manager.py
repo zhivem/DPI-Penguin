@@ -12,10 +12,13 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
 )
 from qfluentwidgets import PushButton, TextEdit
-
+from utils.utils import (
+    BASE_FOLDER,
+    settings,
+    tr,
+)
 from utils.update_utils import UpdateChecker
-from utils.utils import tr
-
+import utils.theme_utils
 
 class SettingsDialog(QDialog):
     """
@@ -33,6 +36,11 @@ class SettingsDialog(QDialog):
         self.setWindowTitle(tr("Менеджер обновлений"))
         self.setFixedSize(500, 400)
         self.logger = logging.getLogger(self.__class__.__name__)
+
+        # Получаем текущую тему из настроек
+        saved_theme = settings.value("theme", "light")
+        # Применяем тему
+        utils.theme_utils.apply_theme(self, saved_theme, settings, BASE_FOLDER)
 
         layout = QVBoxLayout()
 
