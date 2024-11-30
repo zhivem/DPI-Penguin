@@ -15,17 +15,29 @@ from PyQt6 import QtWidgets, QtCore
 from PyQt6.QtWidgets import QMessageBox
 
 from gui.gui import GoodbyeDPIApp
-from utils.utils import BASE_FOLDER, CURRENT_VERSION, tr
+from utils.utils import CURRENT_VERSION, tr
 from utils.process_utils import InitializerThread
 
 MUTEX_NAME = "ru.github.dpipenguin.mutex"
-LOG_FILENAME = os.path.join(BASE_FOLDER, "logs", f"app_penguin_v{CURRENT_VERSION}.log")
+
+appdata_folder = os.environ.get('LOCALAPPDATA', os.path.expanduser("~\\AppData\\Local"))
+
+# Если хотите использовать папку Roaming, замените строчку выше
+# appdata_folder = os.environ.get('APPDATA', os.path.expanduser("~\\AppData\\Roaming"))
+
+# Формируем путь к папке для логов
+log_folder = os.path.join(appdata_folder, 'DPI-Penguin', 'logs')
+
+# Создаем директорию для логов, если ее нет
+os.makedirs(log_folder, exist_ok=True)
+
+# Лог-файл
+LOG_FILENAME = os.path.join(log_folder, f"app_penguin_v{CURRENT_VERSION}.log")
 
 PROCESSES_TO_TERMINATE = ["winws.exe", "goodbyedpi.exe"]
 SERVICE_TO_STOP = "WinDivert"
 
 logger = logging.getLogger(__name__)
-
 
 def setup_logging():
     """Настройка логирования приложения."""
@@ -35,8 +47,6 @@ def setup_logging():
     handler.setFormatter(formatter)
     # Устанавливаем корневой уровень логирования и добавляем обработчик
     logging.basicConfig(handlers=[handler], level=logging.DEBUG, force=True)
-    logger.info(tr("Логирование настроено"))
-
 
 def is_admin() -> bool:
     """Проверка прав администратора."""
@@ -49,7 +59,6 @@ def is_admin() -> bool:
     elif os.name == 'posix':
         return os.geteuid() == 0
     return False
-
 
 def run_as_admin(argv=None):
     """Перезапуск приложения с правами администратора."""
@@ -70,7 +79,6 @@ def run_as_admin(argv=None):
         sys.exit(1)
     sys.exit(0)
 
-
 def ensure_single_instance() -> bool:
     """Обеспечить, чтобы приложение работало только в одном экземпляре."""
     if os.name == 'nt':
@@ -82,13 +90,11 @@ def ensure_single_instance() -> bool:
         atexit.register(win32api.CloseHandle, handle)
     return True
 
-
 def show_single_instance_warning():
     """Показать предупреждение о запущенном экземпляре приложения."""
     app = QtWidgets.QApplication(sys.argv)
     QMessageBox.warning(None, tr("Предупреждение"), tr("Приложение уже запущено"))
     sys.exit(0)
-
 
 def main():
     setup_logging()
@@ -120,7 +126,6 @@ def main():
     if hasattr(window, 'initializer_thread'):
         window.initializer_thread.quit()
         window.initializer_thread.wait()
-
 
 if __name__ == '__main__':
     main()

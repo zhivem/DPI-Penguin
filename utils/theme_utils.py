@@ -38,7 +38,7 @@ def apply_theme(
         stylesheet = DARK_STYLESHEET
     else:
         setTheme(Theme.LIGHT)
-        pywinstyles.apply_style(app_instance, DARK_THEME_NAME)  # Темная шапка 
+        pywinstyles.apply_style(app_instance, DARK_THEME_NAME)  # Темная шапка, если нужна светлая поменяйте на LIGHT_THEME_NAME
         stylesheet = LIGHT_STYLESHEET
 
     apply_stylesheet(app_instance, stylesheet, base_folder)

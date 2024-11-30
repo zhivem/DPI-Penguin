@@ -92,8 +92,6 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         super().__init__()
         self.logger = logging.getLogger(self.__class__.__name__)
 
-        self.ensure_logs_folder_exists()
-
         self.minimize_to_tray: bool = settings.value("minimize_to_tray", True, type=bool)
         self.autostart_enabled: bool = is_autostart_enabled()
         self.autorun_with_last_config: bool = settings.value(
@@ -191,18 +189,6 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             QSystemTrayIcon.MessageIcon.Information,
             3000
         )
-
-    def ensure_logs_folder_exists(self) -> None:
-        """
-        Убедиться, что папка для логов существует, иначе создать её.
-        """
-        logs_folder = os.path.join(BASE_FOLDER, "logs")
-        if not os.path.exists(logs_folder):
-            try:
-                os.makedirs(logs_folder)
-                self.logger.info(f"{tr('Создана папка logs')}: {logs_folder}")
-            except Exception as e:
-                self.logger.error(f"{tr('Не удалось создать папку logs')}: {e}", exc_info=True)
 
     def init_ui(self) -> None:
         """
@@ -363,10 +349,13 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
 
         # Кнопки для открытия папок логов и конфигураций
         log_and_config_layout = QHBoxLayout()
+        
+        appdata_folder = os.environ.get('LOCALAPPDATA', os.path.expanduser("~\\AppData\\Local"))
+        log_folder = os.path.join(appdata_folder, 'DPI-Penguin', 'logs')
 
         self.open_logs_button = self.create_button(
             text=tr("Открыть папку Log"),
-            func=lambda: self.handle_open_path(os.path.join(BASE_FOLDER, "logs")),
+            func=lambda: self.handle_open_path(log_folder),
             layout=log_and_config_layout,
             icon_path=LOG_ICON_PATH,
             icon_size=(16, 16),
