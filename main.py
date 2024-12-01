@@ -11,7 +11,7 @@ if os.name == 'nt':
     import win32event
     import winerror
 
-from PyQt6 import QtWidgets, QtCore
+from PyQt6 import QtWidgets
 from PyQt6.QtWidgets import QMessageBox
 
 from gui.gui import GoodbyeDPIApp
@@ -118,8 +118,6 @@ def main():
         initializer_thread.start()
 
         window.initializer_thread = initializer_thread 
-
-    QtCore.QTimer.singleShot(0, start_initializer)
 
     result = app.exec()
 
