@@ -18,7 +18,7 @@ from PyQt6.QtWidgets import (
     QLabel,
     QTabWidget,
     QWidget,
-    QGridLayout
+    QGridLayout,
 )
 from qfluentwidgets import ComboBox as QFComboBox, PushButton, TextEdit
 
@@ -32,6 +32,7 @@ from utils.utils import (
     create_service,
     delete_service,
     disable_autostart,
+    start_fix_process,
     enable_autostart,
     is_autostart_enabled,
     load_script_options,
@@ -55,7 +56,7 @@ MANAGER_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "manager.png"
 BLACK_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "black.png")
 ADD_SRV_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "add_service.png")
 DELETE_SRV_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "delete_service.png")
-
+FIX_PROCESS = os.path.join(BASE_FOLDER, "resources", "icon", "fix-process.png")
 
 class UpdateBlacklistsThread(QtCore.QThread):
     def __init__(self, parent=None, silent=False):
@@ -526,7 +527,29 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
 
         settings_layout.addWidget(self.updates_group)
 
+        # Группа исправления
+        self.fix_group = QGroupBox(tr("Исправление"))
+        fix_layout = QVBoxLayout()
+        self.fix_group.setLayout(fix_layout)
+
+        self.fix_button = self.create_button(
+            text=tr("Исправить работу с процессом"),
+            func=lambda: start_fix_process(self), 
+            layout=fix_layout,
+            icon_path=FIX_PROCESS,
+            icon_size=(16, 16)
+        )
+
+        fix_layout.addWidget(self.fix_button)
+
+        self.fix_info_label = QLabel(tr("Исправляет работу с запуском процесса обхода и службы WinDivert. Нажимать если кнопка «Запустить» не работает!"))
+        self.fix_info_label.setWordWrap(True) 
+        fix_layout.addWidget(self.fix_info_label)
+
+        settings_layout.addWidget(self.fix_group)
         settings_layout.addStretch(1)
+
+        settings_tab.setLayout(settings_layout) 
 
         return settings_tab
 
@@ -537,49 +560,19 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         lang_code = self.language_combo.currentData()
         set_language(lang_code)
         settings.setValue("language", lang_code)
-        self.update_ui_texts()
 
-    def update_ui_texts(self) -> None:
+        self.notify_restart_required()
+
+    def notify_restart_required(self):
         """
-        Обновляет тексты интерфейса в соответствии с выбранным языком.
+        Отображает сообщение пользователю о необходимости перезапуска приложения.
         """
-        self.setWindowTitle(tr("DPI Penguin v{version}").format(version=CURRENT_VERSION))
-        tab_widget = self.centralWidget().layout().itemAt(0).widget()
-        tab_widget.setTabText(0, tr("Основное"))
-        tab_widget.setTabText(1, tr("Настройки"))
-        tab_widget.setTabText(2, tr("О программе"))
-
-        self.run_button.setText(tr("Запустить"))
-        self.stop_close_button.setText(tr("Остановить и закрыть"))
-        self.update_config_button.setToolTip(tr("Загрузить другую конфигурацию"))
-        self.open_logs_button.setText(tr("Открыть папку Log"))
-        self.open_config_button.setText(tr("Открыть configs"))
-        utils.theme_utils.update_theme_button_text(self, settings)
-
-        self.tray_checkbox.setText(tr("Сворачивать в трей при закрытии приложения"))
-        self.autostart_checkbox.setText(tr("Запускать программу при старте системы"))
-        self.autorun_with_last_config_checkbox.setText(tr("Запускать в тихом режиме"))
-        self.update_blacklists_on_start_checkbox.setText(tr("Проверять обновления черных списков при запуске"))
-        self.create_service_button.setText(tr("Создать службу"))
-        self.delete_service_button.setText(tr("Удалить службу"))
-        self.open_additional_settings_button.setText(tr("Менеджер обновлений"))
-        self.update_blacklists_button.setText(tr("Обновить черные списки"))
-
-        self.language_group.setTitle(tr("Язык / Language"))
-        self.autostart_group.setTitle(tr("Автозапуск"))
-        self.services_group.setTitle(tr("Службы"))
-        self.updates_group.setTitle(tr("Обновления"))
-
-        for index in range(self.language_combo.count()):
-            lang_code = self.language_combo.itemData(index)
-            lang_name = translation_manager.language_names.get(lang_code, lang_code)
-            self.language_combo.setItemText(index, lang_name)
-
-        self.details_group.setTitle(tr("Подробности"))
-        self.acknowledgements_group.setTitle(tr("Зависимости"))
-        self.update_info_tab_texts()
-
-        self.update_script_options_display()
+        msg_box = QMessageBox(self)
+        msg_box.setIcon(QMessageBox.Icon.Information)
+        msg_box.setWindowTitle(tr("Перезапуск приложения"))
+        msg_box.setText(tr("Изменения языка вступят в силу после перезапуска приложения"))
+        msg_box.setStandardButtons(QMessageBox.StandardButton.Ok)
+        msg_box.exec()
 
     def update_script_options_display(self) -> None:
         """

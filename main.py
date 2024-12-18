@@ -45,7 +45,6 @@ def setup_logging():
     handler = RotatingFileHandler(LOG_FILENAME, maxBytes=1 * 1024 * 1024, backupCount=3)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     handler.setFormatter(formatter)
-    # Устанавливаем корневой уровень логирования и добавляем обработчик
     logging.basicConfig(handlers=[handler], level=logging.DEBUG, force=True)
 
 def is_admin() -> bool:

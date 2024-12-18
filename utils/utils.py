@@ -8,7 +8,7 @@ import winreg
 from typing import Optional, List, Dict, Tuple
 
 from PyQt6.QtCore import QSettings
-
+from PyQt6.QtWidgets import QMessageBox
 from utils.translation_utils import TranslationManager
 
 # Создаем логгер
@@ -16,10 +16,12 @@ logger = logging.getLogger(__name__)
 
 # Константы и глобальные настройки
 BASE_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+TRANSLATIONS_FOLDER = os.path.join(os.path.dirname(__file__), '..', 'translations')
 ZAPRET_FOLDER = os.path.join(BASE_FOLDER, "zapret")
 CONFIG_PATH = os.path.join(BASE_FOLDER, "config", 'default.ini')
 SETTING_VER = os.path.join(BASE_FOLDER, "setting_version", "version_config.ini")
-TRANSLATIONS_FOLDER = os.path.join(os.path.dirname(__file__), '..', 'translations')
+
+FIX_BAT_PATH = os.path.join(BASE_FOLDER, "resources", "fix-process", "fix.bat")
 
 BLACKLIST_FOLDER = os.path.join(BASE_FOLDER, "black")
 ICON_FOLDER = os.path.join(BASE_FOLDER, "resources", "icon")
@@ -354,3 +356,20 @@ def delete_service() -> str:
     except Exception as e:
         logger.error(tr("Неизвестная ошибка при удалении службы: {error}").format(error=e))
         return tr("Не удалось удалить службу из-за неизвестной ошибки")
+
+def start_fix_process(parent):
+    if os.path.exists(FIX_BAT_PATH):
+        try:
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            subprocess.run(
+                [FIX_BAT_PATH],
+                startupinfo=startupinfo
+            )
+            QMessageBox.information(parent, "Исправление", "Процесс исправления завершен успешно")
+        except subprocess.CalledProcessError:
+            QMessageBox.warning(parent, "Частичное исправление", "Частичное исправление завершено")
+        except Exception:
+            QMessageBox.warning(parent, "Служба и процесс", "Успешно завершено, запустите обход блокировки снова")
+    else:
+        QMessageBox.warning(parent, "Ошибка", f"Файл {FIX_BAT_PATH} не найден")
