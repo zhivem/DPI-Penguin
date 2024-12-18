@@ -29,6 +29,8 @@ from utils.utils import (
     ZAPRET_FOLDER,
     CONFIG_VERSION,
     ZAPRET_VERSION,
+    settings,
+    translation_manager,
     create_service,
     delete_service,
     disable_autostart,
@@ -38,9 +40,7 @@ from utils.utils import (
     load_script_options,
     open_path,
     set_language,
-    settings,
     tr,
-    translation_manager,
 )
 import utils.theme_utils
 from gui.updater_manager import SettingsDialog
