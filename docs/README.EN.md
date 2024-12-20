@@ -43,7 +43,6 @@ The application uses a `default.ini` file located in the `config` folder. This f
  "discord-blacklist.txt" - {BLACKLIST_FILES_2}
  "disk-youtube.txt" - {BLACKLIST_FILES_3}
  "ipset-discord.txt" - {BLACKLIST_FOLDER}\ipset-discord.txt
- "netrogat.txt" - {BLACKLIST_FOLDER}\netrogat.txt
  "autohostlist.txt" - {BLACKLIST_FOLDER}\autohostlist.txt 
 ```
 
