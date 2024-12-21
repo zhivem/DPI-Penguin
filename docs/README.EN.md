@@ -8,8 +8,8 @@
 **DPI Penguin** is a Python graphical application designed to bypass network limitations such as Deep Packet Analysis (DPI). The application provides an intuitive interface for managing scripts that allow you to access platforms such as YouTube and Discord. The application is based on integration with [Zapret](https://github.com/bol-van/zapret ). You can download the `exe` from [Releases](https://github.com/zhivem/DPI-Penguin/releases ). View the source code of the update loader `->` [Loader for DPI Penguin](https://github.com/zhivem/Loader-for-DPI-Penguin )
 
 ## Application Interface
-![image](https://github.com/user-attachments/assets/3d8b5975-8b0e-44e0-b173-91ae09d6a55b)
-![image](https://github.com/user-attachments/assets/5a24b2e9-e0b9-47d6-b93c-484fd40b680a)
+![image](https://github.com/user-attachments/assets/9224d38d-ffd8-4e14-b6d2-ef8ee49d530f)
+![image](https://github.com/user-attachments/assets/6144cd0e-52cd-4e4d-a167-42e2a8354a46)
 
 ## Features
 
@@ -43,7 +43,6 @@ The application uses a `default.ini` file located in the `config` folder. This f
  "discord-blacklist.txt" - {BLACKLIST_FILES_2}
  "disk-youtube.txt" - {BLACKLIST_FILES_3}
  "ipset-discord.txt" - {BLACKLIST_FOLDER}\ipset-discord.txt
- "netrogat.txt" - {BLACKLIST_FOLDER}\netrogat.txt
  "autohostlist.txt" - {BLACKLIST_FOLDER}\autohostlist.txt 
 ```
 
