@@ -8,8 +8,8 @@
 **DPI Penguin** — это графическое приложение на Python, разработанное для обхода сетевых ограничений, таких как глубокий анализ пакетов (DPI). Приложение предоставляет интуитивно понятный интерфейс для управления скриптами, позволяющими получать доступ к платформам таким как YouTube и Discord. Работа приложения основана на интеграции с [Zapret](https://github.com/bol-van/zapret). Загрузить `exe` можно c [Releases](https://github.com/zhivem/DPI-Penguin/releases). Посмотреть исходный код загрузчика обновлений `->` [Loader for DPI Penguin](https://github.com/zhivem/Loader-for-DPI-Penguin)
 
 ## Интерфейс
-![image](https://github.com/user-attachments/assets/2aaab6c3-b314-4637-9aab-245e0b45b21b)
-![image](https://github.com/user-attachments/assets/8782afdb-ca87-4e11-8a79-73e508ef75de)
+![image](https://github.com/user-attachments/assets/57b68613-1528-4b41-ae89-d5d7e6098e7d)
+![image](https://github.com/user-attachments/assets/d3da3490-c79f-4bd4-9cc7-5033b7baf8a2)
 
 ## Особенности
 
@@ -43,7 +43,6 @@
  "discord-blacklist.txt" - {BLACKLIST_FILES_2}
  "disk-youtube.txt" - {BLACKLIST_FILES_3}
  "ipset-discord.txt" - {BLACKLIST_FOLDER}\ipset-discord.txt
- "netrogat.txt" - {BLACKLIST_FOLDER}\netrogat.txt
  "autohostlist.txt" - {BLACKLIST_FOLDER}\autohostlist.txt 
 ```
 ### Пример конфига DiscordFix
