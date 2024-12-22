@@ -30,7 +30,7 @@ BLACKLIST_FILES: List[str] = [
     os.path.join(BLACKLIST_FOLDER, "russia-blacklist.txt"),
     os.path.join(BLACKLIST_FOLDER, "youtube-blacklist.txt"),
     os.path.join(BLACKLIST_FOLDER, "discord-blacklist.txt"),
-    os.path.join(BLACKLIST_FOLDER, "disk-youtube-blacklist.txt")
+    os.path.join(BLACKLIST_FOLDER, "disk-youtube-blacklist.txt") 
 ]
 
 # Инициализация менеджера переводов и настроек
