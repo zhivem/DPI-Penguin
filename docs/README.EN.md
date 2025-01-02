@@ -49,32 +49,32 @@ The application uses a `default.ini` file located in the `config` folder. This f
 ### DiscordFix Configuration Example
 
 ```py
-[DiscordFix]  | Section name, can be named as you like
-executable = {ZAPRET_FOLDER}\winws.exe | Path to the executable file for bypassing restrictions
+[DiscordFix]
+executable = {ZAPRET_FOLDER}\winws.exe
 args = 
-    --wf-tcp=443;  // Open TCP port 443 (HTTPS)
-    --wf-udp=443,50000-65535;  // Open UDP ports 443 and range 50000-65535
-    --filter-udp=443; // Filter by UDP port 443
-    --hostlist={BLACKLIST_FILES_1};  // Blocked domain list {BLACKLIST_FILES_1}
-    --dpi-desync=fake;  // Use fake method to bypass DPI
-    --dpi-desync-udplen-increment=10;  // Increase UDP packet length by 10 bytes
-    --dpi-desync-repeats=6;  // Repeat desynchronization process 6 times
-    --dpi-desync-udplen-pattern=0xDEADBEEF;  // Pattern for altering UDP packet length
-    --dpi-desync-fake-quic={ZAPRET_FOLDER}\quic_initial_www_google_com.bin;  // Use fake QUIC traffic
-    --filter-udp=50000-65535;  // Filter by UDP ports in the range 50000-65535
-    --dpi-desync=fake;  // Reuse fake method for DPI bypass
-    --dpi-desync-any-protocol; // Apply desynchronization to all protocols
-    --dpi-desync-cutoff=d3;  // Data cutoff for additional DPI bypass
-    --dpi-desync-repeats=6;  // Repeat desynchronization 6 times
-    --dpi-desync-fake-quic={ZAPRET_FOLDER}\quic_initial_www_google_com.bin;  // Reuse fake QUIC traffic
-    --new;  // Start a new session
-    --filter-tcp=443;  // Filter by TCP port 443
-    --hostlist={BLACKLIST_FILES_1};  // Blocked domain list {BLACKLIST_FILES_1}
-    --dpi-desync=fake,split; // Fake and split packet method for DPI bypass
-    --dpi-desync-autottl=2;  // Automatic TTL (Time to Live) management
-    --dpi-desync-repeats=6;  // Repeat desynchronization process 6 times
-    --dpi-desync-fooling=badseq; // Fool DPI with incorrect packet sequence
-    --dpi-desync-fake-tls={ZAPRET_FOLDER}\tls_clienthello_www_google_com.bin;  // Use fake TLS traffic
+    --wf-tcp=443;
+    --wf-udp=443,50000-65535; 
+    --filter-udp=443;
+    --hostlist={BLACKLIST_FILES_1}; 
+    --dpi-desync=fake; 
+    --dpi-desync-udplen-increment=10;  
+    --dpi-desync-repeats=6; 
+    --dpi-desync-udplen-pattern=0xDEADBEEF; 
+    --dpi-desync-fake-quic={ZAPRET_FOLDER}\quic_initial_www_google_com.bin;  
+    --filter-udp=50000-65535; 
+    --dpi-desync=fake;
+    --dpi-desync-any-protocol;
+    --dpi-desync-cutoff=d3; 
+    --dpi-desync-repeats=6; 
+    --dpi-desync-fake-quic={ZAPRET_FOLDER}\quic_initial_www_google_com.bin;
+    --new; 
+    --filter-tcp=443; 
+    --hostlist={BLACKLIST_FILES_1}; 
+    --dpi-desync=fake,split;
+    --dpi-desync-autottl=2;  
+    --dpi-desync-repeats=6; 
+    --dpi-desync-fooling=badseq; 
+    --dpi-desync-fake-tls={ZAPRET_FOLDER}\tls_clienthello_www_google_com.bin; 
 ```
 
 ### Additional Configuration Files
