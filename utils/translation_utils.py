@@ -3,12 +3,10 @@ import logging
 import os
 from typing import Dict, List
 
-
 class TranslationManager:
     """
     Класс для управления переводами приложения.
     """
-
     def __init__(self, translations_folder: str):
         """
         Инициализирует менеджер переводов.
@@ -30,6 +28,9 @@ class TranslationManager:
     def load_translations(self) -> None:
         """
         Загружает файлы переводов из указанной папки.
+
+        Каждый файл должен быть в формате JSON с именем, соответствующим коду языка.
+        Если файл не найден или происходит ошибка при его загрузке.
         """
         for lang_code in self.language_order:
             filename = f"{lang_code}.json"
@@ -49,12 +50,14 @@ class TranslationManager:
         Устанавливает текущий язык приложения.
 
         :param lang_code: Код языка для установки (например, 'en', 'ru').
+        :raises ValueError: Если язык не поддерживается.
         """
         if lang_code in self.available_languages:
             self.current_language = lang_code
             self.logger.info(f"Язык установлен на: {self.language_names.get(lang_code, lang_code)}")
         else:
             self.logger.warning(f"Язык '{lang_code}' не поддерживается")
+            raise ValueError(f"Язык '{lang_code}' не поддерживается")
 
     def translate(self, text: str) -> str:
         """
@@ -63,7 +66,7 @@ class TranslationManager:
         :param text: Текст для перевода.
         :return: Переведённый текст или оригинальный, если перевод не найден.
         """
-        if self.current_language == 'ru':
+        if self.current_language == 'ru':  # Если текущий язык русский, возвращаем текст без изменений.
             return text
 
         # Попытка перевести на текущий язык
@@ -71,11 +74,13 @@ class TranslationManager:
         if translated_text:
             return translated_text
 
-        # Фолбэк на другие языки в указанном порядке
+        # Попытка перевести текст с использованием fallback языков
         for fallback_lang in self.language_order:
             translated_text = self.translations.get(fallback_lang, {}).get(text)
             if translated_text:
+                self.logger.info(f"Используется fallback перевод с языка '{fallback_lang}'")
                 return translated_text
 
-        # Если перевод не найден, вернуть оригинальный текст
+        # Если перевод не найден, возвращаем оригинальный текст и логируем предупреждение
+        self.logger.warning(f"Перевод для '{text}' не найден на языке '{self.current_language}' и fallback языках.")
         return text

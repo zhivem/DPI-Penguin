@@ -12,13 +12,8 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
 )
 from qfluentwidgets import PushButton, TextEdit
-from utils.utils import (
-    BASE_FOLDER,
-    settings,
-    tr,
-)
+from utils.utils import tr
 from utils.update_utils import UpdateChecker
-import utils.theme_utils
 
 class SettingsDialog(QDialog):
     """
@@ -36,11 +31,6 @@ class SettingsDialog(QDialog):
         self.setWindowTitle(tr("Менеджер обновлений"))
         self.setFixedSize(500, 400)
         self.logger = logging.getLogger(self.__class__.__name__)
-
-        # Получаем текущую тему из настроек
-        saved_theme = settings.value("theme", "light")
-        # Применяем тему
-        utils.theme_utils.apply_theme(self, saved_theme, settings, BASE_FOLDER)
 
         layout = QVBoxLayout()
 
@@ -79,43 +69,26 @@ class SettingsDialog(QDialog):
         Выполняет обновление компонентов и информирует пользователя о результате.
         """
         try:
-            # Начинаем обновление компонентов
-            if self.update_checker.is_update_available('zapret'):
-                if not self.update_checker.download_and_update('zapret', dialog=self):
-                    raise Exception("Не удалось обновить Zapret")
-
-            if self.update_checker.is_update_available('config'):
-                if not self.update_checker.download_and_update('config', dialog=self):
-                    raise Exception("Не удалось обновить конфигурацию")
+            self.update_component('zapret')
+            self.update_component('config')
 
             # Если обновления прошли успешно
             QMessageBox.information(self, tr("Обновление"), tr("Обновление выполнено успешно!"))
-
-            # Закрыть окно обновлений
-            self.close()
-
-            # Открыть главное окно
-            if self.parent():
-                self.parent().show()
-            else:
-                from gui.gui import GoodbyeDPIApp  # Импорт главного окна
-                self.main_window = GoodbyeDPIApp()
-                self.main_window.show()
+            self.close_and_open_main_window()
 
         except Exception as e:
             # В случае ошибки показать уведомление
             QMessageBox.critical(self, tr("Ошибка обновления"), tr(f"Ошибка обновления: {e}"))
+            self.close_and_open_main_window()
 
-            # Закрыть окно обновлений
-            self.close()
-
-            # Открыть главное окно
-            if self.parent():
-                self.parent().show()
-            else:
-                from gui.gui import GoodbyeDPIApp  # Импорт главного окна
-                self.main_window = GoodbyeDPIApp()
-                self.main_window.show()
+    def update_component(self, component: str) -> None:
+        """
+        Обновляет указанный компонент (например, 'zapret' или 'config').
+        :param component: Имя компонента для обновления.
+        """
+        if self.update_checker.is_update_available(component):
+            if not self.update_checker.download_and_update(component, dialog=self):
+                raise Exception(f"Не удалось обновить {component}")
 
     def check_for_updates(self) -> None:
         """
@@ -131,41 +104,25 @@ class SettingsDialog(QDialog):
                 self.text_edit.append(tr("✅ Актуальная версия программы. Обновлений не требуется"))
             self.initial_check_done = True
 
-        self.update_zapret_message(
-            tr('🔄 Доступно <span style="color: red;">обновление</span> Zapret') if self.update_checker.is_update_available('zapret') 
-            else tr("✅ Версия Zapret актуальна")
-        )
+        self.update_message('zapret', '🔄 Доступно <span style="color: red;">обновление</span> Zapret', "✅ Версия Zapret актуальна")
+        self.update_message('config', '🔄 Доступно <span style="color: red;">обновление</span> для конфигурационного файла', "✅ Версия конфигурационного файла актуальна")
 
-        self.update_config_message(
-            tr('🔄 Доступно <span style="color: red;">обновление</span> для конфигурационного файла') if self.update_checker.is_update_available('config') 
-            else tr("✅ Версия конфигурационного файла актуальна")
-        )
+        self.update_button.setEnabled(self.update_checker.is_update_available('zapret') or self.update_checker.is_update_available('config'))
 
-        if self.update_checker.is_update_available('zapret') or self.update_checker.is_update_available('config'):
-            self.update_button.setEnabled(True)
-        else:
-            self.update_button.setEnabled(False)
-
-    def update_zapret_message(self, message: str) -> None:
+    def update_message(self, component: str, update_message: str, current_message: str) -> None:
         """
-        Обновляет сообщение об обновлении Zapret в текстовом редакторе.
-
-        :param message: Новое сообщение для отображения.
+        Обновляет сообщение для указанного компонента.
+        :param component: Имя компонента.
+        :param update_message: Сообщение, если обновление доступно.
+        :param current_message: Сообщение, если версия актуальна.
         """
-        self.replace_message_in_text_edit("Zapret", message)
-
-    def update_config_message(self, message: str) -> None:
-        """
-        Обновляет сообщение об обновлении конфигурационного файла в текстовом редакторе.
-
-        :param message: Новое сообщение для отображения.
-        """
-        self.replace_message_in_text_edit("default.ini", message)
+        message = update_message if self.update_checker.is_update_available(component) else current_message
+        keyword = 'Zapret' if component == 'zapret' else 'default.ini'
+        self.replace_message_in_text_edit(keyword, message)
 
     def replace_message_in_text_edit(self, keyword: str, new_message: str) -> None:
         """
         Заменяет сообщение в текстовом редакторе на основе ключевого слова.
-
         :param keyword: Ключевое слово для поиска строки.
         :param new_message: Новое сообщение для вставки.
         """
@@ -201,24 +158,32 @@ class SettingsDialog(QDialog):
         try:
             if getattr(sys, 'frozen', False):
                 base_path = os.path.dirname(sys.executable)
-                updater_exe = os.path.join(base_path, 'loader.exe') 
+                updater_exe = os.path.join(base_path, 'loader.exe')
             else:
                 base_path = os.path.dirname(os.path.abspath(__file__))
-                updater_exe = os.path.join(base_path, 'loader.exe')  
+                updater_exe = os.path.join(base_path, 'loader.exe')
 
             if not os.path.exists(updater_exe):
                 QMessageBox.critical(self, tr("Ошибка"), tr("Файл обновления не найден"))
                 return
 
             subprocess.Popen([updater_exe], shell=True)
-
-            if self.parent():
-                self.parent().close()
-            else:
-                self.close()
+            self.close_and_open_main_window()
 
         except Exception as e:
             QMessageBox.critical(self, tr("Ошибка"), tr(f"Не удалось запустить обновление: {e}"))
+
+    def close_and_open_main_window(self) -> None:
+        """
+        Закрывает диалог и открывает главное окно.
+        """
+        self.close()
+        if self.parent():
+            self.parent().show()
+        else:
+            from gui.gui import GoodbyeDPIApp  
+            self.main_window = GoodbyeDPIApp()
+            self.main_window.show()
 
     @pyqtSlot()
     def on_config_updated(self):

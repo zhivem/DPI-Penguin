@@ -44,6 +44,7 @@ from utils.utils import (
 )
 import utils.theme_utils
 from gui.updater_manager import SettingsDialog
+from gui.proxy_window import ProxySettingsDialog
 from utils.process_utils import WorkerThread
 from utils.service_utils import stop_service
 
@@ -57,6 +58,7 @@ BLACK_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "black.png")
 ADD_SRV_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "add_service.png")
 DELETE_SRV_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "delete_service.png")
 FIX_PROCESS = os.path.join(BASE_FOLDER, "resources", "icon", "fix-process.png")
+PROXY = os.path.join(BASE_FOLDER, "resources", "icon", "proxy.png")
 
 class UpdateBlacklistsThread(QtCore.QThread):
     def __init__(self, parent=None, silent=False):
@@ -348,22 +350,19 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         self.console_output.setReadOnly(True)
         process_layout.addWidget(self.console_output)
 
-        # Кнопки для открытия папок логов и конфигураций
+        # Кнопки для открытия Прокси
         log_and_config_layout = QHBoxLayout()
-        
-        appdata_folder = os.environ.get('LOCALAPPDATA', os.path.expanduser("~\\AppData\\Local"))
-        log_folder = os.path.join(appdata_folder, 'DPI-Penguin', 'logs')
 
-        self.open_logs_button = self.create_button(
-            text=tr("Открыть папку Log"),
-            func=lambda: self.handle_open_path(log_folder),
-            layout=log_and_config_layout,
-            icon_path=LOG_ICON_PATH,
-            icon_size=(16, 16),
+        self.open_proxy_settings_button = self.create_button(
+            text=tr("Прокси и DNS"),
+            func=self.open_proxy_settings_dialog,
+            layout=log_and_config_layout, 
+            icon_path=PROXY,
+            icon_size=(16, 16), 
         )
 
         self.open_config_button = self.create_button(
-            text=tr("Открыть configs"),
+            text=tr("Открыть Configs"),
             func=lambda: self.handle_open_path(os.path.join(BASE_FOLDER, "config")),
             layout=log_and_config_layout,
             icon_path=INI_ICON_PATH,
@@ -450,7 +449,7 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         self.tray_checkbox.toggled.connect(self.toggle_tray_behavior)
         autostart_layout.addWidget(self.tray_checkbox)
 
-        self.autostart_checkbox = QCheckBox(tr("Запускать программу при старте системы"))
+        self.autostart_checkbox = QCheckBox(tr("Запускать при старте Windows"))
         self.autostart_checkbox.setChecked(self.autostart_enabled)
         self.autostart_checkbox.toggled.connect(self.toggle_autostart)
         autostart_layout.addWidget(self.autostart_checkbox)
@@ -645,7 +644,7 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             layout.addWidget(widget, row, 1)
 
         return group
-
+    
     def create_acknowledgements_group(self) -> QGroupBox:
         """
         Создаёт группу с информацией о зависимостях приложения.
@@ -682,18 +681,22 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
             section = self.create_acknowledgement_section(**dep)
             layout.addWidget(section)
 
+        appdata_folder = os.environ.get('LOCALAPPDATA', os.path.expanduser("~\\AppData\\Local"))
+        log_folder = os.path.join(appdata_folder, 'DPI-Penguin', 'logs')
+
+        self.open_logs_button = self.create_button(
+            text=tr("Открыть папку Log"),
+            func=lambda: self.handle_open_path(log_folder),
+            layout=layout,
+            icon_path=LOG_ICON_PATH,
+            icon_size=(16, 16),
+        )    
+
         return group
 
     def create_acknowledgement_section(self, title: str, description: str, version: str, developer: str, links: List[str]) -> QWidget:
         """
         Создаёт секцию с информацией о конкретной зависимости.
-
-        :param title: Название зависимости.
-        :param description: Описание зависимости.
-        :param version: Версия зависимости.
-        :param developer: Разработчик зависимости.
-        :param links: Ссылки на репозиторий или документацию.
-        :return: Экземпляр QWidget с информацией о зависимости.
         """
         section = QWidget()
         layout = QGridLayout(section)
@@ -766,18 +769,6 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         icon_size: tuple = (24, 24),
         tooltip: Optional[str] = None
     ) -> PushButton:
-        """
-        Создаёт и настраивает кнопку.
-
-        :param text: Текст на кнопке.
-        :param func: Функция, вызываемая при нажатии.
-        :param layout: Макет, в который добавляется кнопка.
-        :param enabled: Состояние кнопки (включена/выключена).
-        :param icon_path: Путь к иконке для кнопки.
-        :param icon_size: Размер иконки.
-        :param tooltip: Подсказка для кнопки.
-        :return: Экземпляр PushButton.
-        """
         button = PushButton(text, self)
         button.setEnabled(enabled)
         if func:
@@ -1193,6 +1184,13 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         dialog = SettingsDialog(self)
         dialog.config_updated_signal.connect(self.reload_configuration)
         dialog.exec()
+
+    def open_proxy_settings_dialog(self) -> None:
+        """
+        Открывает диалоговое окно с настройками прокси.
+        """
+        dialog = ProxySettingsDialog(self)
+        dialog.show() 
 
     def reload_configuration(self) -> None:
         """
