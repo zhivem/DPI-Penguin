@@ -8,8 +8,8 @@
 **DPI Penguin** is a Python graphical application designed to bypass network limitations such as Deep Packet Analysis (DPI). The application provides an intuitive interface for managing scripts that allow you to access platforms such as YouTube and Discord. The application is based on integration with [Zapret](https://github.com/bol-van/zapret ). You can download the `exe` from [Releases](https://github.com/zhivem/DPI-Penguin/releases ). View the source code of the update loader `->` [Loader for DPI Penguin](https://github.com/zhivem/Loader-for-DPI-Penguin )
 
 ## Application Interface
-![image](https://github.com/user-attachments/assets/9224d38d-ffd8-4e14-b6d2-ef8ee49d530f)
-![image](https://github.com/user-attachments/assets/6144cd0e-52cd-4e4d-a167-42e2a8354a46)
+![image](https://github.com/user-attachments/assets/2f635370-26b3-4e7c-ad95-8fbe068f24d8)
+![image](https://github.com/user-attachments/assets/56e0b606-f518-4b95-a7af-64015e9b9ada)
 
 ## Features
 
@@ -21,6 +21,10 @@
 - **Theme Support:** Toggle between light and dark themes to suit your preferences.
 - **Automatic Updates:** Check for and apply updates to ensure access to the latest features.
 - **Logging:** Comprehensive logging to aid in troubleshooting and monitoring application behavior.
+- **DNS and Proxy:**
+  - **Proxy:** The application allows you to configure, verify and apply proxy servers (`HTTP`, `HTTPS`, `SOCKS4`, `SOCKS5`) for the entire system. You can also reset the proxy settings.
+  - **DNS:** Support for popular public DNS servers ('Google`, `Cloudflare', `AdGuard`, `Comss'). The user can select the interface and apply the selected DNS to improve the speed or security of the Internet.
+  - **Advantages:** Changing the proxy and DNS helps to bypass blockages, speeds up the connection and increases security.
 
 ## Configuration Setup
 
