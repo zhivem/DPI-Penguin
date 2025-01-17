@@ -86,7 +86,7 @@ class CheckUpdatesThread(QtCore.QThread):
         self.updates_available_signal.emit(updates_available)
 
 
-class GoodbyeDPIApp(QtWidgets.QMainWindow):
+class DPIPenguin(QtWidgets.QMainWindow):
     """
     Главное окно приложения DPI Penguin.
     """
@@ -95,12 +95,9 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         super().__init__()
         self.logger = logging.getLogger(self.__class__.__name__)
 
-        self.minimize_to_tray: bool = settings.value("minimize_to_tray", True, type=bool)
-        self.autostart_enabled: bool = is_autostart_enabled()
-        self.autorun_with_last_config: bool = settings.value(
-            "autorun_with_last_config", False, type=bool
-        )
-        self.logger.debug(f"autorun_with_last_config: {self.autorun_with_last_config}")
+        self.minimize_to_tray = settings.value("minimize_to_tray", True, type=bool)
+        self.autostart_enabled = is_autostart_enabled()
+        self.autorun_with_last_config = settings.value("autorun_with_last_config", False, type=bool)
 
         if self.autorun_with_last_config:
             last_config_path = settings.value(
@@ -759,27 +756,15 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         settings.setValue("update_blacklists_on_start", checked)
         self.logger.info(f"{tr('Обновление черных списков при запуске программы')} {'включено' if checked else 'отключено'}")
 
-    def create_button(
-        self,
-        text: str,
-        func: Optional[Any],
-        layout: QHBoxLayout,
-        enabled: bool = True,
-        icon_path: Optional[str] = None,
-        icon_size: tuple = (24, 24),
-        tooltip: Optional[str] = None
-    ) -> PushButton:
+    def create_button(self, text, func, layout, enabled=True, icon_path=None, icon_size=(24, 24), tooltip=None):
         button = PushButton(text, self)
         button.setEnabled(enabled)
         if func:
             button.clicked.connect(func)
-
         if icon_path:
             self.set_button_icon(button, icon_path, icon_size)
-
         if tooltip:
             button.setToolTip(tooltip)
-
         if layout is not None:
             layout.addWidget(button)
         return button
@@ -830,18 +815,12 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         self.logger.debug(f"{tr('Команда для запуска')}: {command}")
 
         try:
-            capture_output = selected_option not in [
-                "Обход блокировки YouTube",
-                "Обход Discord + YouTube",
-                "Обход блокировки Discord",
-                "Обход блокировок для ЧС РКН"
-            ]
             self.start_main_process(
                 command,
                 selected_option,
                 disable_run=True,
                 clear_console_text=clear_console_text,
-                capture_output=capture_output
+                capture_output=True
             )
             self.logger.info(f"{tr('Процесс')} '{selected_option}' {tr('запущен')}")
 
@@ -856,46 +835,13 @@ class GoodbyeDPIApp(QtWidgets.QMainWindow):
         if auto_run:
             settings.setValue("last_config_path", self.current_config_path)
 
-    def is_executable_available(self, executable: str, selected_option: str) -> bool:
-        """
-        Проверяет доступность исполняемого файла и необходимых зависимостей.
-
-        :param executable: Путь к исполняемому файлу.
-        :param selected_option: Выбранный скрипт.
-        :return: True, если исполняемый файл доступен и все зависимости выполнены, иначе False.
-        """
+    def is_executable_available(self, executable, selected_option):
         if not os.path.exists(executable):
-            error_msg = f"{tr('Файл')} {executable} {tr('не найден')}"
-            self.logger.error(error_msg)
-            self.console_output.append(f"{tr('Ошибка')}: {tr('файл')} {executable} {tr('не найден')}")
+            self.logger.error(f"{tr('Файл не найден')}: {executable}")
             return False
-
         if not os.access(executable, os.X_OK):
-            error_msg = f"{tr('Недостаточно прав для запуска')} {executable}."
-            self.logger.error(error_msg)
-            self.console_output.append(f"{tr('Ошибка')}: {tr('Недостаточно прав для запуска')} {executable}")
+            self.logger.error(f"{tr('Недостаточно прав для запуска')}: {executable}")
             return False
-
-        if selected_option in [
-            "Обход блокировки YouTube",
-            "Обход Discord + YouTube",
-            "Обход блокировки Discord",
-            "Обход блокировок для ЧС РКН"
-        ]:
-            required_files = [
-                os.path.join(BASE_FOLDER, "black"),
-                os.path.join(BASE_FOLDER, "zapret", "quic_initial_www_google_com.bin"),
-                os.path.join(BASE_FOLDER, "zapret", "tls_clienthello_www_google_com.bin"),
-                os.path.join(BASE_FOLDER, "zapret", "tls_clienthello_iana_org.bin")
-            ]
-            missing_files = [f for f in required_files if not os.path.exists(f)]
-            if missing_files:
-                error_msg = f"{tr('Не найдены необходимые файлы')}: {', '.join(missing_files)}"
-                self.logger.error(error_msg)
-                self.console_output.append(f"{tr('Ошибка')}: {tr('не найдены файлы')}: {', '.join(missing_files)}")
-                return False
-
-        self.logger.debug(f"{tr('Исполняемый файл')} {executable} {tr('доступен для запуска')}")
         return True
 
     def start_main_process(
