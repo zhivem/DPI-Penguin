@@ -335,7 +335,7 @@ class DPIPenguin(QtWidgets.QMainWindow):
         buttons_layout = QHBoxLayout()
         self.run_button = self.create_button(tr("Запустить"), self.run_exe, buttons_layout)
         self.stop_close_button = self.create_button(
-            tr("Остановить и закрыть"),
+            tr("Остановить"),
             self.stop_and_close,
             buttons_layout,
             enabled=False
