@@ -1,7 +1,7 @@
 import configparser
 import logging
 import os
-from typing import Any, List, Optional
+from typing import List, Optional
 
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtCore import pyqtSlot, QTimer

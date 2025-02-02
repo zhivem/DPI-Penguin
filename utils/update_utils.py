@@ -64,7 +64,7 @@ class UpdateChecker(QObject):
     }
 
     def __init__(self):
-        super().__init__()  # Инициализируем QObject
+        super().__init__()
         self.logger = logging.getLogger(self.__class__.__name__)
         self.local_versions: Dict[str, str] = {}
         self.remote_versions: Dict[str, str] = {}
