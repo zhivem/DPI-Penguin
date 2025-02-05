@@ -7,6 +7,7 @@ class TranslationManager:
     """
     Класс для управления переводами приложения.
     """
+
     def __init__(self, translations_folder: str):
         """
         Инициализирует менеджер переводов.
@@ -17,7 +18,7 @@ class TranslationManager:
         self.translations: Dict[str, Dict[str, str]] = {}
         self.current_language: str = 'ru'
         self.available_languages: List[str] = ['ru', 'en']
-        self.language_order: List[str] = ['en'] 
+        self.language_order: List[str] = ['en']
         self.logger = logging.getLogger(self.__class__.__name__)
         self.language_names: Dict[str, str] = {
             'ru': 'Русский',
@@ -30,9 +31,10 @@ class TranslationManager:
         Загружает файлы переводов из указанной папки.
 
         Каждый файл должен быть в формате JSON с именем, соответствующим коду языка.
-        Если файл не найден или происходит ошибка при его загрузке.
+        Если файл не найден или происходит ошибка при его загрузке, 
+        записывается соответствующее сообщение в лог.
         """
-        for lang_code in self.language_order:
+        for lang_code in self.available_languages:
             filename = f"{lang_code}.json"
             file_path = os.path.join(self.translations_folder, filename)
             if os.path.exists(file_path):
@@ -42,8 +44,8 @@ class TranslationManager:
                         self.logger.info(f"Файл перевода загружен: {file_path}")
                 except json.JSONDecodeError as e:
                     self.logger.error(f"Ошибка декодирования JSON в файле {file_path}: {e}")
-            else:
-                self.logger.warning(f"Файл перевода не найден: {file_path}")
+                except Exception as e:
+                    self.logger.error(f"Ошибка при загрузке файла {file_path}: {e}")
 
     def set_language(self, lang_code: str) -> None:
         """
@@ -84,3 +86,25 @@ class TranslationManager:
         # Если перевод не найден, возвращаем оригинальный текст и логируем предупреждение
         self.logger.warning(f"Перевод для '{text}' не найден на языке '{self.current_language}' и fallback языках.")
         return text
+
+    @staticmethod
+    def translate_ini_section(ini_content: str, translation_manager: 'TranslationManager') -> str:
+        """
+        Переводит строки с секциями в INI-файле.
+
+        :param ini_content: Содержимое INI-файла в виде строки.
+        :param translation_manager: Экземпляр TranslationManager.
+        :return: Содержимое INI-файла с переведёнными секциями.
+        """
+        # Список строк для перевода
+        sections_to_translate = [
+            "[Обход блокировок для РКН]",
+            "[Универсальный обход]",
+            "[Обход Discord + YouTube]"
+        ]
+
+        for section in sections_to_translate:
+            translated_section = translation_manager.translate(section)
+            ini_content = ini_content.replace(section, translated_section)
+
+        return ini_content

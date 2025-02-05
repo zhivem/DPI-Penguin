@@ -338,9 +338,3 @@ class ProxySettingsDialog(QDialog):
         else:
             self.dns_setter.start()
             self.text_edit.append(f"{tr('DNS для интерфейса')} {interface_name} {tr('установлен на')} {dns_choice} ({primary_dns}, {secondary_dns}).")
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    dialog = ProxySettingsDialog()
-    dialog.show()
-    sys.exit(app.exec())

@@ -45,6 +45,7 @@ from utils.utils import (
 import utils.theme_utils
 from gui.updater_manager import SettingsDialog
 from gui.proxy_window import ProxySettingsDialog
+from gui.converter import ConfigConverterDialog  
 from utils.process_utils import WorkerThread
 from utils.service_utils import stop_service
 
@@ -307,8 +308,6 @@ class DPIPenguin(QtWidgets.QMainWindow):
         """
         process_tab = QWidget()
         process_layout = QVBoxLayout(process_tab)
-
-        # Выбор скрипта
         script_layout = QHBoxLayout()
 
         self.selected_script = QFComboBox()
@@ -326,8 +325,17 @@ class DPIPenguin(QtWidgets.QMainWindow):
         self.update_config_button.setFixedWidth(40)
         script_layout.addWidget(self.update_config_button)
 
-        script_layout.setStretch(0, 1)
-        script_layout.setStretch(1, 0)
+        # Новая кнопка "Конвертер"
+        self.converter_button = PushButton("📜", self)
+        self.converter_button.setToolTip(tr("Открыть окно конвертера"))
+        self.converter_button.clicked.connect(self.open_converter)  # Привяжите метод для открытия окна
+        self.converter_button.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
+        script_layout.addWidget(self.converter_button)
+
+        # Установите stretch для элементов (если нужно)
+        script_layout.setStretch(0, 1)  # ComboBox будет растягиваться
+        script_layout.setStretch(1, 0)  # Кнопка "📁" не будет растягиваться
+        script_layout.setStretch(2, 0)  # Кнопка "Конвертер" не будет растягиваться
 
         process_layout.addLayout(script_layout)
 
@@ -347,7 +355,6 @@ class DPIPenguin(QtWidgets.QMainWindow):
         self.console_output.setReadOnly(True)
         process_layout.addWidget(self.console_output)
 
-        # Кнопки для открытия Прокси
         log_and_config_layout = QHBoxLayout()
 
         self.open_proxy_settings_button = self.create_button(
@@ -376,6 +383,10 @@ class DPIPenguin(QtWidgets.QMainWindow):
         process_layout.addWidget(self.theme_toggle_button)
 
         return process_tab
+    
+    def open_converter(self):
+        self.converter_window = ConfigConverterDialog(self)
+        self.converter_window.show()
 
     def handle_open_path(self, path: str) -> None:
         """

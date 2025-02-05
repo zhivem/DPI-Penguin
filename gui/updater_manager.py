@@ -181,8 +181,8 @@ class SettingsDialog(QDialog):
         if self.parent():
             self.parent().show()
         else:
-            from gui.gui import GoodbyeDPIApp  
-            self.main_window = GoodbyeDPIApp()
+            from gui.gui import DPIPenguin  
+            self.main_window = DPIPenguin()
             self.main_window.show()
 
     @pyqtSlot()

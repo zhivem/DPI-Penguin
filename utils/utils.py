@@ -27,10 +27,9 @@ BLACKLIST_FOLDER = os.path.join(BASE_FOLDER, "black")
 ICON_FOLDER = os.path.join(BASE_FOLDER, "resources", "icon")
 
 BLACKLIST_FILES: List[str] = [
-    os.path.join(BLACKLIST_FOLDER, "russia-blacklist.txt"),
-    os.path.join(BLACKLIST_FOLDER, "youtube-blacklist.txt"),
-    os.path.join(BLACKLIST_FOLDER, "discord-blacklist.txt"),
-    os.path.join(BLACKLIST_FOLDER, "disk-youtube-blacklist.txt") 
+    os.path.join(BLACKLIST_FOLDER, "russia-blacklist.txt"), # 0
+    os.path.join(BLACKLIST_FOLDER, "disk-youtube-blacklist.txt"), # 1
+    os.path.join(BLACKLIST_FOLDER, "universal.txt") # 2
 ]
 
 # Инициализация менеджера переводов и настроек
@@ -39,20 +38,17 @@ translation_manager = TranslationManager(TRANSLATIONS_FOLDER)
 saved_language = settings.value("language", "ru")
 translation_manager.set_language(saved_language)
 
-
 def tr(text: str) -> str:
     """
     Функция для перевода текста.
     """
     return translation_manager.translate(text)
 
-
 def set_language(lang_code: str):
     """
     Устанавливает язык приложения.
     """
     translation_manager.set_language(lang_code)
-
 
 # Загрузка конфигурации
 config = configparser.ConfigParser()
@@ -62,10 +58,9 @@ CURRENT_VERSION = config.get('VERSION', 'ver_programm')
 ZAPRET_VERSION = config.get('VERSION', 'zapret')
 CONFIG_VERSION = config.get('VERSION', 'config')
 
-
 def open_path(path: str) -> Optional[str]:
     """
-    Открывает указанный путь в файловом менеджере.
+    Открывает указанный путь в файловом менеджере (только для Windows).
     Возвращает сообщение об ошибке, если путь не существует или не удалось открыть.
     """
     if not os.path.exists(path):
@@ -73,20 +68,18 @@ def open_path(path: str) -> Optional[str]:
         logger.warning(message)
         return message
 
+    if platform.system() != "Windows":
+        message = tr("Данная функция поддерживается только на Windows.")
+        logger.warning(message)
+        return message
     try:
-        if platform.system() == "Windows":
-            os.startfile(path)
-        elif platform.system() == "Darwin":
-            subprocess.Popen(["open", path], creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
-        else:
-            subprocess.Popen(["xdg-open", path], creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
+        os.startfile(path) 
         return None
     except Exception as e:
         error_message = tr("Не удалось открыть путь: {error}").format(error=e)
         logger.error(error_message)
         return error_message
-
-
+    
 def is_autostart_enabled() -> bool:
     """
     Проверяет, включен ли автозапуск приложения.
@@ -203,7 +196,6 @@ def load_script_options(config_path: str) -> Tuple[Optional[Dict[str, Tuple[str,
                .replace('{BLACKLIST_FILES_0}', BLACKLIST_FILES[0])
                .replace('{BLACKLIST_FILES_1}', BLACKLIST_FILES[1])
                .replace('{BLACKLIST_FILES_2}', BLACKLIST_FILES[2])
-               .replace('{BLACKLIST_FILES_3}', BLACKLIST_FILES[3])
                .replace('{BASE_FOLDER}', BASE_FOLDER)
             for arg in args_list
         ]
