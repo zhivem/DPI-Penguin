@@ -17,10 +17,14 @@ logger = logging.getLogger(__name__)
 
 # Константы
 DNS_SERVERS = {
-    tr("Google Public DNS"): ("8.8.8.8", "8.8.4.4"),
-    tr("Cloudflare DNS"): ("1.1.1.1", "1.0.0.1"),
-    tr("AdGuard DNS"): ("94.140.14.14", "94.140.15.15"),
-    tr("Comss DNS"): ("208.67.222.222", "208.67.220.220"),
+    tr("Google Public DNS (IPv4)"): ("8.8.8.8", "8.8.4.4"),
+    tr("Google Public DNS (IPv6)"): ("2001:4860:4860::8888", "2001:4860:4860::8844"),
+    tr("Cloudflare DNS (IPv4)"): ("1.1.1.1", "1.0.0.1"),
+    tr("Cloudflare DNS (IPv6)"): ("2606:4700:4700::1111", "2606:4700:4700::1001"),
+    tr("AdGuard DNS (IPv4)"): ("94.140.14.14", "94.140.15.15"),
+    tr("AdGuard DNS (IPv6)"): ("2a10:50c0::ad1:ff", "2a10:50c0::ad2:ff"),
+    tr("Comss.one DNS (IPv4)"): ("83.220.169.155", "212.109.195.93"),
+    tr("Comss.one DNS (IPv6)"): ("2a01:230:4:915::2", "2a03:6f00:a::3f24"),
     tr("DNS по умолчанию"): ("", "")
 }
 
