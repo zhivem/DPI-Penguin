@@ -24,8 +24,8 @@ class UpdateChecker(QObject):
         },
         {
             "name": "discord-blacklist",
-            "url": "https://raw.githubusercontent.com/zhivem/DPI-Penguin/main/black/discord-blacklist.txt",
-            "output_file": os.path.join(BASE_FOLDER, "black", "discord-blacklist.txt")
+            "url": "https://raw.githubusercontent.com/zhivem/DPI-Penguin/main/black/universal.txt",
+            "output_file": os.path.join(BASE_FOLDER, "black", "universal.txt")
         },
         {
             "name": "disk-youtube-blacklist",
@@ -36,11 +36,6 @@ class UpdateChecker(QObject):
             "name": "ipset-discord",
             "url": "https://raw.githubusercontent.com/zhivem/DPI-Penguin/main/black/ipset-discord.txt",
             "output_file": os.path.join(BASE_FOLDER, "black", "ipset-discord.txt")
-        },
-        {
-            "name": "youtube-blacklist",
-            "url": "https://raw.githubusercontent.com/zhivem/DPI-Penguin/main/black/youtube-blacklist.txt",
-            "output_file": os.path.join(BASE_FOLDER, "black", "youtube-blacklist.txt")
         }
     ]
 
