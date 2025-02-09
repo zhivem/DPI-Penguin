@@ -328,14 +328,13 @@ class DPIPenguin(QtWidgets.QMainWindow):
         # Кнопка "Конвертер"
         self.converter_button = PushButton("📜", self)
         self.converter_button.setToolTip(tr("Открыть окно конвертера"))
-        self.converter_button.clicked.connect(self.open_converter)  # Привяжите метод для открытия окна
+        self.converter_button.clicked.connect(self.open_converter) 
         self.converter_button.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
         script_layout.addWidget(self.converter_button)
 
-        # Установите stretch для элементов (если нужно)
-        script_layout.setStretch(0, 1)  # ComboBox будет растягиваться
-        script_layout.setStretch(1, 0)  # Кнопка "📁" не будет растягиваться
-        script_layout.setStretch(2, 0)  # Кнопка "Конвертер" не будет растягиваться
+        script_layout.setStretch(0, 1)  
+        script_layout.setStretch(1, 0)  
+        script_layout.setStretch(2, 0)
 
         process_layout.addLayout(script_layout)
 
