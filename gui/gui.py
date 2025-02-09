@@ -325,7 +325,7 @@ class DPIPenguin(QtWidgets.QMainWindow):
         self.update_config_button.setFixedWidth(40)
         script_layout.addWidget(self.update_config_button)
 
-        # Новая кнопка "Конвертер"
+        # Кнопка "Конвертер"
         self.converter_button = PushButton("📜", self)
         self.converter_button.setToolTip(tr("Открыть окно конвертера"))
         self.converter_button.clicked.connect(self.open_converter)  # Привяжите метод для открытия окна
