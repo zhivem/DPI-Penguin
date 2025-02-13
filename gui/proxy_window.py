@@ -1,4 +1,3 @@
-import sys
 import re
 import subprocess
 import winreg
@@ -6,7 +5,7 @@ import requests
 import logging
 
 from PyQt6.QtCore import QThread, pyqtSignal
-from PyQt6.QtWidgets import QApplication, QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QProgressBar, QMessageBox, QCheckBox, QGroupBox
+from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QProgressBar, QMessageBox, QCheckBox, QGroupBox
 from qfluentwidgets import PushButton, TextEdit, ComboBox as QFComboBox
 
 from utils.utils import tr
