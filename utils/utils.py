@@ -219,7 +219,7 @@ def create_service() -> str:
     """
     try:
         binary_path = os.path.join(ZAPRET_FOLDER, "winws.exe")
-        blacklist_path = BLACKLIST_FILES[3]
+        blacklist_path = BLACKLIST_FILES[2]
         quic_initial = os.path.join(ZAPRET_FOLDER, "quic_initial_www_google_com.bin")
         ipset = os.path.join(BLACKLIST_FOLDER, "ipset-discord.txt")
         ts = os.path.join(ZAPRET_FOLDER, "tls_clienthello_www_google_com.bin")

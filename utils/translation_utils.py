@@ -1,110 +1,128 @@
 import json
 import logging
-import os
 from typing import Dict, List
+from pathlib import Path
 
 class TranslationManager:
     """
-    Класс для управления переводами приложения.
+    Управление переводами приложения. Русский — базовый язык, английский — из en.json.
     """
 
-    def __init__(self, translations_folder: str):
+    def __init__(self, translations_folder: str | Path):
         """
-        Инициализирует менеджер переводов.
+        Инициализация менеджера переводов.
 
-        :param translations_folder: Путь к папке с файлами переводов.
+        Args:
+            translations_folder: Путь к папке с файлами переводов (ожидается en.json)
         """
-        self.translations_folder = translations_folder
+        self.translations_folder = Path(translations_folder)
         self.translations: Dict[str, Dict[str, str]] = {}
-        self.current_language: str = 'ru'
-        self.available_languages: List[str] = ['ru', 'en']
-        self.language_order: List[str] = ['en']
-        self.logger = logging.getLogger(self.__class__.__name__)
+        self.current_language: str = "ru" 
+        self.available_languages: List[str] = ["ru", "en"]
+        self.fallback_language: str = "en"
+        self.logger = logging.getLogger(__name__)
         self.language_names: Dict[str, str] = {
-            'ru': 'Русский',
-            'en': 'English',
+            "ru": "Русский",
+            "en": "English",
         }
-        self.load_translations()
+        self._load_translations()
 
-    def load_translations(self) -> None:
+    def _load_translations(self) -> None:
         """
-        Загружает файлы переводов из указанной папки.
+        Загрузка переводов из JSON-файлов.
 
-        Каждый файл должен быть в формате JSON с именем, соответствующим коду языка.
-        Если файл не найден или происходит ошибка при его загрузке, 
-        записывается соответствующее сообщение в лог.
+        Ожидается en.json, ru.json не требуется, так как русский — базовый.
         """
         for lang_code in self.available_languages:
-            filename = f"{lang_code}.json"
-            file_path = os.path.join(self.translations_folder, filename)
-            if os.path.exists(file_path):
+            if lang_code == "ru":  
+                self.translations[lang_code] = {}
+                continue
+            file_path = self.translations_folder / f"{lang_code}.json"
+            if file_path.exists():
                 try:
-                    with open(file_path, 'r', encoding='utf-8') as f:
-                        self.translations[lang_code] = json.load(f)
-                        self.logger.info(f"Файл перевода загружен: {file_path}")
+                    self.translations[lang_code] = json.loads(file_path.read_text(encoding="utf-8"))
+                    self.logger.debug(f"Загружен перевод: {file_path}")
                 except json.JSONDecodeError as e:
-                    self.logger.error(f"Ошибка декодирования JSON в файле {file_path}: {e}")
+                    self.logger.error(f"Ошибка JSON в {file_path}: {e}")
                 except Exception as e:
-                    self.logger.error(f"Ошибка при загрузке файла {file_path}: {e}")
+                    self.logger.error(f"Ошибка загрузки {file_path}: {e}")
+            else:
+                self.logger.debug(f"Файл перевода отсутствует: {file_path}")
+                self.translations[lang_code] = {}
 
     def set_language(self, lang_code: str) -> None:
         """
-        Устанавливает текущий язык приложения.
+        Установка текущего языка приложения.
 
-        :param lang_code: Код языка для установки (например, 'en', 'ru').
-        :raises ValueError: Если язык не поддерживается.
+        Args:
+            lang_code: Код языка ("ru" или "en")
+
+        Raises:
+            ValueError: Если язык не поддерживается
         """
-        if lang_code in self.available_languages:
-            self.current_language = lang_code
-            self.logger.info(f"Язык установлен на: {self.language_names.get(lang_code, lang_code)}")
-        else:
-            self.logger.warning(f"Язык '{lang_code}' не поддерживается")
+        if lang_code not in self.available_languages:
+            self.logger.warning(f"Неподдерживаемый язык: {lang_code}")
             raise ValueError(f"Язык '{lang_code}' не поддерживается")
+        
+        self.current_language = lang_code
+        self.logger.info(f"Установлен язык: {self.language_names.get(lang_code, lang_code)}")
 
     def translate(self, text: str) -> str:
         """
-        Переводит заданный текст на текущий язык.
+        Перевод текста на текущий язык.
 
-        :param text: Текст для перевода.
-        :return: Переведённый текст или оригинальный, если перевод не найден.
+        Args:
+            text: Текст на русском для перевода
+
+        Returns:
+            str: Переведённый текст или исходный русский, если перевода нет
         """
-        if self.current_language == 'ru':  # Если текущий язык русский, возвращаем текст без изменений.
+        if not text or self.current_language == "ru":  # Русский — базовый
             return text
 
-        # Попытка перевести на текущий язык
-        translated_text = self.translations.get(self.current_language, {}).get(text)
-        if translated_text:
-            return translated_text
+        # Прямой перевод на текущий язык (например, en)
+        if translated := self.translations.get(self.current_language, {}).get(text):
+            return translated
 
-        # Попытка перевести текст с использованием fallback языков
-        for fallback_lang in self.language_order:
-            translated_text = self.translations.get(fallback_lang, {}).get(text)
-            if translated_text:
-                self.logger.info(f"Используется fallback перевод с языка '{fallback_lang}'")
-                return translated_text
+        # Fallback на английский, если текущий язык не ru и перевод не найден
+        if self.current_language != "en":
+            if translated := self.translations.get(self.fallback_language, {}).get(text):
+                self.logger.debug(f"Fallback перевод с 'en' для '{text}'")
+                return translated
 
-        # Если перевод не найден, возвращаем оригинальный текст и логируем предупреждение
-        self.logger.warning(f"Перевод для '{text}' не найден на языке '{self.current_language}' и fallback языках.")
+        self.logger.debug(f"Перевод для '{text}' не найден на '{self.current_language}'")
         return text
 
     @staticmethod
-    def translate_ini_section(ini_content: str, translation_manager: 'TranslationManager') -> str:
+    def translate_ini_section(ini_content: str, translation_manager: "TranslationManager") -> str:
         """
-        Переводит строки с секциями в INI-файле.
+        Перевод секций в INI-файле.
 
-        :param ini_content: Содержимое INI-файла в виде строки.
-        :param translation_manager: Экземпляр TranslationManager.
-        :return: Содержимое INI-файла с переведёнными секциями.
+        Args:
+            ini_content: Содержимое INI-файла
+            translation_manager: Экземпляр TranslationManager
+
+        Returns:
+            str: INI-файл с переведёнными секциями
         """
-        # Список строк для перевода
-        sections_to_translate = [
+        sections = [
             "[Обход блокировок для РКН]",
             "[Универсальный обход]",
             "[Обход Discord + YouTube]"
         ]
-
-        for section in sections_to_translate:
-            translated_section = translation_manager.translate(section)
-            ini_content = ini_content.replace(section, translated_section)
-
+        
+        for section in sections:
+            translated = translation_manager.translate(section)
+            if translated != section:
+                ini_content = ini_content.replace(section, translated)
+        
         return ini_content
+
+    def get_available_languages(self) -> Dict[str, str]:
+        """
+        Получение списка доступных языков.
+
+        Returns:
+            Dict[str, str]: Словарь кодов языков и их названий
+        """
+        return self.language_names.copy()

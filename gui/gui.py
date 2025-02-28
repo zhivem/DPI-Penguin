@@ -318,7 +318,7 @@ class DPIPenguin(QtWidgets.QMainWindow):
         self.selected_script.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Preferred)
         script_layout.addWidget(self.selected_script)
 
-        self.update_config_button = PushButton("📁", self)
+        self.update_config_button = PushButton("📂", self)
         self.update_config_button.setToolTip(tr("Загрузить другую конфигурацию"))
         self.update_config_button.clicked.connect(self.load_config_via_dialog)
         self.update_config_button.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
@@ -326,10 +326,11 @@ class DPIPenguin(QtWidgets.QMainWindow):
         script_layout.addWidget(self.update_config_button)
 
         # Кнопка "Конвертер"
-        self.converter_button = PushButton("📜", self)
+        self.converter_button = PushButton("📝", self)
         self.converter_button.setToolTip(tr("Открыть окно конвертера"))
         self.converter_button.clicked.connect(self.open_converter) 
         self.converter_button.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
+        self.converter_button.setFixedWidth(40)
         script_layout.addWidget(self.converter_button)
 
         script_layout.setStretch(0, 1)  

@@ -2,59 +2,60 @@ import locale
 import logging
 import os
 import subprocess
-from typing import List, Optional
+from typing import List, Optional, Set
 
 import psutil
 from PyQt6 import QtCore
 from utils.service_utils import stop_service
-
 from utils.utils import tr
 
 if os.name == 'nt':
-    import win32api
+    from win32con import CREATE_NO_WINDOW
 
 
 class ProcessUtils:
-    logger = logging.getLogger('ProcessUtils')
+    """Утилиты для работы с процессами и службами."""
+    logger = logging.getLogger(__name__)
 
-    @staticmethod
-    def terminate_process(process_name: str) -> None:
-        """
-        Завершает процесс по имени.
-        """
+    @classmethod
+    def terminate_process(cls, process_name: str) -> bool:
+        """Завершает процесс по имени. Возвращает True при успехе."""
+        cls.logger.debug(tr("Попытка завершить процесс: {name}").format(name=process_name))
         try:
-            ProcessUtils.logger.info(tr(f"Завершение процесса {process_name}..."))
+            process_name_lower = process_name.lower()
             for proc in psutil.process_iter(['pid', 'name']):
-                if proc.info['name'] and proc.info['name'].lower() == process_name.lower():
-                    ProcessUtils.logger.info(tr(f"Попытка завершить процесс {process_name} с PID {proc.info['pid']}"))
+                if proc.info['name'] and proc.info['name'].lower() == process_name_lower:
+                    pid = proc.info['pid']
+                    cls.logger.info(tr("Завершение процесса {name} (PID: {pid})").format(name=process_name, pid=pid))
                     proc.terminate()
-                    try:
-                        proc.wait(timeout=10)
-                        ProcessUtils.logger.info(tr(f"Процесс {process_name} успешно завершён."))
-                    except psutil.TimeoutExpired:
-                        ProcessUtils.logger.warning(tr(f"Процесс {process_name} не завершился вовремя, пытаемся принудительно завершить."))
-                        proc.kill()
-                        proc.wait(timeout=5)
-                        ProcessUtils.logger.info(tr(f"Процесс {process_name} принудительно завершён."))
+                    proc.wait(timeout=10)
+                    cls.logger.info(tr("Процесс успешно завершён"))
+                    return True
+            cls.logger.warning(tr("Процесс {name} не найден").format(name=process_name))
+            return False
+        except psutil.TimeoutExpired:
+            cls.logger.warning(tr("Тайм-аут при завершении {name}, принудительное завершение").format(name=process_name))
+            proc.kill()
+            proc.wait(timeout=5)
+            return True
         except Exception as e:
-            ProcessUtils.logger.error(tr(f"Ошибка при завершении процесса {process_name}: {e}"))
-            raise e
+            cls.logger.error(tr("Ошибка завершения процесса {name}: {error}").format(name=process_name, error=e))
+            raise
 
-    @staticmethod
-    def stop_service(service_name: str) -> None:
-        """
-        Останавливает службу по имени, используя внешнюю функцию stop_service.
-        """
+    @classmethod
+    def stop_service(cls, service_name: str) -> None:
+        """Останавливает службу."""
+        cls.logger.info(tr("Остановка службы: {name}").format(name=service_name))
         try:
-            ProcessUtils.logger.info(tr(f"Остановка службы {service_name}..."))
             stop_service(service_name)
-            ProcessUtils.logger.info(tr(f"Служба {service_name} успешно остановлена."))
+            cls.logger.info(tr("Служба успешно остановлена"))
         except Exception as e:
-            ProcessUtils.logger.error(tr(f"Ошибка при остановке службы {service_name}: {e}"))
-            raise e
+            cls.logger.error(tr("Ошибка остановки службы {name}: {error}").format(name=service_name, error=e))
+            raise
 
 
 class WorkerThread(QtCore.QThread):
+    """Поток для выполнения внешних процессов."""
     output_signal = QtCore.pyqtSignal(str)
     finished_signal = QtCore.pyqtSignal(str)
     error_signal = QtCore.pyqtSignal(str)
@@ -71,155 +72,129 @@ class WorkerThread(QtCore.QThread):
         self.process_name = process_name
         self.encoding = encoding or locale.getpreferredencoding()
         self.capture_output = capture_output
-        self.process = None
-        self._is_terminated = False
-        self.logger = logging.getLogger(self.__class__.__name__)
+        self._process: Optional[subprocess.Popen] = None
+        self._running = False
+        self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
     def run(self) -> None:
-        self.logger.debug(tr("Запуск команды: {command}").format(command=' '.join(self.command)))
+        """Запуск процесса и обработка вывода."""
+        self._running = True
+        self.logger.debug(tr("Выполнение команды: {cmd}").format(cmd=' '.join(self.command)))
         try:
-            self.process = self._start_process()
-            if self.capture_output and self.process.stdout:
-                self._capture_output()
-            else:
-                self.process.wait()
-            self.logger.info(tr("Процесс {process_name} завершён с кодом {returncode}").format(
-                process_name=self.process_name,
-                returncode=self.process.returncode
-            ))
-        except subprocess.SubprocessError as e:
-            self._handle_error(tr("Ошибка запуска процесса {process_name}: {error}").format(
-                process_name=self.process_name,
-                error=e
-            ))
+            with self._start_process() as process:
+                self._process = process
+                if self.capture_output and process.stdout:
+                    self._handle_output(process.stdout)
+                else:
+                    process.wait()
+                self._log_completion(process.returncode)
         except Exception as e:
-            self._handle_error(tr("Неожиданная ошибка в WorkerThread {process_name}: {error}").format(
-                process_name=self.process_name,
-                error=e
-            ), critical=True)
-        finally:
-            self.finished_signal.emit(self.process_name)
-            self.process = None
+            self.error_signal.emit(
+                tr("Ошибка в процессе {name}: {error}").format(name=self.process_name, error=str(e))
+            )
+            self.logger.exception(tr("Исключение в WorkerThread"))
 
     def _start_process(self) -> subprocess.Popen:
-        popen_params = {
+        """Создание и настройка процесса."""
+        popen_kwargs = {
             'args': self.command,
             'text': True,
             'encoding': self.encoding,
-            'creationflags': subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0,
             'stdout': subprocess.PIPE if self.capture_output else subprocess.DEVNULL,
             'stderr': subprocess.STDOUT if self.capture_output else subprocess.DEVNULL,
-            'shell': False
+            'shell': False,
         }
-
         if os.name == 'nt':
+            popen_kwargs['creationflags'] = CREATE_NO_WINDOW
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             startupinfo.wShowWindow = subprocess.SW_HIDE
-            popen_params['startupinfo'] = startupinfo
+            popen_kwargs['startupinfo'] = startupinfo
+        
+        return subprocess.Popen(**popen_kwargs)
 
-        return subprocess.Popen(**popen_params)
-
-    def _capture_output(self) -> None:
-        for output in self.process.stdout:
-            if self._is_terminated:
-                self.logger.debug(tr("Завершение захвата вывода из-за принудительного завершения процесса"))
+    def _handle_output(self, stdout) -> None:
+        """Обработка вывода процесса."""
+        for line in iter(stdout.readline, ''):
+            if not self._running:
                 break
-            output = output.strip()
-            if output:
-                self.output_signal.emit(output)
-                self.logger.debug(tr("[{process_name}] {output}").format(
-                    process_name=self.process_name,
-                    output=output
-                ))
-        self.process.stdout.close()
+            line = line.strip()
+            if line:
+                self.output_signal.emit(line)
+                self.logger.debug(tr("[{name}] {output}").format(name=self.process_name, output=line))
 
-    def _handle_error(self, message: str, critical: bool = False) -> None:
-        self.logger.error(message)
-        if critical:
-            self.logger.critical(message, exc_info=True)
-        self.error_signal.emit(message)
+    def _log_completion(self, returncode: int) -> None:
+        """Логирование завершения процесса."""
+        if returncode == 0:
+            self.logger.info(tr("Процесс {name} завершён успешно").format(name=self.process_name))
+        else:
+            self.logger.warning(tr("Процесс {name} завершён с кодом {code}").format(
+                name=self.process_name, code=returncode
+            ))
+        self.finished_signal.emit(self.process_name)
 
     def terminate_process(self) -> None:
-        """Общий метод для завершения процесса."""
-        if self.process and self.process.poll() is None:
+        """Принудительное завершение процесса."""
+        if self._process and self._process.poll() is None:
+            self._running = False
+            self._process.terminate()
             try:
-                self.process.terminate()
-                self.process.wait()
-                self._is_terminated = True
-                self.logger.info(tr("Процесс {process_name} принудительно завершён").format(
-                    process_name=self.process_name
-                ))
-            except Exception as e:
-                self._handle_error(tr("Не удалось завершить процесс {process_name}: {error}").format(
-                    process_name=self.process_name,
-                    error=e
-                ))
+                self._process.wait(timeout=5)
+                self.logger.info(tr("Процесс {name} завершён").format(name=self.process_name))
+            except subprocess.TimeoutExpired:
+                self._process.kill()
+                self.logger.warning(tr("Процесс {name} убит после тайм-аута").format(name=self.process_name))
 
-    def close_winws(self):
-        """Завершаем процесс winws.exe с помощью общей логики."""
-        self._close_process("winws.exe", "winws.exe")
+    def close_winws(self) -> None:
+        """Завершение процесса winws.exe."""
+        self._close_process("winws.exe")
 
-    def _close_process(self, process_name: str, display_name: str):
-        """Общий метод для завершения процессов через psutil."""
-        try:
-            for proc in psutil.process_iter(['pid', 'name']):
-                if proc.info['name'] and proc.info['name'].lower() == process_name.lower():
-                    psutil.Process(proc.info['pid']).terminate()
-                    self.output_signal.emit(tr("Обход остановлен"))
-                    self.logger.debug(f"{tr('Процесс')} {display_name} (PID: {proc.info['pid']}) {tr('завершён')}")
-        except psutil.NoSuchProcess:
-            self.logger.warning(f"{tr('Процесс')} {display_name} {tr('не найден.')}")
-        except psutil.AccessDenied:
-            error_msg = f"{tr('Недостаточно прав для завершения процесса')} {display_name}"
-            self._handle_error(error_msg)
-        except Exception as e:
-            self._handle_error(f"{tr('Ошибка завершения процесса')} {display_name}: {str(e)}")
+    def _close_process(self, process_name: str) -> None:
+        """Общий метод завершения процесса."""
+        ProcessUtils.terminate_process(process_name)
+        self.output_signal.emit(tr("Обход остановлен"))
 
 
 class InitializerThread(QtCore.QThread):
+    """Поток инициализации: завершает процессы и службы."""
     initialization_complete = QtCore.pyqtSignal()
     error_signal = QtCore.pyqtSignal(str)
 
-    def __init__(self, processes_to_terminate: List[str], service_to_stop: str):
+    def __init__(self, processes_to_terminate: Set[str], service_to_stop: str):
         super().__init__()
-        self.processes_to_terminate = processes_to_terminate
+        self.processes_to_terminate = set(map(str.lower, processes_to_terminate))
         self.service_to_stop = service_to_stop
-        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
-    def run(self):
+    def run(self) -> None:
+        """Запуск инициализации."""
         try:
-            self.logger.info(tr("Инициализация: завершение процессов и остановка службы"))
-            self.terminate_processes(self.processes_to_terminate)
-            self.stop_service(self.service_to_stop)
+            self.logger.info(tr("Начало инициализации"))
+            self._terminate_processes()
+            ProcessUtils.stop_service(self.service_to_stop)
             self.logger.info(tr("Инициализация завершена"))
             self.initialization_complete.emit()
         except Exception as e:
-            error_msg = tr("Ошибка инициализации: {e}").format(e=e)
-            self.logger.error(error_msg, exc_info=True)
-            self.error_signal.emit(error_msg)
+            self.error_signal.emit(tr("Ошибка инициализации: {error}").format(error=str(e)))
+            self.logger.exception(tr("Ошибка в InitializerThread"))
 
-    def terminate_processes(self, process_names: List[str]):
-        """Общий метод для завершения нескольких процессов."""
-        current_process_id = win32api.GetCurrentProcessId()
+    def _terminate_processes(self) -> None:
+        """Завершение указанных процессов."""
+        current_pid = os.getpid()
         for proc in psutil.process_iter(['pid', 'name']):
-            pid = proc.info['pid']
-            exe_name = proc.info['name']
-            if exe_name is None:
-                continue
-            exe_base_name = os.path.basename(exe_name).lower()
-            if exe_base_name in [name.lower() for name in process_names] and pid != current_process_id:
-                try:
-                    proc.terminate()
-                    proc.wait(timeout=5)
-                    self.logger.info(tr("Процесс {exe_base_name} (PID: {pid}) успешно завершён").format(
-                        exe_base_name=exe_base_name, pid=pid
-                    ))
-                except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.TimeoutExpired) as e:
-                    self.logger.warning(tr("Не удалось завершить PID {pid}: {e}").format(pid=pid, e=e))
-
-    def stop_service(self, service_name: str):
-        """
-        Останавливает службу, используя ProcessUtils.
-        """
-        ProcessUtils.stop_service(service_name)
+            if proc.info['name'] and proc.info['pid'] != current_pid:
+                proc_name = proc.info['name'].lower()
+                if proc_name in self.processes_to_terminate:
+                    try:
+                        proc.terminate()
+                        proc.wait(timeout=5)
+                        self.logger.info(tr("Процесс {name} (PID: {pid}) завершён").format(
+                            name=proc_name, pid=proc.info['pid']
+                        ))
+                    except psutil.TimeoutExpired:
+                        proc.kill()
+                        self.logger.warning(tr("Процесс {name} убит").format(name=proc_name))
+                    except (psutil.NoSuchProcess, psutil.AccessDenied) as e:
+                        self.logger.warning(tr("Ошибка завершения {name}: {error}").format(
+                            name=proc_name, error=e
+                        ))
