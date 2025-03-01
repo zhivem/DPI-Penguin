@@ -9,8 +9,8 @@
 ](https://github.com/zhivem/LoaderPenguin)
 
 ## Интерфейс
-![image](https://github.com/user-attachments/assets/13616792-abaa-4e93-a669-e533e8a35ee4)
-![image](https://github.com/user-attachments/assets/97ad87ca-435d-423d-9a72-2f65d8edd99b)
+![image](https://github.com/user-attachments/assets/5aa82759-acfe-4edb-b80e-7f562ddb1891)
+![image](https://github.com/user-attachments/assets/4ef7ccc3-f425-4c57-add2-23ae9ccdf8bd)
 
 ## Особенности
 
