@@ -19,26 +19,19 @@ ICON_FOLDER = "resources/icon"
 
 
 def apply_theme(
-    app_instance: QApplication,
+    window: QWidget,  
     theme_name: str,
     settings: QSettings,
     base_folder: str
 ) -> None:
-    """
-    Применяет выбранную тему к приложению.
-
-    :param app_instance: Экземпляр QApplication.
-    :param theme_name: Название темы ('dark' или 'light').
-    :param settings: Экземпляр QSettings для сохранения выбранной темы.
-    :param base_folder: Базовая папка приложения.
-    """
+    app_instance = QApplication.instance()  
     if theme_name == DARK_THEME_NAME:
         setTheme(Theme.DARK)
-        pywinstyles.apply_style(app_instance, DARK_THEME_NAME)  # Темная шапка 
+        pywinstyles.apply_style(window, DARK_THEME_NAME)  
         stylesheet = DARK_STYLESHEET
     else:
         setTheme(Theme.LIGHT)
-        pywinstyles.apply_style(app_instance, DARK_THEME_NAME)  # Темная шапка, если нужна светлая поменяйте на LIGHT_THEME_NAME
+        pywinstyles.apply_style(window, LIGHT_THEME_NAME) 
         stylesheet = LIGHT_STYLESHEET
 
     apply_stylesheet(app_instance, stylesheet, base_folder)
@@ -49,6 +42,7 @@ def apply_stylesheet(
     stylesheet_name: str,
     base_folder: str
 ) -> None:
+    
     """
     Применяет заданный файл стилей к приложению.
 
@@ -92,27 +86,16 @@ def update_theme_button_text(
         theme_button.setText(tr("Переключиться на светлую тему"))
         theme_button.setToolTip(tr("Нажмите, чтобы переключиться на светлую тему"))
 
-    logging.debug(tr("Текст кнопки переключения темы обновлён на '{text}'").format(text=theme_button.text()))
-
-
 def toggle_theme(
-    app_instance: QApplication,
+    window: QWidget,
     settings: QSettings,
     base_folder: str
 ) -> None:
-    """
-    Переключает тему приложения между светлой и тёмной.
-
-    :param app_instance: Экземпляр QApplication.
-    :param settings: Экземпляр QSettings для сохранения выбранной темы.
-    :param base_folder: Базовая папка приложения.
-    """
     current_theme = settings.value("theme", LIGHT_THEME_NAME)
     new_theme = DARK_THEME_NAME if current_theme == LIGHT_THEME_NAME else LIGHT_THEME_NAME
-    apply_theme(app_instance, new_theme, settings, base_folder)
-    update_theme_button_text(app_instance, settings)
+    apply_theme(window, new_theme, settings, base_folder)
+    update_theme_button_text(window, settings)
     logging.info(tr("Тема переключена с '{current_theme}' на '{new_theme}'.").format(current_theme=current_theme, new_theme=new_theme))
-
 
 def get_stylesheet_path(base_folder: str, stylesheet_name: str) -> str:
     """

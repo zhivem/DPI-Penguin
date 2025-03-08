@@ -25,6 +25,7 @@ class TranslationManager:
             "ru": "Русский",
             "en": "English",
         }
+        self.logger.info(f"Инициализация TranslationManager с папкой переводов: {self.translations_folder}")
         self._load_translations()
 
     def _load_translations(self) -> None:
@@ -33,6 +34,7 @@ class TranslationManager:
 
         Ожидается en.json, ru.json не требуется, так как русский — базовый.
         """
+        self.logger.info("Загрузка переводов для доступных языков")
         for lang_code in self.available_languages:
             if lang_code == "ru":  
                 self.translations[lang_code] = {}
@@ -41,13 +43,13 @@ class TranslationManager:
             if file_path.exists():
                 try:
                     self.translations[lang_code] = json.loads(file_path.read_text(encoding="utf-8"))
-                    self.logger.debug(f"Загружен перевод: {file_path}")
+                    self.logger.info(f"Успешно загружен перевод для '{lang_code}' из {file_path}")
                 except json.JSONDecodeError as e:
-                    self.logger.error(f"Ошибка JSON в {file_path}: {e}")
+                    self.logger.exception(f"Ошибка декодирования JSON в {file_path}: {e}")
                 except Exception as e:
-                    self.logger.error(f"Ошибка загрузки {file_path}: {e}")
+                    self.logger.exception(f"Неизвестная ошибка при загрузке {file_path}: {e}")
             else:
-                self.logger.debug(f"Файл перевода отсутствует: {file_path}")
+                self.logger.warning(f"Файл перевода для '{lang_code}' отсутствует: {file_path}")
                 self.translations[lang_code] = {}
 
     def set_language(self, lang_code: str) -> None:
@@ -61,11 +63,12 @@ class TranslationManager:
             ValueError: Если язык не поддерживается
         """
         if lang_code not in self.available_languages:
-            self.logger.warning(f"Неподдерживаемый язык: {lang_code}")
+            self.logger.warning(f"Попытка установить неподдерживаемый язык: {lang_code}")
             raise ValueError(f"Язык '{lang_code}' не поддерживается")
         
+        old_language = self.current_language
         self.current_language = lang_code
-        self.logger.info(f"Установлен язык: {self.language_names.get(lang_code, lang_code)}")
+        self.logger.info(f"Язык изменён с '{old_language}' на '{self.language_names.get(lang_code, lang_code)}'")
 
     def translate(self, text: str) -> str:
         """
@@ -77,20 +80,20 @@ class TranslationManager:
         Returns:
             str: Переведённый текст или исходный русский, если перевода нет
         """
-        if not text or self.current_language == "ru":  # Русский — базовый
+        if not text:
+            return text
+        if self.current_language == "ru":
             return text
 
-        # Прямой перевод на текущий язык (например, en)
         if translated := self.translations.get(self.current_language, {}).get(text):
             return translated
 
-        # Fallback на английский, если текущий язык не ru и перевод не найден
         if self.current_language != "en":
             if translated := self.translations.get(self.fallback_language, {}).get(text):
-                self.logger.debug(f"Fallback перевод с 'en' для '{text}'")
+                self.logger.info(f"Fallback перевод с 'en' для '{text}': '{translated}'")
                 return translated
 
-        self.logger.debug(f"Перевод для '{text}' не найден на '{self.current_language}'")
+        self.logger.warning(f"Перевод для '{text}' не найден на '{self.current_language}' и 'en', возвращается исходный текст")
         return text
 
     @staticmethod
@@ -105,6 +108,8 @@ class TranslationManager:
         Returns:
             str: INI-файл с переведёнными секциями
         """
+        logger = logging.getLogger(__name__)
+        logger.info("Начало перевода секций INI-файла")
         sections = [
             "[Обход блокировок для РКН]",
             "[Универсальный обход]",
@@ -115,7 +120,8 @@ class TranslationManager:
             translated = translation_manager.translate(section)
             if translated != section:
                 ini_content = ini_content.replace(section, translated)
-        
+
+        logger.info("Перевод секций INI-файла завершён")
         return ini_content
 
     def get_available_languages(self) -> Dict[str, str]:

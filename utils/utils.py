@@ -11,7 +11,7 @@ from PyQt6.QtCore import QSettings
 from PyQt6.QtWidgets import QMessageBox
 from utils.translation_utils import TranslationManager
 
-# Создаем логгер
+# Глобальный логгер
 logger = logging.getLogger(__name__)
 
 # Константы и глобальные настройки
@@ -27,9 +27,9 @@ BLACKLIST_FOLDER = os.path.join(BASE_FOLDER, "black")
 ICON_FOLDER = os.path.join(BASE_FOLDER, "resources", "icon")
 
 BLACKLIST_FILES: List[str] = [
-    os.path.join(BLACKLIST_FOLDER, "russia-blacklist.txt"), # 0
-    os.path.join(BLACKLIST_FOLDER, "disk-youtube-blacklist.txt"), # 1
-    os.path.join(BLACKLIST_FOLDER, "universal.txt") # 2
+    os.path.join(BLACKLIST_FOLDER, "russia-blacklist.txt"),  # 0
+    os.path.join(BLACKLIST_FOLDER, "disk-youtube-blacklist.txt"),  # 1
+    os.path.join(BLACKLIST_FOLDER, "universal.txt")  # 2
 ]
 
 # Инициализация менеджера переводов и настроек
@@ -44,7 +44,7 @@ def tr(text: str) -> str:
     """
     return translation_manager.translate(text)
 
-def set_language(lang_code: str):
+def set_language(lang_code: str) -> None:
     """
     Устанавливает язык приложения.
     """
@@ -72,14 +72,15 @@ def open_path(path: str) -> Optional[str]:
         message = tr("Данная функция поддерживается только на Windows.")
         logger.warning(message)
         return message
+    
     try:
-        os.startfile(path) 
+        os.startfile(path)
         return None
     except Exception as e:
         error_message = tr("Не удалось открыть путь: {error}").format(error=e)
         logger.error(error_message)
         return error_message
-    
+
 def is_autostart_enabled() -> bool:
     """
     Проверяет, включен ли автозапуск приложения.
@@ -98,7 +99,6 @@ def is_autostart_enabled() -> bool:
         logger.error(tr("Ошибка при проверке автозапуска: {error}").format(error=e))
         return False
 
-
 def enable_autostart() -> None:
     """
     Включает автозапуск приложения.
@@ -115,7 +115,6 @@ def enable_autostart() -> None:
     except Exception as e:
         logger.error(tr("Ошибка при установке автозапуска: {error}").format(error=e))
         raise
-
 
 def disable_autostart() -> None:
     """
@@ -135,17 +134,16 @@ def disable_autostart() -> None:
         logger.error(tr("Ошибка при отключении автозапуска: {error}").format(error=e))
         raise
 
-
 def get_executable_path() -> str:
     """
     Возвращает путь к исполняемому файлу приложения.
     """
     if getattr(sys, 'frozen', False):
-        return sys.executable
+        path = sys.executable
     else:
         script_path = os.path.abspath(sys.argv[0])
-        return f'"{sys.executable}" "{script_path}"'
-
+        path = f'"{sys.executable}" "{script_path}"'
+    return path
 
 def load_script_options(config_path: str) -> Tuple[Optional[Dict[str, Tuple[str, List[str]]]], Optional[str]]:
     """
@@ -157,9 +155,10 @@ def load_script_options(config_path: str) -> Tuple[Optional[Dict[str, Tuple[str,
     try:
         config.read(config_path, encoding='utf-8')
     except configparser.Error as e:
-        return None, tr("Ошибка при чтении config.ini: {error}").format(error=e)
+        error_msg = tr("Ошибка при чтении config.ini: {error}").format(error=e)
+        logger.error(error_msg)
+        return None, error_msg
 
-    # Проверка на дублирующиеся секции
     section_counts = {}
     try:
         with open(config_path, 'r', encoding='utf-8') as f:
@@ -169,13 +168,16 @@ def load_script_options(config_path: str) -> Tuple[Optional[Dict[str, Tuple[str,
                     section = line[1:-1].strip()
                     section_counts[section] = section_counts.get(section, 0) + 1
     except Exception as e:
-        return None, tr("Ошибка при обработке config.ini: {error}").format(error=e)
+        error_msg = tr("Ошибка при обработке config.ini: {error}").format(error=e)
+        logger.error(error_msg)
+        return None, error_msg
 
     duplicates = [name for name, count in section_counts.items() if count > 1]
     if duplicates:
         error_message = tr("Ошибка: Названия разделов конфигурации не должны повторяться: {duplicates}").format(
             duplicates=", ".join(duplicates)
         )
+        logger.error(error_message)
         return None, error_message
 
     script_options = {}
@@ -187,7 +189,6 @@ def load_script_options(config_path: str) -> Tuple[Optional[Dict[str, Tuple[str,
         args = config.get(section, 'args', fallback='')
 
         args = ' '.join(args.splitlines())
-
         args_list = [arg.strip() for arg in args.split(';') if arg.strip()] if args else []
 
         args_list = [
@@ -208,14 +209,12 @@ def load_script_options(config_path: str) -> Tuple[Optional[Dict[str, Tuple[str,
 
         script_options[section] = (executable, args_list)
 
-    logger.info(tr("SCRIPT_OPTIONS загружены: {options}").format(options=script_options))
+    logger.info(tr("SCRIPT_OPTIONS успешно загружены"))
     return script_options, None
-
 
 def create_service() -> str:
     """
     Создает и настраивает службу Windows.
-    Возвращает сообщение об успехе или ошибке.
     """
     try:
         binary_path = os.path.join(ZAPRET_FOLDER, "winws.exe")
@@ -255,12 +254,7 @@ def create_service() -> str:
             f'--dpi-desync-fake-tls={ts}"'
         )
 
-        cmd_create = [
-            'sc', 'create', 'Penguin',
-            f'binPath= {bin_path_with_args}',
-        ]
-
-        logger.debug(tr("Команда для создания службы: {command}").format(command=' '.join(cmd_create)))
+        cmd_create = ['sc', 'create', 'Penguin', f'binPath= {bin_path_with_args}']
 
         popen_params = {
             'args': cmd_create,
@@ -284,7 +278,6 @@ def create_service() -> str:
             'sc', 'description', 'Penguin',
             'Passive Deep Packet Inspection blocker and Active DPI circumvention utility'
         ]
-
         logger.debug(tr("Команда для добавления описания службы: {command}").format(command=' '.join(cmd_description)))
 
         popen_params_description = {
@@ -311,17 +304,12 @@ def create_service() -> str:
         logger.error(tr("Не удалось создать службу из-за неизвестной ошибки: {error}").format(error=e))
         return tr("Не удалось создать службу из-за неизвестной ошибки")
 
-
 def delete_service() -> str:
     """
     Удаляет службу Windows.
-    Возвращает сообщение об успехе или ошибке.
     """
     try:
         cmd_delete = ['sc', 'delete', 'Penguin']
-
-        logger.debug(tr("Команда для удаления службы: {command}").format(command=' '.join(cmd_delete)))
-
         popen_params = {
             'args': cmd_delete,
             'check': True,
@@ -349,7 +337,10 @@ def delete_service() -> str:
         logger.error(tr("Неизвестная ошибка при удалении службы: {error}").format(error=e))
         return tr("Не удалось удалить службу из-за неизвестной ошибки")
 
-def start_fix_process(parent):
+def start_fix_process(parent) -> None:
+    """
+    Запускает процесс исправления через fix.bat.
+    """
     if os.path.exists(FIX_BAT_PATH):
         try:
             startupinfo = subprocess.STARTUPINFO()
@@ -358,10 +349,14 @@ def start_fix_process(parent):
                 [FIX_BAT_PATH],
                 startupinfo=startupinfo
             )
+            logger.info("Процесс исправления завершён успешно")
             QMessageBox.information(parent, "Исправление", "Процесс исправления завершен успешно")
         except subprocess.CalledProcessError:
+            logger.warning("Частичное исправление завершено с ошибкой")
             QMessageBox.warning(parent, "Частичное исправление", "Частичное исправление завершено")
-        except Exception:
+        except Exception as e:
+            logger.error(f"Ошибка при выполнении процесса исправления: {e}")
             QMessageBox.warning(parent, "Служба и процесс", "Успешно завершено, запустите обход блокировки снова")
     else:
+        logger.error(f"Файл исправления не найден: {FIX_BAT_PATH}")
         QMessageBox.warning(parent, "Ошибка", f"Файл {FIX_BAT_PATH} не найден")

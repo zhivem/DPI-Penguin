@@ -1,4 +1,5 @@
 import re
+import logging
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QMessageBox, QCheckBox, QGroupBox, QFileDialog
 from PyQt6.QtGui import QGuiApplication
 from qfluentwidgets import PushButton, TextEdit, LineEdit, ComboBox
@@ -7,6 +8,8 @@ from utils.utils import tr
 class ConfigConverterDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.INFO)
         self.initUI()
 
     def initUI(self):
@@ -69,6 +72,7 @@ class ConfigConverterDialog(QDialog):
         config_name = self.config_name_input.text().strip()
 
         if not config_name:
+            self.logger.warning("Попытка конвертации без имени конфигурации")
             QMessageBox.warning(self, tr("Ошибка"), tr("Название конфигурации обязательно!"))
             return
 
@@ -76,30 +80,43 @@ class ConfigConverterDialog(QDialog):
         add_script_options = self.script_options_checkbox.isChecked()
         command = self.input_text.toPlainText()
 
+        self.logger.info(f"Конвертация команды для конфигурации '{config_name}' с методом '{method}'")
         converted_config = self.convert_command_to_config(command, config_name, method, add_script_options)
-
         self.output_text.setPlainText(converted_config)
+        # Убрано self.logger.debug("Конвертация успешно завершена") - избыточная деталь, успех виден по отсутствию ошибок
 
     def copy_to_clipboard(self):
         clipboard = QGuiApplication.clipboard()
-        clipboard.setText(self.output_text.toPlainText())
-        QMessageBox.information(self, tr("Скопировано"), tr("Результат скопирован в буфер обмена!"))
+        text = self.output_text.toPlainText()
+        if text:
+            clipboard.setText(text)
+            self.logger.info("Результат конвертации скопирован в буфер обмена")
+            QMessageBox.information(self, tr("Скопировано"), tr("Результат скопирован в буфер обмена!"))
+        else:
+            self.logger.warning("Попытка копирования пустого результата")
+            QMessageBox.warning(self, tr("Ошибка"), tr("Нет данных для копирования!"))
 
     def save_as_file(self):
         config_text = self.output_text.toPlainText()
 
         if not config_text:
+            self.logger.warning("Попытка сохранить пустой файл")
             QMessageBox.warning(self, tr("Ошибка"), tr("Нет данных для сохранения!"))
             return
 
         file_name, _ = QFileDialog.getSaveFileName(self, tr("Сохранить файл"), "", tr("INI Files (*.ini)"))
-
         if file_name:
-            with open(file_name, 'w', encoding='utf-8') as file:
-                file.write(config_text)
-            QMessageBox.information(self, tr("Сохранено"), tr("Файл успешно сохранен!"))
+            try:
+                with open(file_name, 'w', encoding='utf-8') as file:
+                    file.write(config_text)
+                self.logger.info(f"Файл успешно сохранен: {file_name}")
+                QMessageBox.information(self, tr("Сохранено"), tr("Файл успешно сохранен!"))
+            except Exception as e:
+                self.logger.error(f"Ошибка при сохранении файла {file_name}: {str(e)}")
+                QMessageBox.warning(self, tr("Ошибка"), tr("Не удалось сохранить файл!"))
 
     def convert_command_to_config(self, command: str, config_name: str, method: str, add_script_options: bool) -> str:
+        # Убрано логирование внутри функции, так как процесс преобразования - внутренняя деталь
         command = re.sub(r'start.*?winws\.exe', '', command, flags=re.IGNORECASE).strip()
         command = command.replace('"', '').replace('^', '').strip()
 

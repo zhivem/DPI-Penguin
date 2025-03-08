@@ -19,6 +19,7 @@ from PyQt6.QtWidgets import (
     QTabWidget,
     QWidget,
     QGridLayout,
+    QApplication,
 )
 from qfluentwidgets import ComboBox as QFComboBox, PushButton, TextEdit
 
@@ -45,7 +46,7 @@ from utils.utils import (
 import utils.theme_utils
 from gui.updater_manager import SettingsDialog
 from gui.proxy_window import ProxySettingsDialog
-from gui.converter import ConfigConverterDialog  
+from gui.converter import ConfigConverterDialog
 from utils.process_utils import WorkerThread
 from utils.service_utils import stop_service
 
@@ -61,6 +62,8 @@ DELETE_SRV_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "delete_service
 FIX_PROCESS = os.path.join(BASE_FOLDER, "resources", "icon", "fix-process.png")
 PROXY = os.path.join(BASE_FOLDER, "resources", "icon", "proxy.png")
 
+logger = logging.getLogger(__name__)
+
 class UpdateBlacklistsThread(QtCore.QThread):
     def __init__(self, parent=None, silent=False):
         super().__init__(parent)
@@ -70,7 +73,6 @@ class UpdateBlacklistsThread(QtCore.QThread):
     def run(self):
         update_checker = UpdateChecker()
         self.success = update_checker.update_blacklists()
-
 
 class CheckUpdatesThread(QtCore.QThread):
     updates_available_signal = QtCore.pyqtSignal(bool)
@@ -86,7 +88,6 @@ class CheckUpdatesThread(QtCore.QThread):
         ])
         self.updates_available_signal.emit(updates_available)
 
-
 class DPIPenguin(QtWidgets.QMainWindow):
     """
     Главное окно приложения DPI Penguin.
@@ -94,12 +95,14 @@ class DPIPenguin(QtWidgets.QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger = logger
 
+        # Инициализация базовых настроек
         self.minimize_to_tray = settings.value("minimize_to_tray", True, type=bool)
         self.autostart_enabled = is_autostart_enabled()
         self.autorun_with_last_config = settings.value("autorun_with_last_config", False, type=bool)
 
+        # Инициализация параметров конфигурации
         if self.autorun_with_last_config:
             last_config_path = settings.value(
                 "last_config_path",
@@ -115,9 +118,11 @@ class DPIPenguin(QtWidgets.QMainWindow):
         self.main_worker_thread: Optional[WorkerThread] = None
         self.winws_worker_thread: Optional[WorkerThread] = None
 
+        # Инициализация интерфейса и трей-иконки
         self.init_ui()
         self.init_tray_icon()
 
+        # Обработка ошибок конфигурации
         if self.config_error:
             self.console_output.append(self.config_error)
             self.logger.error(self.config_error)
@@ -126,11 +131,13 @@ class DPIPenguin(QtWidgets.QMainWindow):
             self.stop_close_button.setEnabled(False)
             self.update_config_button.setEnabled(True)
 
+        # Запуск дополнительных задач
         if settings.value("update_blacklists_on_start", False, type=bool):
             self.start_update_blacklists_thread(silent=True)
 
         self.start_check_updates_thread()
 
+        # Автозапуск или показ окна
         if self.autorun_with_last_config and not self.config_error:
             QTimer.singleShot(0, self.run_autorun)
         else:
@@ -211,8 +218,6 @@ class DPIPenguin(QtWidgets.QMainWindow):
     def set_window_icon(self, icon_path: str) -> None:
         """
         Устанавливает иконку окна приложения.
-
-        :param icon_path: Путь к иконке.
         """
         if not os.path.exists(icon_path):
             self.logger.error(f"{tr('Файл иконки приложения не найден')}: {icon_path}")
@@ -241,9 +246,7 @@ class DPIPenguin(QtWidgets.QMainWindow):
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         """
-        Обработчик события закрытия окна. Если включено, сворачивает приложение в трей.
-
-        :param event: Событие закрытия.
+        Обработчик события закрытия окна.
         """
         if self.minimize_to_tray:
             event.ignore()
@@ -271,8 +274,6 @@ class DPIPenguin(QtWidgets.QMainWindow):
     def on_tray_icon_activated(self, reason: QSystemTrayIcon.ActivationReason) -> None:
         """
         Обработчик активации иконки в трее.
-
-        :param reason: Причина активации.
         """
         if reason == QSystemTrayIcon.ActivationReason.Trigger:
             if self.isHidden():
@@ -291,8 +292,6 @@ class DPIPenguin(QtWidgets.QMainWindow):
     def create_tabs(self) -> QTabWidget:
         """
         Создаёт вкладки в главном окне.
-
-        :return: Экземпляр QTabWidget с добавленными вкладками.
         """
         tab_widget = QTabWidget(self)
         tab_widget.addTab(self.create_process_tab(), tr("Основное"))
@@ -303,8 +302,6 @@ class DPIPenguin(QtWidgets.QMainWindow):
     def create_process_tab(self) -> QWidget:
         """
         Создаёт вкладку "Основное" с элементами управления процессами.
-
-        :return: Экземпляр QWidget для вкладки "Основное".
         """
         process_tab = QWidget()
         process_layout = QVBoxLayout(process_tab)
@@ -325,21 +322,19 @@ class DPIPenguin(QtWidgets.QMainWindow):
         self.update_config_button.setFixedWidth(40)
         script_layout.addWidget(self.update_config_button)
 
-        # Кнопка "Конвертер"
         self.converter_button = PushButton("📝", self)
         self.converter_button.setToolTip(tr("Открыть окно конвертера"))
-        self.converter_button.clicked.connect(self.open_converter) 
+        self.converter_button.clicked.connect(self.open_converter)
         self.converter_button.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
         self.converter_button.setFixedWidth(40)
         script_layout.addWidget(self.converter_button)
 
-        script_layout.setStretch(0, 1)  
-        script_layout.setStretch(1, 0)  
+        script_layout.setStretch(0, 1)
+        script_layout.setStretch(1, 0)
         script_layout.setStretch(2, 0)
 
         process_layout.addLayout(script_layout)
 
-        # Кнопки управления процессами
         buttons_layout = QHBoxLayout()
         self.run_button = self.create_button(tr("Запустить"), self.run_exe, buttons_layout)
         self.stop_close_button = self.create_button(
@@ -350,7 +345,6 @@ class DPIPenguin(QtWidgets.QMainWindow):
         )
         process_layout.addLayout(buttons_layout)
 
-        # Консоль вывода
         self.console_output = TextEdit(self)
         self.console_output.setReadOnly(True)
         process_layout.addWidget(self.console_output)
@@ -360,9 +354,9 @@ class DPIPenguin(QtWidgets.QMainWindow):
         self.open_proxy_settings_button = self.create_button(
             text=tr("Прокси и DNS"),
             func=self.open_proxy_settings_dialog,
-            layout=log_and_config_layout, 
+            layout=log_and_config_layout,
             icon_path=PROXY,
-            icon_size=(16, 16), 
+            icon_size=(16, 16),
         )
 
         self.open_config_button = self.create_button(
@@ -375,7 +369,6 @@ class DPIPenguin(QtWidgets.QMainWindow):
 
         process_layout.addLayout(log_and_config_layout)
 
-        # Кнопка переключения темы
         self.theme_toggle_button = PushButton()
         utils.theme_utils.update_theme_button_text(self, settings)
         self.set_button_icon(self.theme_toggle_button, THEME_ICON_PATH, (16, 16))
@@ -383,7 +376,7 @@ class DPIPenguin(QtWidgets.QMainWindow):
         process_layout.addWidget(self.theme_toggle_button)
 
         return process_tab
-    
+
     def open_converter(self):
         self.converter_window = ConfigConverterDialog(self)
         self.converter_window.show()
@@ -391,8 +384,6 @@ class DPIPenguin(QtWidgets.QMainWindow):
     def handle_open_path(self, path: str) -> None:
         """
         Открывает заданную папку или файл в проводнике.
-
-        :param path: Путь к папке или файлу.
         """
         error = open_path(path)
         if error:
@@ -401,10 +392,6 @@ class DPIPenguin(QtWidgets.QMainWindow):
     def set_button_icon(self, button: PushButton, icon_path: str, icon_size: tuple) -> None:
         """
         Устанавливает иконку на кнопку.
-
-        :param button: Экземпляр PushButton.
-        :param icon_path: Путь к иконке.
-        :param icon_size: Размер иконки.
         """
         if not os.path.exists(icon_path):
             self.logger.error(f"{tr('Файл иконки приложения не найден')}: {icon_path}")
@@ -422,13 +409,10 @@ class DPIPenguin(QtWidgets.QMainWindow):
     def create_settings_tab(self) -> QWidget:
         """
         Создаёт вкладку "Настройки" с различными настройками приложения.
-
-        :return: Экземпляр QWidget для вкладки "Настройки".
         """
         settings_tab = QWidget()
         settings_layout = QVBoxLayout(settings_tab)
 
-        # Группа выбора языка
         self.language_group = QGroupBox("Язык / Language")
         language_layout = QVBoxLayout()
         self.language_group.setLayout(language_layout)
@@ -447,7 +431,6 @@ class DPIPenguin(QtWidgets.QMainWindow):
         language_layout.addWidget(self.language_combo)
         settings_layout.addWidget(self.language_group)
 
-        # Группа автозапуска
         self.autostart_group = QGroupBox(tr("Автозапуск"))
         autostart_layout = QVBoxLayout()
         self.autostart_group.setLayout(autostart_layout)
@@ -472,7 +455,6 @@ class DPIPenguin(QtWidgets.QMainWindow):
         self.update_blacklists_on_start_checkbox.toggled.connect(self.toggle_update_blacklists_on_start)
         autostart_layout.addWidget(self.update_blacklists_on_start_checkbox)
 
-        # Настройка шрифта для чекбоксов
         font = self.tray_checkbox.font()
         font.setPointSize(9)
         self.tray_checkbox.setFont(font)
@@ -482,7 +464,6 @@ class DPIPenguin(QtWidgets.QMainWindow):
 
         settings_layout.addWidget(self.autostart_group)
 
-        # Группа управления службами
         self.services_group = QGroupBox(tr("Службы"))
         services_layout = QVBoxLayout()
         self.services_group.setLayout(services_layout)
@@ -508,7 +489,6 @@ class DPIPenguin(QtWidgets.QMainWindow):
 
         settings_layout.addWidget(self.services_group)
 
-        # Группа обновлений
         self.updates_group = QGroupBox(tr("Обновления"))
         updates_layout = QVBoxLayout()
         self.updates_group.setLayout(updates_layout)
@@ -534,14 +514,13 @@ class DPIPenguin(QtWidgets.QMainWindow):
 
         settings_layout.addWidget(self.updates_group)
 
-        # Группа исправления
         self.fix_group = QGroupBox(tr("Исправление"))
         fix_layout = QVBoxLayout()
         self.fix_group.setLayout(fix_layout)
 
         self.fix_button = self.create_button(
             text=tr("Исправить работу с процессом"),
-            func=lambda: start_fix_process(self), 
+            func=lambda: start_fix_process(self),
             layout=fix_layout,
             icon_path=FIX_PROCESS,
             icon_size=(16, 16)
@@ -550,13 +529,13 @@ class DPIPenguin(QtWidgets.QMainWindow):
         fix_layout.addWidget(self.fix_button)
 
         self.fix_info_label = QLabel(tr("Исправляет работу с запуском процесса обхода и службы WinDivert. Нажимать если кнопка «Запустить» не работает!"))
-        self.fix_info_label.setWordWrap(True) 
+        self.fix_info_label.setWordWrap(True)
         fix_layout.addWidget(self.fix_info_label)
 
         settings_layout.addWidget(self.fix_group)
         settings_layout.addStretch(1)
 
-        settings_tab.setLayout(settings_layout) 
+        settings_tab.setLayout(settings_layout)
 
         return settings_tab
 
@@ -567,12 +546,11 @@ class DPIPenguin(QtWidgets.QMainWindow):
         lang_code = self.language_combo.currentData()
         set_language(lang_code)
         settings.setValue("language", lang_code)
-
         self.notify_restart_required()
 
     def notify_restart_required(self):
         """
-        Отображает сообщение пользователю о необходимости перезапуска приложения.
+        Отображает сообщение о необходимости перезапуска.
         """
         msg_box = QMessageBox(self)
         msg_box.setIcon(QMessageBox.Icon.Information)
@@ -597,9 +575,7 @@ class DPIPenguin(QtWidgets.QMainWindow):
 
     def create_info_tab(self) -> QWidget:
         """
-        Создаёт вкладку "О программе" с информацией о приложении и зависимостях.
-
-        :return: Экземпляр QWidget для вкладки "О программе".
+        Создаёт вкладку "О программе".
         """
         info_tab = QWidget()
         info_layout = QVBoxLayout(info_tab)
@@ -615,7 +591,7 @@ class DPIPenguin(QtWidgets.QMainWindow):
 
     def update_info_tab_texts(self) -> None:
         """
-        Обновляет тексты в вкладке "О программе" в соответствии с выбранным языком.
+        Обновляет тексты в вкладке "О программе".
         """
         self.details_group.setTitle(tr("Подробности"))
         self.acknowledgements_group.setTitle(tr("Зависимости"))
@@ -623,8 +599,6 @@ class DPIPenguin(QtWidgets.QMainWindow):
     def create_details_group(self) -> QGroupBox:
         """
         Создаёт группу с подробностями о приложении.
-
-        :return: Экземпляр QGroupBox с подробностями.
         """
         group = QGroupBox(tr("Подробности"))
         layout = QtWidgets.QGridLayout(group)
@@ -652,12 +626,10 @@ class DPIPenguin(QtWidgets.QMainWindow):
             layout.addWidget(widget, row, 1)
 
         return group
-    
+
     def create_acknowledgements_group(self) -> QGroupBox:
         """
-        Создаёт группу с информацией о зависимостях приложения.
-
-        :return: Экземпляр QGroupBox с зависимостями.
+        Создаёт группу с информацией о зависимостях.
         """
         group = QGroupBox(tr("Зависимости"))
         layout = QVBoxLayout(group)
@@ -698,13 +670,13 @@ class DPIPenguin(QtWidgets.QMainWindow):
             layout=layout,
             icon_path=LOG_ICON_PATH,
             icon_size=(16, 16),
-        )    
+        )
 
         return group
 
     def create_acknowledgement_section(self, title: str, description: str, version: str, developer: str, links: List[str]) -> QWidget:
         """
-        Создаёт секцию с информацией о конкретной зависимости.
+        Создаёт секцию с информацией о зависимости.
         """
         section = QWidget()
         layout = QGridLayout(section)
@@ -723,9 +695,7 @@ class DPIPenguin(QtWidgets.QMainWindow):
 
     def toggle_tray_behavior(self, checked: bool) -> None:
         """
-        Переключает поведение приложения при закрытии (сворачивание в трей).
-
-        :param checked: Состояние чекбокса.
+        Переключает поведение приложения при закрытии.
         """
         self.minimize_to_tray = checked
         settings.setValue("minimize_to_tray", self.minimize_to_tray)
@@ -735,9 +705,7 @@ class DPIPenguin(QtWidgets.QMainWindow):
 
     def toggle_autostart(self, checked: bool) -> None:
         """
-        Включает или отключает автозапуск приложения при старте системы.
-
-        :param checked: Состояние чекбокса.
+        Включает или отключает автозапуск при старте системы.
         """
         if checked:
             enable_autostart()
@@ -748,9 +716,7 @@ class DPIPenguin(QtWidgets.QMainWindow):
 
     def toggle_autorun_with_last_config(self, checked: bool) -> None:
         """
-        Включает или отключает автоматический запуск с последней конфигурацией.
-
-        :param checked: Состояние чекбокса.
+        Включает или отключает автозапуск с последней конфигурацией.
         """
         self.autorun_with_last_config = checked
         settings.setValue("autorun_with_last_config", self.autorun_with_last_config)
@@ -760,9 +726,7 @@ class DPIPenguin(QtWidgets.QMainWindow):
 
     def toggle_update_blacklists_on_start(self, checked: bool) -> None:
         """
-        Включает или отключает автоматическое обновление черных списков при запуске приложения.
-
-        :param checked: Состояние чекбокса.
+        Включает или отключает обновление черных списков при запуске.
         """
         settings.setValue("update_blacklists_on_start", checked)
         self.logger.info(f"{tr('Обновление черных списков при запуске программы')} {'включено' if checked else 'отключено'}")
@@ -797,9 +761,8 @@ class DPIPenguin(QtWidgets.QMainWindow):
     def run_exe(self, auto_run: bool = False) -> None:
         """
         Запускает выбранный скрипт.
-
-        :param auto_run: Если True, запускает скрипт в автоматическом режиме.
         """
+        self.logger.debug(f"Запуск скрипта, auto_run={auto_run}")
         if self.config_error:
             self.console_output.append(tr("Не удалось загрузить конфигурацию из-за ошибок"))
             self.logger.error(tr("Не удалось загрузить конфигурацию из-за ошибок"))
@@ -865,12 +828,6 @@ class DPIPenguin(QtWidgets.QMainWindow):
     ) -> None:
         """
         Запускает основной процесс через WorkerThread.
-
-        :param command: Команда для запуска.
-        :param process_name: Имя процесса.
-        :param disable_run: Если True, отключает кнопку запуска.
-        :param clear_console_text: Текст для очистки консоли перед запуском.
-        :param capture_output: Если True, захватывает вывод процесса.
         """
         if clear_console_text:
             self.clear_console(clear_console_text)
@@ -904,9 +861,7 @@ class DPIPenguin(QtWidgets.QMainWindow):
 
     def update_output(self, text: str) -> None:
         """
-        Обновляет консоль вывода, фильтруя нежелательные сообщения.
-
-        :param text: Текст для обновления консоли.
+        Обновляет консоль вывода.
         """
         ignore_keywords = [
             "loading hostlist",
@@ -941,8 +896,6 @@ class DPIPenguin(QtWidgets.QMainWindow):
     def on_finished(self, process_name: str) -> None:
         """
         Обработчик завершения процесса.
-
-        :param process_name: Имя завершившегося процесса.
         """
         if process_name in self.script_options or process_name == "winws.exe":
             if process_name == "winws.exe":
@@ -975,9 +928,8 @@ class DPIPenguin(QtWidgets.QMainWindow):
     def handle_error(self, error_message: str) -> None:
         """
         Обработчик ошибок процессов.
-
-        :param error_message: Сообщение об ошибке.
         """
+        self.logger.error(f"Ошибка процесса: {error_message}")
         QMessageBox.critical(self, tr("Ошибка"), error_message)
 
     def stop_and_close(self) -> None:
@@ -1021,9 +973,7 @@ class DPIPenguin(QtWidgets.QMainWindow):
 
     def clear_console(self, initial_text: str = "") -> None:
         """
-        Очищает консоль вывода и добавляет начальный текст, если указан.
-
-        :param initial_text: Текст для добавления после очистки консоли.
+        Очищает консоль вывода.
         """
         self.console_output.clear()
         if initial_text:
@@ -1090,10 +1040,7 @@ class DPIPenguin(QtWidgets.QMainWindow):
 
     def validate_config_file(self, file_path: str) -> Optional[str]:
         """
-        Валидирует файл конфигурации на соответствие необходимым требованиям.
-
-        :param file_path: Путь к файлу конфигурации.
-        :return: Сообщение об ошибке или None, если ошибок нет.
+        Валидирует файл конфигурации.
         """
         if not os.path.exists(file_path):
             error_msg = f"{tr('Файл не найден')}: {file_path}"
@@ -1147,13 +1094,13 @@ class DPIPenguin(QtWidgets.QMainWindow):
         Открывает диалоговое окно с настройками прокси.
         """
         dialog = ProxySettingsDialog(self)
-        dialog.show() 
+        dialog.show()
 
     def reload_configuration(self) -> None:
         """
         Перезагружает конфигурацию после обновления.
         """
-        # Останавливаем текущие запущенные процессы
+        self.logger.debug("Перезагрузка конфигурации")
         if self.main_worker_thread is not None:
             self.main_worker_thread.terminate_process()
             self.main_worker_thread.quit()
@@ -1166,7 +1113,6 @@ class DPIPenguin(QtWidgets.QMainWindow):
             self.winws_worker_thread.wait()
             self.winws_worker_thread = None
 
-        # Перезагрузка конфигурации
         self.script_options, self.config_error = load_script_options(self.current_config_path)
         if self.config_error:
             self.console_output.append(self.config_error)
@@ -1182,9 +1128,6 @@ class DPIPenguin(QtWidgets.QMainWindow):
     def start_winws(self, winws_path: str, args: Optional[List[str]] = None) -> None:
         """
         Запускает процесс winws.exe.
-
-        :param winws_path: Путь к исполняемому файлу winws.exe.
-        :param args: Дополнительные аргументы для запуска.
         """
         if self.winws_worker_thread is not None and self.winws_worker_thread.process_name == "winws.exe":
             return
