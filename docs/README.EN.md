@@ -128,5 +128,6 @@ For those who do not want to build the project and make modifications, download 
 
 ## License 
 
-This project is licensed under the [Apache License, Version 2.0.](https://raw.githubusercontent.com/zhivem/DPI-Penguin/refs/heads/main/LICENSE.md)
+MIT License. For more details, see the [LICENSE](https://github.com/zhivem/DPI-Penguin/raw/refs/heads/main/LICENSE).
+
 
