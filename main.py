@@ -1,4 +1,3 @@
-import atexit
 import ctypes
 import logging
 import os

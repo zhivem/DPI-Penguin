@@ -8,21 +8,18 @@ from PyQt6.QtCore import QThread, pyqtSignal
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QProgressBar, QMessageBox, QCheckBox, QGroupBox
 from qfluentwidgets import PushButton, TextEdit, ComboBox as QFComboBox
 
-from utils.utils import tr
-
+# Логирование
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Константы
 DNS_SERVERS = {
-    tr("DNS по умолчанию"): ("", ""),
-    tr("AdGuard DNS (IPv4)"): ("94.140.14.14", "94.140.15.15"),
-    tr("AdGuard DNS (IPv6)"): ("2a10:50c0::ad1:ff", "2a10:50c0::ad2:ff"),
-    tr("Cloudflare DNS (IPv4)"): ("1.1.1.1", "1.0.0.1"),
-    tr("Cloudflare DNS (IPv6)"): ("2606:4700:4700::1111", "2606:4700:4700::1001"),
-    tr("Comss.one DNS (IPv4)"): ("83.220.169.155", "212.109.195.93"),
-    tr("Comss.one DNS (IPv6)"): ("2a01:230:4:915::2", "2a03:6f00:a::3f24"),
-    tr("Google Public DNS (IPv4)"): ("8.8.8.8", "8.8.4.4"),
-    tr("Google Public DNS (IPv6)"): ("2001:4860:4860::8888", "2001:4860:4860::8844")
+    "DNS по умолчанию": ("", ""),
+    "CloudFlare": ("1.1.1.1", "1.0.0.1"),
+    "Google": ("8.8.8.8", "8.8.4.4"),
+    "Quad9": ("9.9.9.9", "149.112.112.112"),
+    "Adguard": ("94.140.14.14", "94.140.15.15"),
+    "Comodo": ("8.26.56.26", "8.20.247.20"),
+    "Яндекс": ("77.88.8.8", "77.88.8.1")
 }
 
 class RegistryManager:
@@ -71,7 +68,7 @@ class ProxyTester(QThread):
         proxy_url = f"{self.proxy_type.lower()}://{self.proxy_ip}:{self.proxy_port}"
         if self.proxy_type.lower() in ["http", "https"]:
             return {"http": proxy_url, "https": proxy_url}
-        elif self.proxy_type.lower() in ["socks4", "socks5"]:
+        elif self.proxy_type.lower() in ["sorks4", "socks5"]:
             return {"http": proxy_url, "https": proxy_url, "socks4": proxy_url, "socks5": proxy_url}
         return {}
 
@@ -104,10 +101,10 @@ class DnsSetter(QThread):
                     creationflags=subprocess.CREATE_NO_WINDOW
                 )
                 logger.info(f"Вторичный DNS {self.secondary_dns} установлен")
-                self.dns_result.emit(f"{tr('Вторичный DNS:')} {self.secondary_dns} {tr('установлен.')}")
+                self.dns_result.emit(f"Вторичный DNS: {self.secondary_dns} установлен.")
         except subprocess.CalledProcessError as e:
             logger.exception(f"Ошибка при установке DNS: {e}")
-            self.dns_result.emit(f"{tr('Ошибка при установке DNS:')} {e}")
+            self.dns_result.emit(f"Ошибка при установке DNS: {e}")
 
     def clear_dns(self):
         """Очищает DNS, восстанавливая настройки по умолчанию."""
@@ -119,16 +116,16 @@ class DnsSetter(QThread):
                 creationflags=subprocess.CREATE_NO_WINDOW
             )
             logger.info(f"DNS для интерфейса {self.interface_name} очищены, используется DHCP")
-            self.dns_result.emit(f"{tr('DNS для интерфейса')} {self.interface_name} {tr('очищены, используется DHCP.')}")
+            self.dns_result.emit(f"DNS для интерфейса {self.interface_name} очищены, используется DHCP.")
         except subprocess.CalledProcessError as e:
             logger.exception(f"Ошибка при очистке DNS: {e}")
-            self.dns_result.emit(f"{tr('Ошибка при очистке DNS:')} {e}")
+            self.dns_result.emit(f"Ошибка при очистке DNS: {e}")
 
 class ProxySettingsDialog(QDialog):
     """Основной класс диалога настроек прокси и DNS."""
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle(tr("Прокси и DNS"))
+        self.setWindowTitle("Прокси и DNS")
         self.setFixedSize(500, 600)
         self.init_ui()
         logger.info("Диалог настроек прокси и DNS инициализирован")
@@ -139,27 +136,27 @@ class ProxySettingsDialog(QDialog):
 
         # Текстовое поле для вывода информации
         self.text_edit = TextEdit(self)
-        self.text_edit.setPlaceholderText(tr("Информация о прокси и DNS будет отображена здесь..."))
+        self.text_edit.setPlaceholderText("Информация о прокси и DNS будет отображена здесь...")
         self.text_edit.setReadOnly(True)
         layout.addWidget(self.text_edit)
 
         # Группа для настроек прокси
-        proxy_group = QGroupBox(tr("Настройки прокси"))
+        proxy_group = QGroupBox("Настройки прокси")
         proxy_group_layout = QVBoxLayout()
 
         proxy_input_layout = QHBoxLayout()
         self.proxy_ip_input = QLineEdit()
-        self.proxy_ip_input.setPlaceholderText(tr("Введите IP прокси"))
+        self.proxy_ip_input.setPlaceholderText("Введите IP прокси")
         self.proxy_port_input = QLineEdit()
-        self.proxy_port_input.setPlaceholderText(tr("Введите порт"))
+        self.proxy_port_input.setPlaceholderText("Введите порт")
         self.proxy_type_combo = QFComboBox()
         self.proxy_type_combo.addItems(["HTTP", "HTTPS", "SOCKS4", "SOCKS5"])
 
         proxy_input_layout.addWidget(QLabel("IP:"))
         proxy_input_layout.addWidget(self.proxy_ip_input)
-        proxy_input_layout.addWidget(QLabel(tr("Порт:")))
+        proxy_input_layout.addWidget(QLabel("Порт:"))
         proxy_input_layout.addWidget(self.proxy_port_input)
-        proxy_input_layout.addWidget(QLabel(tr("Тип:")))
+        proxy_input_layout.addWidget(QLabel("Тип:"))
         proxy_input_layout.addWidget(self.proxy_type_combo)
 
         proxy_group_layout.addLayout(proxy_input_layout)
@@ -174,14 +171,14 @@ class ProxySettingsDialog(QDialog):
         layout.addWidget(self.progress_bar)
 
         # Группа для кнопок управления прокси
-        button_group = QGroupBox(tr("Управление прокси"))
+        button_group = QGroupBox("Управление прокси")
         button_layout = QHBoxLayout()
 
-        self.test_button = PushButton(tr("Проверить прокси"), self)
+        self.test_button = PushButton("Проверить прокси", self)
         self.test_button.clicked.connect(self.test_proxy)
-        self.apply_button = PushButton(tr("Применить прокси"), self)
+        self.apply_button = PushButton("Применить прокси", self)
         self.apply_button.clicked.connect(self.apply_proxy)
-        self.clear_button = PushButton(tr("Сбросить прокси"), self)
+        self.clear_button = PushButton("Сбросить прокси", self)
         self.clear_button.clicked.connect(self.clear_proxy)
 
         button_layout.addWidget(self.test_button)
@@ -192,29 +189,29 @@ class ProxySettingsDialog(QDialog):
         layout.addWidget(button_group)
 
         # Группа для дополнительных параметров
-        checkbox_group = QGroupBox(tr("Дополнительные параметры"))
+        checkbox_group = QGroupBox("Дополнительные параметры")
         checkbox_layout = QVBoxLayout()
 
-        self.clear_text_checkbox = QCheckBox(tr("Очищать поле перед проверкой прокси"), self)
+        self.clear_text_checkbox = QCheckBox("Очищать поле перед проверкой прокси", self)
         checkbox_layout.addWidget(self.clear_text_checkbox)
         checkbox_group.setLayout(checkbox_layout)
         layout.addWidget(checkbox_group)
 
         # Группа для настроек DNS
-        dns_group = QGroupBox(tr("Настройки DNS"))
+        dns_group = QGroupBox("Настройки DNS")
         dns_group_layout = QVBoxLayout()
 
         self.interface_combo = QFComboBox()
         self.populate_interface_list()
-        dns_group_layout.addWidget(QLabel(tr("Выберите интерфейс:")))
+        dns_group_layout.addWidget(QLabel("Выберите интерфейс:"))
         dns_group_layout.addWidget(self.interface_combo)
 
         self.dns_type_combo = QFComboBox()
         self.dns_type_combo.addItems(DNS_SERVERS.keys())
-        dns_group_layout.addWidget(QLabel(tr("Выберите DNS:")))
+        dns_group_layout.addWidget(QLabel("Выберите DNS:"))
         dns_group_layout.addWidget(self.dns_type_combo)
 
-        self.apply_dns_button = PushButton(tr("Применить DNS"), self)
+        self.apply_dns_button = PushButton("Применить DNS", self)
         self.apply_dns_button.clicked.connect(self.apply_dns)
         dns_group_layout.addWidget(self.apply_dns_button)
 
@@ -245,19 +242,19 @@ class ProxySettingsDialog(QDialog):
                 logger.warning("Список интерфейсов пуст, добавлен стандартный 'Ethernet'")
         except Exception as e:
             logger.exception(f"Ошибка при получении списка интерфейсов: {e}")
-            QMessageBox.critical(self, tr("Ошибка"), f"{tr('Не удалось получить список интерфейсов:')} {e}")
+            QMessageBox.critical(self, "Ошибка", f"Не удалось получить список интерфейсов: {e}")
             self.interface_combo.addItem("Ethernet")
 
     def validate_proxy_input(self, proxy_ip, proxy_port):
         """Проверяет корректность введенных данных прокси."""
         if not proxy_ip or not proxy_port:
             logger.warning("Попытка проверки/применения прокси без IP или порта")
-            QMessageBox.warning(self, tr("Ошибка"), tr("Введите IP и порт прокси."))
+            QMessageBox.warning(self, "Ошибка", "Введите IP и порт прокси.")
             return False
 
         if not self.is_valid_ip(proxy_ip):
             logger.warning(f"Некорректный IP-адрес прокси: {proxy_ip}")
-            QMessageBox.warning(self, tr("Ошибка"), tr("Некорректный IP адрес прокси."))
+            QMessageBox.warning(self, "Ошибка", "Некорректный IP адрес прокси.")
             return False
 
         try:
@@ -266,7 +263,7 @@ class ProxySettingsDialog(QDialog):
                 raise ValueError
         except ValueError:
             logger.warning(f"Некорректный порт прокси: {proxy_port}")
-            QMessageBox.warning(self, tr("Ошибка"), tr("Порт должен быть числом от 1 до 65535."))
+            QMessageBox.warning(self, "Ошибка", "Порт должен быть числом от 1 до 65535.")
             return False
 
         return True
@@ -289,7 +286,7 @@ class ProxySettingsDialog(QDialog):
         if self.clear_text_checkbox.isChecked():
             self.text_edit.clear()
 
-        self.text_edit.append(tr("Проверка прокси..."))
+        self.text_edit.append("Проверка прокси...")
         self.progress_bar.setVisible(True)
 
         self.tester = ProxyTester(proxy_ip, proxy_port, proxy_type)
@@ -301,10 +298,10 @@ class ProxySettingsDialog(QDialog):
         self.progress_bar.setVisible(False)
         if result == 1:
             logger.info("Прокси успешно прошел проверку")
-            self.text_edit.append(tr("✅ Прокси работает успешно"))
+            self.text_edit.append("✅ Прокси работает успешно")
         else:
             logger.warning("Прокси не прошел проверку")
-            self.text_edit.append(tr("⛔ Прокси не работает"))
+            self.text_edit.append("⛔ Прокси не работает")
 
     def apply_proxy(self):
         """Применяет настройки прокси."""
@@ -330,10 +327,10 @@ class ProxySettingsDialog(QDialog):
                 f"{proxy_ip}:{proxy_port}"
             )
             logger.info(f"Прокси {proxy_ip}:{proxy_port} ({proxy_type}) успешно применен")
-            self.text_edit.append(f"{tr('Прокси')} {proxy_ip}:{proxy_port} ({proxy_type}) {tr('применен.')}")
+            self.text_edit.append(f"Прокси {proxy_ip}:{proxy_port} ({proxy_type}) применен.")
         except Exception as e:
             logger.exception(f"Не удалось применить настройки прокси: {e}")
-            QMessageBox.critical(self, tr("Ошибка"), f"{tr('Nicht удалось применить настройки прокси:')} {e}")
+            QMessageBox.critical(self, "Ошибка", f"Не удалось применить настройки прокси: {e}")
 
     def clear_proxy(self):
         """Сбрасывает настройки прокси."""
@@ -346,10 +343,10 @@ class ProxySettingsDialog(QDialog):
                 0
             )
             logger.info("Настройки прокси успешно сброшены")
-            self.text_edit.append(tr("Прокси настройки сброшены."))
+            self.text_edit.append("Прокси настройки сброшены.")
         except Exception as e:
             logger.exception(f"Не удалось сбросить настройки прокси: {e}")
-            QMessageBox.critical(self, tr("Ошибка"), f"{tr('Не удалось сбросить настройки прокси:')} {e}")
+            QMessageBox.critical(self, "Ошибка", f"Не удалось сбросить настройки прокси: {e}")
 
     def apply_dns(self):
         """Применяет настройки DNS."""
@@ -359,9 +356,22 @@ class ProxySettingsDialog(QDialog):
 
         logger.info(f"Применение DNS для интерфейса {interface_name}: {dns_choice}")
         self.dns_setter = DnsSetter(interface_name, primary_dns, secondary_dns)
-        if dns_choice == tr("DNS по умолчанию"):
+        if dns_choice == "DNS по умолчанию":
             self.dns_setter.clear_dns()
-            self.text_edit.append(f"{tr('DNS для интерфейса')} {interface_name} {tr('по умолчанию.')}")
+            self.text_edit.append(f"DNS для интерфейса {interface_name} по умолчанию.")
         else:
+            self.dns_setter.dns_result.connect(self.handle_dns_result)
             self.dns_setter.start()
-            self.text_edit.append(f"{tr('DNS для интерфейса')} {interface_name} {tr('установлен на')} {dns_choice} ({primary_dns}, {secondary_dns}).")
+            self.text_edit.append(f"DNS для интерфейса {interface_name} установлен на {dns_choice} ({primary_dns}, {secondary_dns}).")
+
+    def handle_dns_result(self, message):
+        """Обрабатывает результат настройки DNS."""
+        self.text_edit.append(message)
+
+if __name__ == "__main__":
+    from PyQt6.QtWidgets import QApplication
+    import sys
+    app = QApplication(sys.argv)
+    dialog = ProxySettingsDialog()
+    dialog.show()
+    sys.exit(app.exec())
