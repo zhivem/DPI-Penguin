@@ -1,82 +1,90 @@
 import logging
 import os
-from typing import Optional
+from typing import Optional, Union
 
 from PyQt6.QtCore import QSettings
 from PyQt6.QtWidgets import QApplication, QWidget
 from qfluentwidgets import PushButton, Theme, setTheme
-import pywinstyles 
+import pywinstyles
 
 from utils.utils import tr
 
-# Константы для тем и путей к стилям
+# Константы
 DARK_THEME_NAME = "dark"
 LIGHT_THEME_NAME = "light"
+STYLES_FOLDER = "resources/styles"
 DARK_STYLESHEET = "dark_theme.qss"
 LIGHT_STYLESHEET = "light_theme.qss"
-STYLES_FOLDER = "resources/styles"
 ICON_FOLDER = "resources/icon"
 
 
 def apply_theme(
-    window: QWidget,  
+    window: QWidget,
     theme_name: str,
     settings: QSettings,
-    base_folder: str
+    base_folder: Union[str, os.PathLike]
 ) -> None:
-    app_instance = QApplication.instance()  
+    """
+    Применяет тему (тёмную или светлую) к приложению и сохраняет выбор в настройках.
+    """
+    app = QApplication.instance()
+    if app is None:
+        logging.error(tr("QApplication не инициализирован"))
+        return
+
     if theme_name == DARK_THEME_NAME:
         setTheme(Theme.DARK)
-        pywinstyles.apply_style(window, DARK_THEME_NAME)  
-        stylesheet = DARK_STYLESHEET
+        pywinstyles.apply_style(window, DARK_THEME_NAME)
+        stylesheet_name = DARK_STYLESHEET
     else:
         setTheme(Theme.LIGHT)
-        pywinstyles.apply_style(window, LIGHT_THEME_NAME) 
-        stylesheet = LIGHT_STYLESHEET
+        pywinstyles.apply_style(window, LIGHT_THEME_NAME)
+        stylesheet_name = LIGHT_STYLESHEET
 
-    apply_stylesheet(app_instance, stylesheet, base_folder)
+    style_content = get_stylesheet(stylesheet_name, base_folder)
+    if style_content:
+        app.setStyleSheet(style_content)
+        logging.info(tr("Применён стиль: {stylesheet}").format(stylesheet=stylesheet_name))
+    else:
+        logging.warning(tr("Не удалось применить стиль: {stylesheet}").format(stylesheet=stylesheet_name))
+
     settings.setValue("theme", theme_name)
 
-def apply_stylesheet(
-    app_instance: QApplication,
-    stylesheet_name: str,
-    base_folder: str
-) -> None:
-    
-    """
-    Применяет заданный файл стилей к приложению.
 
-    :param app_instance: Экземпляр QApplication.
-    :param stylesheet_name: Имя файла стилей (.qss).
-    :param base_folder: Базовая папка приложения.
+def get_stylesheet_path(base_folder: Union[str, os.PathLike], stylesheet_name: str) -> str:
     """
-    style_path = os.path.join(base_folder, STYLES_FOLDER, stylesheet_name)
+    Возвращает полный путь к файлу стилей.
+    """
+    return os.path.join(base_folder, STYLES_FOLDER, stylesheet_name)
+
+
+def get_stylesheet(stylesheet_name: str, base_folder: Union[str, os.PathLike]) -> Optional[str]:
+    """
+    Загружает содержимое файла стилей.
+    """
+    path = get_stylesheet_path(base_folder, stylesheet_name)
     try:
-        with open(style_path, "r", encoding="utf-8") as f:
-            style = f.read()
-            app_instance.setStyleSheet(style)
-        logging.info(tr("Применен стиль: {stylesheet_name}").format(stylesheet_name=stylesheet_name))
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read()
     except FileNotFoundError:
-        logging.error(tr("Файл стилей не найден: {style_path}").format(style_path=style_path))
+        logging.error(tr("Файл стилей не найден: {path}").format(path=path))
     except Exception as e:
-        logging.error(tr("Не удалось загрузить файл стилей {style_path}: {e}").format(style_path=style_path, e=e))
+        logging.error(tr("Ошибка при загрузке стиля {path}: {error}").format(path=path, error=e))
+    return None
 
 
 def update_theme_button_text(
-    app_instance: QWidget,
+    window: QWidget,
     settings: QSettings
 ) -> None:
     """
-    Обновляет текст и подсказку на кнопке переключения темы в зависимости от текущей темы.
-
-    :param app_instance: Экземпляр QWidget, содержащий кнопку переключения темы.
-    :param settings: Экземпляр QSettings для получения текущей темы.
+    Обновляет текст и подсказку кнопки переключения темы в зависимости от текущей темы.
     """
     current_theme = settings.value("theme", LIGHT_THEME_NAME)
-    theme_button: Optional[PushButton] = getattr(app_instance, "theme_toggle_button", None)
+    theme_button: Optional[PushButton] = getattr(window, "theme_toggle_button", None)
 
-    if not theme_button:
-        logging.warning(tr("Кнопка 'theme_toggle_button' не найдена в app_instance"))
+    if theme_button is None:
+        logging.warning(tr("Кнопка 'theme_toggle_button' не найдена в окне"))
         return
 
     if current_theme == LIGHT_THEME_NAME:
@@ -86,45 +94,17 @@ def update_theme_button_text(
         theme_button.setText(tr("Переключиться на светлую тему"))
         theme_button.setToolTip(tr("Нажмите, чтобы переключиться на светлую тему"))
 
+
 def toggle_theme(
     window: QWidget,
     settings: QSettings,
-    base_folder: str
+    base_folder: Union[str, os.PathLike]
 ) -> None:
+    """
+    Переключает текущую тему между тёмной и светлой.
+    """
     current_theme = settings.value("theme", LIGHT_THEME_NAME)
     new_theme = DARK_THEME_NAME if current_theme == LIGHT_THEME_NAME else LIGHT_THEME_NAME
     apply_theme(window, new_theme, settings, base_folder)
     update_theme_button_text(window, settings)
-    logging.info(tr("Тема переключена с '{current_theme}' на '{new_theme}'.").format(current_theme=current_theme, new_theme=new_theme))
-
-def get_stylesheet_path(base_folder: str, stylesheet_name: str) -> str:
-    """
-    Возвращает полный путь к файлу стилей.
-
-    :param base_folder: Базовая папка приложения.
-    :param stylesheet_name: Имя файла стилей.
-    :return: Полный путь к файлу стилей.
-    """
-    return os.path.join(base_folder, STYLES_FOLDER, stylesheet_name)
-
-
-def get_stylesheet(
-    stylesheet_name: str,
-    base_folder: str
-) -> Optional[str]:
-    """
-    Возвращает содержимое файла стилей.
-
-    :param stylesheet_name: Имя файла стилей (.qss).
-    :param base_folder: Базовая папка приложения.
-    :return: Содержимое стилей или None, если файл не найден или произошла ошибка.
-    """
-    style_path = get_stylesheet_path(base_folder, stylesheet_name)
-    try:
-        with open(style_path, "r", encoding="utf-8") as f:
-            return f.read()
-    except FileNotFoundError:
-        logging.error(tr("Файл стилей не найден: {style_path}").format(style_path=style_path))
-    except Exception as e:
-        logging.error(tr("Не удалось загрузить файл стилей {style_path}: {e}").format(style_path=style_path, e=e))
-    return None
+    logging.info(tr("Тема переключена с '{old}' на '{new}'").format(old=current_theme, new=new_theme))

@@ -60,162 +60,158 @@ class UpdateChecker(QObject):
 
     def __init__(self):
         super().__init__()
-        self.logger = logging.getLogger(__name__)  # Используем __name__ для соответствия main.py
-        self.logger.info("Инициализация UpdateChecker")
+        self.logger = logging.getLogger(__name__)
         self.local_versions: Dict[str, str] = {}
         self.remote_versions: Dict[str, str] = {}
 
     def get_local_versions(self) -> None:
-        """Получение локальных версий компонентов из файла version_config.ini."""
-        version_file_path = os.path.join(BASE_FOLDER, "setting_version", "version_config.ini")
-        versions: Dict[str, str] = {}
-        if os.path.exists(version_file_path):
+        """Читает локальные версии из version_config.ini."""
+        version_file = os.path.join(BASE_FOLDER, "setting_version", "version_config.ini")
+        self.local_versions = {}
+        if os.path.exists(version_file):
             try:
                 config = configparser.ConfigParser()
-                config.read(version_file_path, encoding='utf-8')
+                config.read(version_file, encoding='utf-8')
                 if 'VERSION' in config:
-                    versions = {k: v.strip() for k, v in config['VERSION'].items()}
-                    versions.setdefault('ver_programm', CURRENT_VERSION)
+                    self.local_versions = {k: v.strip() for k, v in config['VERSION'].items()}
+                    self.local_versions.setdefault('ver_programm', CURRENT_VERSION)
                 else:
-                    self.logger.warning(f"Файл {version_file_path} не содержит секцию [VERSION]")
+                    self.logger.warning(f"Файл {version_file} не содержит секцию [VERSION]")
             except Exception as e:
-                self.logger.exception(f"Ошибка при чтении локального файла версий {version_file_path}: {e}")
+                self.logger.exception(f"Ошибка при чтении локального файла версий: {e}")
         else:
-            self.logger.warning(f"Локальный файл версий не найден: {version_file_path}")
-            versions['ver_programm'] = CURRENT_VERSION
-        self.local_versions = versions
+            self.logger.warning(f"Локальный файл версий не найден: {version_file}")
+            self.local_versions['ver_programm'] = CURRENT_VERSION
 
     def get_remote_versions(self) -> None:
-        """Получение удалённых версий компонентов с GitHub."""
-        versions: Dict[str, str] = {}
-        version_url = f"https://raw.githubusercontent.com/zhivem/DPI-Penguin/main/setting_version/version_config.ini?t={int(time.time())}"
+        """Получает версии с GitHub."""
+        url = f"https://raw.githubusercontent.com/zhivem/DPI-Penguin/main/setting_version/version_config.ini?t={int(time.time())}"
+        self.remote_versions = {}
         try:
-            response = requests.get(version_url, timeout=10)
+            response = requests.get(url, timeout=10)
             response.raise_for_status()
             config = configparser.ConfigParser()
             config.read_string(response.text)
             if 'VERSION' in config:
-                versions = {k: v.strip() for k, v in config['VERSION'].items()}
+                self.remote_versions = {k: v.strip() for k, v in config['VERSION'].items()}
             else:
                 self.logger.warning("Удалённый файл версий не содержит секцию [VERSION]")
-        except requests.RequestException as e:
-            self.logger.exception(f"Ошибка при запросе удалённых версий: {e}")
-        self.remote_versions = versions
+        except Exception as e:
+            self.logger.exception(f"Ошибка при получении удалённых версий: {e}")
 
     def is_update_available(self, component: str) -> bool:
-        """Проверка наличия обновления для компонента."""
-        local_version = self.local_versions.get(component)
-        remote_version = self.remote_versions.get(component)
-        if local_version and remote_version:
-            result = self.is_newer_version(remote_version, local_version)
-            return result
-        self.logger.warning(f"Версии для '{component}' неполные: локальная={local_version}, удалённая={remote_version}")
+        """Проверяет, доступно ли обновление для компонента."""
+        local = self.local_versions.get(component)
+        remote = self.remote_versions.get(component)
+        if local and remote:
+            return self.is_newer_version(remote, local)
+        self.logger.warning(f"Нет информации о версиях для '{component}': локальная={local}, удалённая={remote}")
         return False
 
-    def is_newer_version(self, latest: str, current: str) -> bool:
-        """Сравнение версий."""
+    @staticmethod
+    def is_newer_version(latest: str, current: str) -> bool:
+        """Сравнивает версии."""
         try:
-            result = parse_version(latest) > parse_version(current)
-            return result
-        except Exception as e:
-            self.logger.exception(f"Ошибка при сравнении версий {latest} и {current}: {e}")
+            return parse_version(latest) > parse_version(current)
+        except Exception:
             return False
 
     def download_and_update(self, component: str, dialog=None) -> bool:
-        """Скачивание и обновление компонента."""
-        component_info = self.COMPONENTS.get(component)
-        if not component_info:
-            self.logger.error(f"Неизвестный компонент для обновления: '{component}'")
+        """Скачивает и обновляет компонент."""
+        info = self.COMPONENTS.get(component)
+        if not info:
+            self.logger.error(f"Неизвестный компонент: '{component}'")
             return False
         try:
-            if 'pre_update' in component_info:
-                for method_name in component_info['pre_update']:
-                    method = getattr(self, method_name, None)
-                    if method:
-                        args = component_info.get('pre_update_args', {}).get(method_name, {})
-                        method(**args)
-                    else:
-                        self.logger.warning(f"Метод '{method_name}' не найден в UpdateChecker")
+            # Pre-update actions
+            for method_name in info.get('pre_update', []):
+                method = getattr(self, method_name, None)
+                if method:
+                    args = info.get('pre_update_args', {}).get(method_name, {})
+                    method(**args)
+                else:
+                    self.logger.warning(f"Метод '{method_name}' не найден")
 
-            self.logger.info(f"Скачивание {component} с {component_info['url']}")
-            response = requests.get(component_info['url'], stream=True, timeout=30)
+            # Download
+            self.logger.info(f"Скачивание {component} с {info['url']}")
+            response = requests.get(info['url'], stream=True, timeout=30)
             response.raise_for_status()
-            os.makedirs(os.path.dirname(component_info['destination']), exist_ok=True)
-            if component_info.get('extract'):
-                with zipfile.ZipFile(io.BytesIO(response.content)) as zip_ref:
-                    zip_ref.extractall(os.path.dirname(component_info['destination']))
+            os.makedirs(os.path.dirname(info['destination']), exist_ok=True)
+
+            if info.get('extract'):
+                self._extract_zip(response.content, os.path.dirname(info['destination']))
             else:
-                with open(component_info['destination'], "w", encoding='utf-8') as f:
-                    f.write(response.text)
+                self._write_file(info['destination'], response.text)
+
             self.logger.info(f"{component} успешно обновлён")
 
-            if 'post_update' in component_info and component_info['post_update'] == "emit_config_updated":
+            # Post-update actions
+            if info.get('post_update') == "emit_config_updated":
                 if dialog and hasattr(dialog, 'config_updated_signal'):
                     dialog.config_updated_signal.emit()
                 self.emit_config_updated()
 
             self.update_local_version_file()
             return True
-        except requests.RequestException as e:
-            self.logger.exception(f"Ошибка при скачивании {component}: {e}")
-            return False
         except Exception as e:
             self.logger.exception(f"Ошибка при обновлении {component}: {e}")
             return False
 
     def update_local_version_file(self) -> None:
-        """Обновление локального файла версий."""
-        self.logger.info("Обновление локального файла version_config.ini")
-        version_url = "https://raw.githubusercontent.com/zhivem/DPI-Penguin/main/setting_version/version_config.ini"
+        """Обновляет локальный version_config.ini."""
+        url = "https://raw.githubusercontent.com/zhivem/DPI-Penguin/main/setting_version/version_config.ini"
         try:
-            response = requests.get(version_url, timeout=10)
+            response = requests.get(url, timeout=10)
             response.raise_for_status()
             version_dir = os.path.join(BASE_FOLDER, "setting_version")
             os.makedirs(version_dir, exist_ok=True)
-            local_version_file = os.path.join(version_dir, "version_config.ini")
-            with open(local_version_file, "w", encoding='utf-8') as f:
-                f.write(response.text)
+            self._write_file(os.path.join(version_dir, "version_config.ini"), response.text)
             self.logger.info("Локальный version_config.ini успешно обновлён")
-        except requests.RequestException as e:
-            self.logger.exception(f"Ошибка при скачивании version_config.ini: {e}")
         except Exception as e:
-            self.logger.exception(f"Ошибка при записи version_config.ini: {e}")
+            self.logger.exception(f"Ошибка при обновлении version_config.ini: {e}")
 
     def update_blacklists(self) -> bool:
-        """Обновление чёрных списков."""
-        self.logger.info("Начало обновления чёрных списков")
+        """Обновляет все чёрные списки."""
+        self.logger.info("Обновление чёрных списков")
         success = True
-        for blacklist in self.BLACKLISTS:
-            name = blacklist['name']
-            url = blacklist['url']
-            output_file = blacklist['output_file']
+        for bl in self.BLACKLISTS:
             try:
-                response = requests.get(url, timeout=10)
-                response.raise_for_status()
-                os.makedirs(os.path.dirname(output_file), exist_ok=True)
-                with open(output_file, 'w', encoding='utf-8') as f:
-                    f.write(response.text)
-                self.logger.info(f"Чёрный список '{name}' успешно обновлён")
-            except requests.RequestException as e:
-                self.logger.exception(f"Ошибка при скачивании '{name}': {e}")
-                success = False
+                self._download_and_write(bl['url'], bl['output_file'])
+                self.logger.info(f"Чёрный список '{bl['name']}' успешно обновлён")
             except Exception as e:
-                self.logger.exception(f"Ошибка при записи '{name}': {e}")
+                self.logger.exception(f"Ошибка при обновлении '{bl['name']}': {e}")
                 success = False
-        self.logger.info(f"Обновление чёрных списков завершено, успех: {success}")
         return success
 
     def terminate_process(self, process_name: str) -> None:
-        """Завершение процесса через ProcessUtils."""
-        self.logger.info(f"Запрос на завершение процесса '{process_name}'")
+        """Завершает процесс."""
+        self.logger.info(f"Завершение процесса '{process_name}'")
         ProcessUtils.terminate_process(process_name)
 
     def stop_service(self, service_name: str) -> None:
-        """Остановка службы через ProcessUtils."""
-        self.logger.info(f"Запрос на остановку службы '{service_name}'")
+        """Останавливает службу."""
+        self.logger.info(f"Остановка службы '{service_name}'")
         ProcessUtils.stop_service(service_name)
 
     def emit_config_updated(self) -> None:
-        """Эмит сигнала обновления конфигурации."""
-        self.logger.info("Эмит сигнала обновления конфигурации")
+        """Эмитирует сигнал обновления конфигурации."""
+        self.logger.info("Сигнал обновления конфигурации")
         self.config_updated_signal.emit()
+
+    # --- Вспомогательные методы ---
+    def _extract_zip(self, content: bytes, target_dir: str) -> None:
+        """Распаковывает zip-архив в указанную директорию."""
+        with zipfile.ZipFile(io.BytesIO(content)) as zip_ref:
+            zip_ref.extractall(target_dir)
+
+    def _write_file(self, path: str, text: str) -> None:
+        """Записывает текст в файл."""
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(text)
+
+    def _download_and_write(self, url: str, path: str) -> None:
+        """Скачивает содержимое url и записывает в файл."""
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        self._write_file(path, response.text)

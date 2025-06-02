@@ -20,7 +20,8 @@ from PyQt6.QtWidgets import (
     QWidget,
     QGridLayout,
 )
-from qfluentwidgets import ComboBox as QFComboBox, PushButton, TextEdit
+
+from qfluentwidgets import ComboBox as QFComboBox, PushButton, TextEdit, FluentIcon
 
 from utils.update_utils import UpdateChecker
 from utils.utils import (
@@ -43,23 +44,16 @@ from utils.utils import (
     tr,
 )
 import utils.theme_utils
+
 from gui.updater_manager import SettingsDialog
 from gui.proxy_window import ProxySettingsDialog
 from gui.converter import ConfigConverterDialog
+
 from utils.process_utils import WorkerThread
 from utils.service_utils import stop_service
 
-# Пути к иконкам
+# Путь к иконке приложения
 TRAY_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "newicon.ico")
-THEME_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "themes.png")
-LOG_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "log.png")
-INI_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "ini.png")
-MANAGER_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "manager.png")
-BLACK_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "black.png")
-ADD_SRV_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "add_service.png")
-DELETE_SRV_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "delete_service.png")
-FIX_PROCESS = os.path.join(BASE_FOLDER, "resources", "icon", "fix-process.png")
-PROXY = os.path.join(BASE_FOLDER, "resources", "icon", "proxy.png")
 
 logger = logging.getLogger(__name__)
 
@@ -314,19 +308,23 @@ class DPIPenguin(QtWidgets.QMainWindow):
         self.selected_script.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Preferred)
         script_layout.addWidget(self.selected_script)
 
-        self.update_config_button = PushButton("📂", self)
-        self.update_config_button.setToolTip(tr("Загрузить другую конфигурацию"))
-        self.update_config_button.clicked.connect(self.load_config_via_dialog)
-        self.update_config_button.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
-        self.update_config_button.setFixedWidth(40)
-        script_layout.addWidget(self.update_config_button)
+        self.update_config_button = self.create_button(
+            text="...",
+            func=self.load_config_via_dialog,
+            layout=script_layout,
+            icon=FluentIcon.FOLDER,
+            icon_size=(16, 16),
+            tooltip=tr("Загрузить другую конфигурацию")
+        )
 
-        self.converter_button = PushButton("📝", self)
-        self.converter_button.setToolTip(tr("Открыть окно конвертера"))
-        self.converter_button.clicked.connect(self.open_converter)
-        self.converter_button.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
-        self.converter_button.setFixedWidth(40)
-        script_layout.addWidget(self.converter_button)
+        self.converter_button = self.create_button(
+            text="...",
+            func=self.open_converter,
+            layout=script_layout,
+            icon=FluentIcon.EDIT,
+            icon_size=(16, 16),
+            tooltip=tr("Открыть окно конвертера")
+        )
 
         script_layout.setStretch(0, 1)
         script_layout.setStretch(1, 0)
@@ -354,7 +352,7 @@ class DPIPenguin(QtWidgets.QMainWindow):
             text=tr("Прокси и DNS"),
             func=self.open_proxy_settings_dialog,
             layout=log_and_config_layout,
-            icon_path=PROXY,
+            icon=FluentIcon.GLOBE,
             icon_size=(16, 16),
         )
 
@@ -362,7 +360,7 @@ class DPIPenguin(QtWidgets.QMainWindow):
             text=tr("Открыть Configs"),
             func=lambda: self.handle_open_path(os.path.join(BASE_FOLDER, "config")),
             layout=log_and_config_layout,
-            icon_path=INI_ICON_PATH,
+            icon=FluentIcon.SETTING,
             icon_size=(16, 16),
         )
 
@@ -370,7 +368,7 @@ class DPIPenguin(QtWidgets.QMainWindow):
 
         self.theme_toggle_button = PushButton()
         utils.theme_utils.update_theme_button_text(self, settings)
-        self.set_button_icon(self.theme_toggle_button, THEME_ICON_PATH, (16, 16))
+        self.set_button_icon(self.theme_toggle_button, FluentIcon.PALETTE, (16, 16))
         self.theme_toggle_button.clicked.connect(self.toggle_theme_button_clicked)
         process_layout.addWidget(self.theme_toggle_button)
 
@@ -388,16 +386,12 @@ class DPIPenguin(QtWidgets.QMainWindow):
         if error:
             QMessageBox.warning(self, tr("Ошибка"), error)
 
-    def set_button_icon(self, button: PushButton, icon_path: str, icon_size: tuple) -> None:
+    def set_button_icon(self, button: PushButton, icon: FluentIcon, icon_size: tuple) -> None:
         """
-        Устанавливает иконку на кнопку.
+        Устанавливает иконку FluentIcon на кнопку.
         """
-        if not os.path.exists(icon_path):
-            self.logger.error(f"{tr('Файл иконки приложения не найден')}: {icon_path}")
-        else:
-            icon = QIcon(icon_path)
-            button.setIcon(icon)
-            button.setIconSize(QtCore.QSize(*icon_size))
+        button.setIcon(icon)
+        button.setIconSize(QtCore.QSize(*icon_size))
 
     def toggle_theme_button_clicked(self) -> None:
         """
@@ -471,7 +465,7 @@ class DPIPenguin(QtWidgets.QMainWindow):
             tr("Создать службу"),
             self.handle_create_service,
             services_layout,
-            icon_path=ADD_SRV_PATH,
+            icon=FluentIcon.ADD,
             icon_size=(16, 16)
         )
 
@@ -479,12 +473,9 @@ class DPIPenguin(QtWidgets.QMainWindow):
             tr("Удалить службу"),
             self.handle_delete_service,
             services_layout,
-            icon_path=DELETE_SRV_PATH,
+            icon=FluentIcon.DELETE,
             icon_size=(16, 16)
         )
-
-        services_layout.addWidget(self.create_service_button)
-        services_layout.addWidget(self.delete_service_button)
 
         settings_layout.addWidget(self.services_group)
 
@@ -496,7 +487,7 @@ class DPIPenguin(QtWidgets.QMainWindow):
             text=tr("Менеджер обновлений"),
             func=self.open_settings_dialog,
             layout=updates_layout,
-            icon_path=MANAGER_ICON_PATH,
+            icon=FluentIcon.UPDATE,
             icon_size=(16, 16)
         )
 
@@ -504,12 +495,9 @@ class DPIPenguin(QtWidgets.QMainWindow):
             text=tr("Обновить черные списки"),
             func=lambda: self.start_update_blacklists_thread(silent=False),
             layout=updates_layout,
-            icon_path=BLACK_ICON_PATH,
+            icon=FluentIcon.SYNC,
             icon_size=(16, 16)
         )
-
-        updates_layout.addWidget(self.open_additional_settings_button)
-        updates_layout.addWidget(self.update_blacklists_button)
 
         settings_layout.addWidget(self.updates_group)
 
@@ -521,7 +509,7 @@ class DPIPenguin(QtWidgets.QMainWindow):
             text=tr("Исправить работу с процессом"),
             func=lambda: start_fix_process(self),
             layout=fix_layout,
-            icon_path=FIX_PROCESS,
+            icon=FluentIcon.VPN,
             icon_size=(16, 16)
         )
 
@@ -533,8 +521,6 @@ class DPIPenguin(QtWidgets.QMainWindow):
 
         settings_layout.addWidget(self.fix_group)
         settings_layout.addStretch(1)
-
-        settings_tab.setLayout(settings_layout)
 
         return settings_tab
 
@@ -667,7 +653,7 @@ class DPIPenguin(QtWidgets.QMainWindow):
             text=tr("Открыть папку Log"),
             func=lambda: self.handle_open_path(log_folder),
             layout=layout,
-            icon_path=LOG_ICON_PATH,
+            icon=FluentIcon.DOCUMENT,
             icon_size=(16, 16),
         )
 
@@ -730,13 +716,16 @@ class DPIPenguin(QtWidgets.QMainWindow):
         settings.setValue("update_blacklists_on_start", checked)
         self.logger.info(f"{tr('Обновление черных списков при запуске программы')} {'включено' if checked else 'отключено'}")
 
-    def create_button(self, text, func, layout, enabled=True, icon_path=None, icon_size=(24, 24), tooltip=None):
-        button = PushButton(text, self)
+    def create_button(self, text, func, layout, enabled=True, icon=None, icon_size=(24, 24), tooltip=None):
+        """
+        Создает кнопку с заданными параметрами.
+        """
+        button = PushButton(text, self, icon)
         button.setEnabled(enabled)
         if func:
             button.clicked.connect(func)
-        if icon_path:
-            self.set_button_icon(button, icon_path, icon_size)
+        if icon:
+            self.set_button_icon(button, icon, icon_size)
         if tooltip:
             button.setToolTip(tooltip)
         if layout is not None:

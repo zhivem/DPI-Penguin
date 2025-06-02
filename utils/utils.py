@@ -11,80 +11,79 @@ from PyQt6.QtCore import QSettings
 from PyQt6.QtWidgets import QMessageBox
 from utils.translation_utils import TranslationManager
 
-# Глобальный логгер
-logger = logging.getLogger(__name__)
-
-# Константы и глобальные настройки
+# --- Глобальные константы и настройки ---
 BASE_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-TRANSLATIONS_FOLDER = os.path.join(os.path.dirname(__file__), '..', 'translations')
+TRANSLATIONS_FOLDER = os.path.join(BASE_FOLDER, 'translations')
 ZAPRET_FOLDER = os.path.join(BASE_FOLDER, "zapret")
 CONFIG_PATH = os.path.join(BASE_FOLDER, "config", 'default.ini')
 SETTING_VER = os.path.join(BASE_FOLDER, "setting_version", "version_config.ini")
-
 FIX_BAT_PATH = os.path.join(BASE_FOLDER, "resources", "fix-process", "fix.bat")
-
 BLACKLIST_FOLDER = os.path.join(BASE_FOLDER, "black")
 ICON_FOLDER = os.path.join(BASE_FOLDER, "resources", "icon")
-
 BLACKLIST_FILES: List[str] = [
-    os.path.join(BLACKLIST_FOLDER, "russia-blacklist.txt"),  # 0
-    os.path.join(BLACKLIST_FOLDER, "disk-youtube-blacklist.txt"),  # 1
-    os.path.join(BLACKLIST_FOLDER, "universal.txt")  # 2
+    os.path.join(BLACKLIST_FOLDER, "russia-blacklist.txt"),
+    os.path.join(BLACKLIST_FOLDER, "disk-youtube-blacklist.txt"),
+    os.path.join(BLACKLIST_FOLDER, "universal.txt")
 ]
 
-# Инициализация менеджера переводов и настроек
+# --- Логгер ---
+logger = logging.getLogger("dpipenguin")
+logger.setLevel(logging.DEBUG)
+if not logger.hasHandlers():
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+
+# --- Переводы и настройки ---
 settings = QSettings("Zhivem", "DPI Penguin")
 translation_manager = TranslationManager(TRANSLATIONS_FOLDER)
 saved_language = settings.value("language", "ru")
 translation_manager.set_language(saved_language)
 
 def tr(text: str) -> str:
-    """
-    Функция для перевода текста.
-    """
+    """Функция для перевода текста."""
     return translation_manager.translate(text)
 
 def set_language(lang_code: str) -> None:
-    """
-    Устанавливает язык приложения.
-    """
+    """Устанавливает язык приложения."""
     translation_manager.set_language(lang_code)
 
-# Загрузка конфигурации
+# --- Загрузка версий ---
 config = configparser.ConfigParser()
 config.read(SETTING_VER)
-
 CURRENT_VERSION = config.get('VERSION', 'ver_programm')
 ZAPRET_VERSION = config.get('VERSION', 'zapret')
 CONFIG_VERSION = config.get('VERSION', 'config')
 
+# --- Функции работы с путями и автозапуском ---
 def open_path(path: str) -> Optional[str]:
-    """
-    Открывает указанный путь в файловом менеджере (только для Windows).
-    Возвращает сообщение об ошибке, если путь не существует или не удалось открыть.
-    """
+    """Открывает указанный путь в файловом менеджере (только для Windows)."""
     if not os.path.exists(path):
-        message = tr("Путь не существует: {path}").format(path=path)
-        logger.warning(message)
-        return message
-
+        msg = tr("Путь не существует: {path}").format(path=path)
+        logger.warning(msg)
+        return msg
     if platform.system() != "Windows":
-        message = tr("Данная функция поддерживается только на Windows.")
-        logger.warning(message)
-        return message
-    
+        msg = tr("Данная функция поддерживается только на Windows.")
+        logger.warning(msg)
+        return msg
     try:
         os.startfile(path)
         return None
     except Exception as e:
-        error_message = tr("Не удалось открыть путь: {error}").format(error=e)
-        logger.error(error_message)
-        return error_message
+        msg = tr("Не удалось открыть путь: {error}").format(error=e)
+        logger.error(msg)
+        return msg
+
+def get_executable_path() -> str:
+    """Возвращает путь к исполняемому файлу приложения."""
+    if getattr(sys, 'frozen', False):
+        return sys.executable
+    return f'"{sys.executable}" "{os.path.abspath(sys.argv[0])}"'
 
 def is_autostart_enabled() -> bool:
-    """
-    Проверяет, включен ли автозапуск приложения.
-    """
+    """Проверяет, включен ли автозапуск приложения."""
     try:
         with winreg.OpenKey(
             winreg.HKEY_CURRENT_USER,
@@ -100,26 +99,21 @@ def is_autostart_enabled() -> bool:
         return False
 
 def enable_autostart() -> None:
-    """
-    Включает автозапуск приложения.
-    """
+    """Включает автозапуск приложения."""
     try:
         with winreg.OpenKey(
             winreg.HKEY_CURRENT_USER,
             r"Software\Microsoft\Windows\CurrentVersion\Run",
             0, winreg.KEY_SET_VALUE
         ) as key:
-            executable_path = get_executable_path()
-            winreg.SetValueEx(key, "WinWSApp", 0, winreg.REG_SZ, executable_path)
+            winreg.SetValueEx(key, "WinWSApp", 0, winreg.REG_SZ, get_executable_path())
             logger.info(tr("Автозапуск успешно установлен"))
     except Exception as e:
         logger.error(tr("Ошибка при установке автозапуска: {error}").format(error=e))
         raise
 
 def disable_autostart() -> None:
-    """
-    Отключает автозапуск приложения.
-    """
+    """Отключает автозапуск приложения."""
     try:
         with winreg.OpenKey(
             winreg.HKEY_CURRENT_USER,
@@ -134,63 +128,48 @@ def disable_autostart() -> None:
         logger.error(tr("Ошибка при отключении автозапуска: {error}").format(error=e))
         raise
 
-def get_executable_path() -> str:
-    """
-    Возвращает путь к исполняемому файлу приложения.
-    """
-    if getattr(sys, 'frozen', False):
-        path = sys.executable
-    else:
-        script_path = os.path.abspath(sys.argv[0])
-        path = f'"{sys.executable}" "{script_path}"'
-    return path
-
+# --- Работа с конфигом скриптов ---
 def load_script_options(config_path: str) -> Tuple[Optional[Dict[str, Tuple[str, List[str]]]], Optional[str]]:
-    """
-    Загружает опции скрипта из конфигурационного файла.
-    Возвращает словарь опций и сообщение об ошибке, если оно произошло.
-    """
+    """Загружает опции скрипта из конфигурационного файла."""
     config = configparser.ConfigParser()
     config.optionxform = str
     try:
         config.read(config_path, encoding='utf-8')
     except configparser.Error as e:
-        error_msg = tr("Ошибка при чтении config.ini: {error}").format(error=e)
-        logger.error(error_msg)
-        return None, error_msg
+        msg = tr("Ошибка при чтении config.ini: {error}").format(error=e)
+        logger.error(msg)
+        return None, msg
 
+    # Проверка на дубли секций
     section_counts = {}
     try:
         with open(config_path, 'r', encoding='utf-8') as f:
             for line in f:
-                line = line.strip()
-                if line.startswith('[') and line.endswith(']'):
-                    section = line[1:-1].strip()
+                if line.strip().startswith('[') and line.strip().endswith(']'):
+                    section = line.strip()[1:-1]
                     section_counts[section] = section_counts.get(section, 0) + 1
     except Exception as e:
-        error_msg = tr("Ошибка при обработке config.ini: {error}").format(error=e)
-        logger.error(error_msg)
-        return None, error_msg
+        msg = tr("Ошибка при обработке config.ini: {error}").format(error=e)
+        logger.error(msg)
+        return None, msg
 
     duplicates = [name for name, count in section_counts.items() if count > 1]
     if duplicates:
-        error_message = tr("Ошибка: Названия разделов конфигурации не должны повторяться: {duplicates}").format(
+        msg = tr("Ошибка: Названия разделов конфигурации не должны повторяться: {duplicates}").format(
             duplicates=", ".join(duplicates)
         )
-        logger.error(error_message)
-        return None, error_message
+        logger.error(msg)
+        return None, msg
 
     script_options = {}
     for section in config.sections():
         if section == "SCRIPT_OPTIONS":
             continue
-
         executable = config.get(section, 'executable', fallback=None)
         args = config.get(section, 'args', fallback='')
+        args_list = [arg.strip() for arg in ' '.join(args.splitlines()).split(';') if arg.strip()] if args else []
 
-        args = ' '.join(args.splitlines())
-        args_list = [arg.strip() for arg in args.split(';') if arg.strip()] if args else []
-
+        # Подстановка путей
         args_list = [
             arg.replace('{ZAPRET_FOLDER}', ZAPRET_FOLDER)
                .replace('{BLACKLIST_FOLDER}', BLACKLIST_FOLDER)
@@ -200,29 +179,50 @@ def load_script_options(config_path: str) -> Tuple[Optional[Dict[str, Tuple[str,
                .replace('{BASE_FOLDER}', BASE_FOLDER)
             for arg in args_list
         ]
-
         if executable:
-            executable = executable.replace('{ZAPRET_FOLDER}', ZAPRET_FOLDER)\
-                                   .replace('{BASE_FOLDER}', BASE_FOLDER)
+            executable = executable.replace('{ZAPRET_FOLDER}', ZAPRET_FOLDER).replace('{BASE_FOLDER}', BASE_FOLDER)
             if not os.path.isabs(executable):
                 executable = os.path.join(BASE_FOLDER, executable)
-
         script_options[section] = (executable, args_list)
 
     logger.info(tr("SCRIPT_OPTIONS успешно загружены"))
     return script_options, None
 
+# --- Работа со службой Windows ---
+def _run_sc_command(args: List[str], error_msg: str) -> str:
+    """Вспомогательная функция для запуска команд sc."""
+    try:
+        popen_params = {
+            'args': args,
+            'check': True,
+            'shell': False,
+            'creationflags': subprocess.CREATE_NO_WINDOW,
+            'stdout': subprocess.PIPE,
+            'stderr': subprocess.PIPE,
+            'text': True
+        }
+        if os.name == 'nt':
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = subprocess.SW_HIDE
+            popen_params['startupinfo'] = startupinfo
+        subprocess.run(**popen_params)
+        return ""
+    except subprocess.CalledProcessError as e:
+        logger.error(error_msg.format(error=e))
+        return error_msg.format(error=e)
+    except Exception as e:
+        logger.error(error_msg.format(error=e))
+        return error_msg.format(error=e)
+
 def create_service() -> str:
-    """
-    Создает и настраивает службу Windows.
-    """
+    """Создает и настраивает службу Windows."""
     try:
         binary_path = os.path.join(ZAPRET_FOLDER, "winws.exe")
         blacklist_path = BLACKLIST_FILES[2]
         quic_initial = os.path.join(ZAPRET_FOLDER, "quic_initial_www_google_com.bin")
         ipset = os.path.join(BLACKLIST_FOLDER, "ipset-discord.txt")
         ts = os.path.join(ZAPRET_FOLDER, "tls_clienthello_www_google_com.bin")
-
         required_files = [binary_path, blacklist_path, quic_initial, ipset, ts]
         missing_files = [f for f in required_files if not os.path.exists(f)]
         if missing_files:
@@ -253,110 +253,55 @@ def create_service() -> str:
             f'--dpi-desync-fooling=badseq '
             f'--dpi-desync-fake-tls={ts}"'
         )
+        # Создание службы
+        err = _run_sc_command(
+            ['sc', 'create', 'Penguin', f'binPath= {bin_path_with_args}'],
+            tr("Ошибка при создании службы: {error}")
+        )
+        if err:
+            return tr("Не удалось создать службу")
 
-        cmd_create = ['sc', 'create', 'Penguin', f'binPath= {bin_path_with_args}']
-
-        popen_params = {
-            'args': cmd_create,
-            'check': True,
-            'shell': False,
-            'creationflags': subprocess.CREATE_NO_WINDOW,
-            'stdout': subprocess.PIPE,
-            'stderr': subprocess.PIPE,
-            'text': True
-        }
-
-        if os.name == 'nt':
-            startupinfo = subprocess.STARTUPINFO()
-            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            startupinfo.wShowWindow = subprocess.SW_HIDE
-            popen_params['startupinfo'] = startupinfo
-
-        subprocess.run(**popen_params)
-
-        cmd_description = [
-            'sc', 'description', 'Penguin',
-            'Passive Deep Packet Inspection blocker and Active DPI circumvention utility'
-        ]
-        logger.debug(tr("Команда для добавления описания службы: {command}").format(command=' '.join(cmd_description)))
-
-        popen_params_description = {
-            'args': cmd_description,
-            'check': True,
-            'shell': False,
-            'creationflags': subprocess.CREATE_NO_WINDOW,
-            'stdout': subprocess.PIPE,
-            'stderr': subprocess.PIPE,
-            'text': True
-        }
-
-        if os.name == 'nt':
-            popen_params_description['startupinfo'] = startupinfo
-
-        subprocess.run(**popen_params_description)
+        # Описание службы
+        err = _run_sc_command(
+            ['sc', 'description', 'Penguin', 'Passive Deep Packet Inspection blocker and Active DPI circumvention utility'],
+            tr("Ошибка при добавлении описания службы: {error}")
+        )
+        if err:
+            return tr("Не удалось добавить описание службы")
 
         logger.info(tr("Служба создана и настроена для автоматического запуска"))
         return tr("Служба создана и настроена для автоматического запуска")
-    except subprocess.CalledProcessError as e:
-        logger.error(tr("Ошибка при создании службы: {error}").format(error=e))
-        return tr("Не удалось создать службу")
     except Exception as e:
         logger.error(tr("Не удалось создать службу из-за неизвестной ошибки: {error}").format(error=e))
         return tr("Не удалось создать службу из-за неизвестной ошибки")
 
 def delete_service() -> str:
-    """
-    Удаляет службу Windows.
-    """
-    try:
-        cmd_delete = ['sc', 'delete', 'Penguin']
-        popen_params = {
-            'args': cmd_delete,
-            'check': True,
-            'shell': False,
-            'creationflags': subprocess.CREATE_NO_WINDOW,
-            'stdout': subprocess.PIPE,
-            'stderr': subprocess.PIPE,
-            'text': True
-        }
-
-        if os.name == 'nt':
-            startupinfo = subprocess.STARTUPINFO()
-            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            startupinfo.wShowWindow = subprocess.SW_HIDE
-            popen_params['startupinfo'] = startupinfo
-
-        subprocess.run(**popen_params)
-
-        logger.info(tr("Служба успешно удалена"))
-        return tr("Служба успешно удалена")
-    except subprocess.CalledProcessError as e:
-        logger.error(tr("Не удалось удалить службу. Ошибка: {error}").format(error=e))
+    """Удаляет службу Windows."""
+    err = _run_sc_command(
+        ['sc', 'delete', 'Penguin'],
+        tr("Не удалось удалить службу. Ошибка: {error}")
+    )
+    if err:
         return tr("Не удалось удалить службу")
-    except Exception as e:
-        logger.error(tr("Неизвестная ошибка при удалении службы: {error}").format(error=e))
-        return tr("Не удалось удалить службу из-за неизвестной ошибки")
+    logger.info(tr("Служба успешно удалена"))
+    return tr("Служба успешно удалена")
 
+# --- Исправление через fix.bat ---
 def start_fix_process(parent) -> None:
-    """
-    Запускает процесс исправления через fix.bat.
-    """
-    if os.path.exists(FIX_BAT_PATH):
-        try:
-            startupinfo = subprocess.STARTUPINFO()
-            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            subprocess.run(
-                [FIX_BAT_PATH],
-                startupinfo=startupinfo
-            )
-            logger.info("Процесс исправления завершён успешно")
-            QMessageBox.information(parent, "Исправление", "Процесс исправления завершен успешно")
-        except subprocess.CalledProcessError:
-            logger.warning("Частичное исправление завершено с ошибкой")
-            QMessageBox.warning(parent, "Частичное исправление", "Частичное исправление завершено")
-        except Exception as e:
-            logger.error(f"Ошибка при выполнении процесса исправления: {e}")
-            QMessageBox.warning(parent, "Служба и процесс", "Успешно завершено, запустите обход блокировки снова")
-    else:
-        logger.error(f"Файл исправления не найден: {FIX_BAT_PATH}")
-        QMessageBox.warning(parent, "Ошибка", f"Файл {FIX_BAT_PATH} не найден")
+    """Запускает процесс исправления через fix.bat."""
+    if not os.path.exists(FIX_BAT_PATH):
+        logger.error(tr("Файл исправления не найден: {path}").format(path=FIX_BAT_PATH))
+        QMessageBox.warning(parent, tr("Ошибка"), tr("Файл {path} не найден").format(path=FIX_BAT_PATH))
+        return
+    try:
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        subprocess.run([FIX_BAT_PATH], startupinfo=startupinfo)
+        logger.info(tr("Процесс исправления завершён успешно"))
+        QMessageBox.information(parent, tr("Исправление"), tr("Процесс исправления завершен успешно"))
+    except subprocess.CalledProcessError:
+        logger.warning(tr("Частичное исправление завершено с ошибкой"))
+        QMessageBox.warning(parent, tr("Частичное исправление"), tr("Частичное исправление завершено"))
+    except Exception as e:
+        logger.error(tr("Ошибка при выполнении процесса исправления: {error}").format(error=e))
+        QMessageBox.warning(parent, tr("Служба и процесс"), tr("Успешно завершено, запустите обход блокировки снова"))
