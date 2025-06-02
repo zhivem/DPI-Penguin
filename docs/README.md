@@ -12,8 +12,7 @@
 >Также доступна альтернативная версия — [TrayPenguinDPI](https://github.com/zhivem/TrayPenguinDPI), написанная на `C#` для Windows. Она работает из системного трея, поддерживает тёмную и светлую темы и обеспечивает удобный способ обхода DPI-фильтрации.
 
 ## Интерфейс
-![image](https://github.com/user-attachments/assets/5aa82759-acfe-4edb-b80e-7f562ddb1891)
-![image](https://github.com/user-attachments/assets/4ef7ccc3-f425-4c57-add2-23ae9ccdf8bd)
+![image](https://github.com/user-attachments/assets/7dc2072c-fcd7-4c86-b362-2bd4ebed6ac6)
 
 ## Особенности
 
