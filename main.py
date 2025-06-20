@@ -1,19 +1,11 @@
-import ctypes
 import logging
 import os
 import sys
-import time
+import win32api
 from logging.handlers import RotatingFileHandler
-from typing import Optional, List
 from pathlib import Path
 
-if os.name == 'nt':
-    import win32api
-    import win32con
-    import win32event
-    import winerror
-
-from PyQt6.QtWidgets import QApplication, QMessageBox
+from PyQt6.QtWidgets import QApplication
 from gui.gui import DPIPenguin
 from utils.utils import CURRENT_VERSION, tr
 from utils.process_utils import InitializerThread
@@ -30,7 +22,7 @@ def setup_logging() -> logging.Logger:
     LOG_DIR.mkdir(parents=True, exist_ok=True)
     logger = logging.getLogger("dpipenguin")
     if logger.hasHandlers():
-        logger.handlers.clear() 
+        logger.handlers.clear()
     logger.setLevel(logging.DEBUG)
 
     formatter = logging.Formatter(
@@ -53,43 +45,6 @@ def setup_logging() -> logging.Logger:
     logger.info("Логирование успешно настроено")
     return logger
 
-def is_admin() -> bool:
-    """Проверка прав администратора."""
-    try:
-        if os.name == 'nt':
-            return bool(ctypes.windll.shell32.IsUserAnAdmin())
-        elif os.name == 'posix':
-            return os.geteuid() == 0
-        return False
-    except Exception as e:
-        logging.getLogger("dpipenguin").error(tr("Ошибка при проверке прав администратора: {error}").format(error=str(e)))
-        return False
-
-def run_as_admin(argv: Optional[List[str]] = None, mutex: Optional[int] = None) -> None:
-    """Перезапуск приложения с правами администратора."""
-    logger = logging.getLogger("dpipenguin")
-    if os.name != 'nt':
-        logger.error(tr("Функция run_as_admin доступна только на Windows"))
-        sys.exit(1)
-
-    try:
-        executable = sys.executable
-        params = ' '.join(f'"{arg}"' for arg in (argv or sys.argv))
-        ret = ctypes.windll.shell32.ShellExecuteW(
-            None, "runas", executable, params, None, win32con.SW_NORMAL
-        )
-        if ret <= 32:
-            logger.error(tr("Не удалось получить права администратора. Код ошибки: {code}").format(code=ret))
-            sys.exit(1)
-        else:
-            if mutex:
-                win32api.CloseHandle(mutex)
-            time.sleep(1)
-            sys.exit(0)
-    except Exception as e:
-        logger.error(tr("Ошибка при попытке повышения прав: {error}").format(error=str(e)))
-        sys.exit(1)
-
 class SingleInstance:
     """Контекстный менеджер для проверки единственного экземпляра приложения (только Windows)."""
     def __init__(self, mutex_name: str):
@@ -100,6 +55,7 @@ class SingleInstance:
         if os.name != 'nt':
             return None
         try:
+            import win32event, winerror
             self.mutex = win32event.CreateMutex(None, False, self.mutex_name)
             if win32api.GetLastError() == winerror.ERROR_ALREADY_EXISTS:
                 return None
@@ -109,6 +65,7 @@ class SingleInstance:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.mutex:
+            import win32api
             win32api.CloseHandle(self.mutex)
 
 def main() -> None:
@@ -118,12 +75,9 @@ def main() -> None:
     with SingleInstance(MUTEX_NAME) as mutex:
         if os.name == 'nt' and mutex is None:
             app = QApplication(sys.argv)
+            from PyQt6.QtWidgets import QMessageBox
             QMessageBox.warning(None, tr("Предупреждение"), tr("Приложение уже запущено"))
             sys.exit(0)
-
-        if not is_admin():
-            logger.info(tr("Требуются права администратора"))
-            run_as_admin(mutex=mutex)
 
         app = QApplication(sys.argv)
         window = None
