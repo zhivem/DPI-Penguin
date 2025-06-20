@@ -21,7 +21,7 @@ class TranslationManager:
             "ru": "Русский",
             "en": "English",
         }
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger("dpipenguin")
         self.logger.info(f"Инициализация TranslationManager с папкой: {self.translations_folder}")
         self._load_translations()
 
@@ -79,23 +79,21 @@ class TranslationManager:
         self.logger.debug(f"Перевод для '{text}' не найден, возвращаем исходный текст")
         return text
 
-    @staticmethod
-    def translate_ini_section(ini_content: str, translation_manager: "TranslationManager") -> str:
+    def translate_ini_section(self, ini_content: str) -> str:
         """
         Переводит названия секций в INI-файле.
         """
-        logger = logging.getLogger(__name__)
-        logger.info("Начало перевода секций INI-файла")
+        self.logger.info("Начало перевода секций INI-файла")
         sections = [
             "[Обход блокировок для РКН]",
             "[Универсальный обход]",
             "[Обход Discord + YouTube]"
         ]
         for section in sections:
-            translated = translation_manager.translate(section)
+            translated = self.translate(section)
             if translated != section:
                 ini_content = ini_content.replace(section, translated)
-        logger.info("Перевод секций INI-файла завершён")
+        self.logger.info("Перевод секций INI-файла завершён")
         return ini_content
 
     def get_available_languages(self) -> Dict[str, str]:

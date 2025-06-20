@@ -60,7 +60,7 @@ class UpdateChecker(QObject):
 
     def __init__(self):
         super().__init__()
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger("dpipenguin")
         self.local_versions: Dict[str, str] = {}
         self.remote_versions: Dict[str, str] = {}
 

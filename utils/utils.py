@@ -27,14 +27,7 @@ BLACKLIST_FILES: List[str] = [
 ]
 
 # --- Логгер ---
-logger = logging.getLogger("dpipenguin")
-logger.setLevel(logging.DEBUG)
-if not logger.hasHandlers():
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.INFO)
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
+logger = logging.getLogger("dpipenguin") 
 
 # --- Переводы и настройки ---
 settings = QSettings("Zhivem", "DPI Penguin")
@@ -246,7 +239,6 @@ def create_service() -> str:
             f'--dpi-desync=fake,split2 '
             f'--dpi-desync-autottl=2 '
             f'--dpi-desync-fooling=md5sig '
-            f'--filter-tcp=443 '
             f'--dpi-desync=fake,split '
             f'--dpi-desync-autottl=2 '
             f'--dpi-desync-repeats=6 '

@@ -8,7 +8,7 @@ import win32serviceutil
 import winerror
 from pywintypes import error as WinError
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dpipenguin")
 
 _SERVICE_STATES = {
     win32service.SERVICE_STOPPED: "STOPPED",
@@ -95,15 +95,14 @@ def is_service_running(service_name: str) -> Optional[bool]:
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
     service = "WinDivert"
 
     try:
         stopped = stop_service(service)
-        print(f"Служба '{service}' остановлена: {stopped}")
+        logger.info(f"Служба '{service}' остановлена: {stopped}")
 
         running = is_service_running(service)
-        print(f"Служба '{service}' запущена: {running}")
+        logger.info(f"Служба '{service}' запущена: {running}")
 
     except Exception as e:
-        print(f"Ошибка: {e}")
+        logger.error(f"Ошибка: {e}")

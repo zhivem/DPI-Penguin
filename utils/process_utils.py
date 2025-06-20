@@ -12,7 +12,7 @@ from utils.utils import tr
 if os.name == 'nt':
     from win32con import CREATE_NO_WINDOW
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dpipenguin")
 
 class ProcessUtils:
     """Утилиты для работы с процессами и службами."""

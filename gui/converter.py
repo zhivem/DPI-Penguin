@@ -1,5 +1,5 @@
-import logging
 import re
+import logging
 
 from PyQt6.QtGui import QGuiApplication
 from PyQt6.QtWidgets import (
@@ -14,8 +14,7 @@ from utils import theme_utils
 class ConfigConverterDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.INFO)
+        self.logger = logging.getLogger("dpipenguin")
         saved_theme = settings.value("theme", "light")
         theme_utils.apply_theme(self, saved_theme, settings, BASE_FOLDER)
         self._init_ui()

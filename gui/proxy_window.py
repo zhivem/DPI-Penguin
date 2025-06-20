@@ -1,8 +1,8 @@
-import logging
 import re
 import subprocess
 import winreg
 import requests
+import logging
 
 from PyQt6.QtCore import QThread, pyqtSignal
 from PyQt6.QtWidgets import (
@@ -16,7 +16,7 @@ from utils import theme_utils
 from utils.utils import settings, BASE_FOLDER
 
 # Настройка логирования
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dpipenguin")
 
 DNS_SERVERS = {
     "DNS по умолчанию": ("", ""),
@@ -36,7 +36,7 @@ class RegistryManager:
             with winreg.OpenKey(winreg.HKEY_CURRENT_USER,
                               r"Software\Microsoft\Windows\CurrentVersion\Internet Settings",
                               0, winreg.KEY_WRITE) as key:
-                winreg.SetValueEx(key, "ProxyEnable", 0, winreg.REG_DWORD, int(enabled))
+                winreg.SetValue(key, "ProxyEnable", 0, winreg.REG_DWORD, int(enabled))
                 if enabled and server:
                     winreg.SetValueEx(key, "ProxyServer", 0, winreg.REG_SZ, server)
         except Exception as e:
@@ -297,10 +297,3 @@ class ProxySettingsDialog(QDialog):
     def _show_error(self, text: str):
         """Отображает сообщение об ошибке"""
         QMessageBox.critical(self, "Ошибка", text)
-
-if __name__ == "__main__":
-    from PyQt6.QtWidgets import QApplication
-    app = QApplication([])
-    dialog = ProxySettingsDialog()
-    dialog.show()
-    app.exec()

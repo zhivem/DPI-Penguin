@@ -20,8 +20,7 @@ class SettingsDialog(QDialog):
 
     def __init__(self, parent: Optional[Any] = None):
         super().__init__(parent)
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.INFO)
+        self.logger = logging.getLogger("dpipenguin")
         self.logger.info("Инициализация диалога менеджера обновлений")
 
         self.setWindowTitle(tr("Менеджер обновлений"))

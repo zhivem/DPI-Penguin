@@ -17,6 +17,8 @@ DARK_STYLESHEET = "dark_theme.qss"
 LIGHT_STYLESHEET = "light_theme.qss"
 ICON_FOLDER = "resources/icon"
 
+# Логгер
+logger = logging.getLogger("dpipenguin")
 
 def apply_theme(
     window: QWidget,
@@ -29,7 +31,7 @@ def apply_theme(
     """
     app = QApplication.instance()
     if app is None:
-        logging.error(tr("QApplication не инициализирован"))
+        logger.error(tr("QApplication не инициализирован"))
         return
 
     if theme_name == DARK_THEME_NAME:
@@ -44,9 +46,9 @@ def apply_theme(
     style_content = get_stylesheet(stylesheet_name, base_folder)
     if style_content:
         app.setStyleSheet(style_content)
-        logging.info(tr("Применён стиль: {stylesheet}").format(stylesheet=stylesheet_name))
+        logger.info(tr("Применён стиль: {stylesheet}").format(stylesheet=stylesheet_name))
     else:
-        logging.warning(tr("Не удалось применить стиль: {stylesheet}").format(stylesheet=stylesheet_name))
+        logger.warning(tr("Не удалось применить стиль: {stylesheet}").format(stylesheet=stylesheet_name))
 
     settings.setValue("theme", theme_name)
 
@@ -67,9 +69,9 @@ def get_stylesheet(stylesheet_name: str, base_folder: Union[str, os.PathLike]) -
         with open(path, "r", encoding="utf-8") as f:
             return f.read()
     except FileNotFoundError:
-        logging.error(tr("Файл стилей не найден: {path}").format(path=path))
+        logger.error(tr("Файл стилей не найден: {path}").format(path=path))
     except Exception as e:
-        logging.error(tr("Ошибка при загрузке стиля {path}: {error}").format(path=path, error=e))
+        logger.error(tr("Ошибка при загрузке стиля {path}: {error}").format(path=path, error=e))
     return None
 
 
@@ -84,7 +86,7 @@ def update_theme_button_text(
     theme_button: Optional[PushButton] = getattr(window, "theme_toggle_button", None)
 
     if theme_button is None:
-        logging.warning(tr("Кнопка 'theme_toggle_button' не найдена в окне"))
+        logger.warning(tr("Кнопка 'theme_toggle_button' не найдена в окне"))
         return
 
     if current_theme == LIGHT_THEME_NAME:
@@ -107,4 +109,4 @@ def toggle_theme(
     new_theme = DARK_THEME_NAME if current_theme == LIGHT_THEME_NAME else LIGHT_THEME_NAME
     apply_theme(window, new_theme, settings, base_folder)
     update_theme_button_text(window, settings)
-    logging.info(tr("Тема переключена с '{old}' на '{new}'").format(old=current_theme, new=new_theme))
+    logger.info(tr("Тема переключена с '{old}' на '{new}'").format(old=current_theme, new=new_theme))

@@ -55,7 +55,7 @@ from utils.service_utils import stop_service
 # Путь к иконке приложения
 TRAY_ICON_PATH = os.path.join(BASE_FOLDER, "resources", "icon", "newicon.ico")
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("dpipenguin")
 
 class UpdateBlacklistsThread(QtCore.QThread):
     def __init__(self, parent=None, silent=False):
@@ -1006,7 +1006,6 @@ class DPIPenguin(QtWidgets.QMainWindow):
                 return
 
             new_script_options, new_config_error = load_script_options(file_path)
-
             if new_config_error:
                 self.console_output.append(new_config_error)
                 self.logger.error(new_config_error)

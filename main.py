@@ -29,6 +29,8 @@ def setup_logging() -> logging.Logger:
     """Настройка логирования приложения."""
     LOG_DIR.mkdir(parents=True, exist_ok=True)
     logger = logging.getLogger("dpipenguin")
+    if logger.hasHandlers():
+        logger.handlers.clear() 
     logger.setLevel(logging.DEBUG)
 
     formatter = logging.Formatter(
