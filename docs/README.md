@@ -31,7 +31,7 @@
 
 ## Конфигурация настройки
 
-Приложение использует файл `default.ini`, расположенный в папке `config`. Этот файл содержит настройки для различных скриптов и параметров работы приложения. Вы можете редактировать этот файл вручную и добавлять свои конфигурации. Пример на основе `DiscordFix`:
+Приложение использует файл `default.ini`, расположенный в папке `config`. Этот файл содержит настройки для различных скриптов и параметров работы приложения. Вы можете редактировать этот файл вручную и добавлять свои конфигурации.
 
 ### Путь к исполняемым файлам должны оставаться как есть 
 
@@ -46,45 +46,80 @@
 
 ```py
  "russia-blacklist.txt" - {BLACKLIST_FILES_0}
- "russia-youtube.txt" - {BLACKLIST_FILES_1}
- "discord-blacklist.txt" - {BLACKLIST_FILES_2}
- "disk-youtube.txt" - {BLACKLIST_FILES_3}
+ "disk-youtube-blacklist.txt" - {BLACKLIST_FILES_1}
+ "universal.txt" - {BLACKLIST_FILES_2}
  "ipset-discord.txt" - {BLACKLIST_FOLDER}\ipset-discord.txt
  "autohostlist.txt" - {BLACKLIST_FOLDER}\autohostlist.txt 
+ "{GAME_FILTER}" - игровой фильтр
 ```
 ### Пример конфига DiscordFix
 
 ```py
-[DiscordFix]
+[Пример названия]
+[Универсальный доступ 🚀]
 executable = {ZAPRET_FOLDER}\winws.exe
-args = 
-    --wf-tcp=443;
-    --wf-udp=443,50000-65535; 
+args =
+    --wf-tcp=80,443,{GAME_FILTER};
+    --wf-udp=443,50000-50100,{GAME_FILTER};
     --filter-udp=443;
-    --hostlist={BLACKLIST_FILES_1}; 
-    --dpi-desync=fake; 
-    --dpi-desync-udplen-increment=10;  
-    --dpi-desync-repeats=6; 
-    --dpi-desync-udplen-pattern=0xDEADBEEF; 
-    --dpi-desync-fake-quic={ZAPRET_FOLDER}\quic_initial_www_google_com.bin;  
-    --filter-udp=50000-65535; 
+    --hostlist={BLACKLIST_FILES_2};
     --dpi-desync=fake;
-    --dpi-desync-any-protocol;
-    --dpi-desync-cutoff=d3; 
-    --dpi-desync-repeats=6; 
+    --dpi-desync-repeats=11;
     --dpi-desync-fake-quic={ZAPRET_FOLDER}\quic_initial_www_google_com.bin;
-    --new; 
-    --filter-tcp=443; 
-    --hostlist={BLACKLIST_FILES_1}; 
-    --dpi-desync=fake,split;
-    --dpi-desync-autottl=2;  
-    --dpi-desync-repeats=6; 
-    --dpi-desync-fooling=badseq; 
-    --dpi-desync-fake-tls={ZAPRET_FOLDER}\tls_clienthello_www_google_com.bin; 
+    --new;
+    --filter-udp=50000-50100;
+    --filter-l7=discord,stun;
+    --dpi-desync=fake;
+    --dpi-desync-repeats=6;
+    --new;
+    --filter-tcp=80;
+    --hostlist={BLACKLIST_FILES_2};
+    --dpi-desync=fake,fakedsplit;
+    --dpi-desync-autottl=2;
+    --dpi-desync-fooling=md5sig;
+    --new;
+    --filter-tcp=443;
+    --hostlist={BLACKLIST_FILES_2};
+    --dpi-desync=fake,fakedsplit;
+    --dpi-desync-split-pos=1;
+    --dpi-desync-autottl;
+    --dpi-desync-fooling=badseq;
+    --dpi-desync-repeats=8;
+    --dpi-desync-fake-tls-mod=rnd,dupsid,sni=www.google.com;
+    --new;
+    --filter-udp=443;
+    --ipset={BLACKLIST_FOLDER}\ipset-discord.txt;
+    --dpi-desync=fake;
+    --dpi-desync-repeats=11;
+    --dpi-desync-fake-quic={ZAPRET_FOLDER}\quic_initial_www_google_com.bin;
+    --new;
+    --filter-tcp=80;
+    --ipset={BLACKLIST_FOLDER}\ipset-discord.txt;
+    --dpi-desync=fake,fakedsplit;
+    --dpi-desync-autottl=2;
+    --dpi-desync-fooling=md5sig;
+    --new;
+    --filter-tcp=443,{GAME_FILTER};
+    --ipset={BLACKLIST_FOLDER}\ipset-discord.txt;
+    --dpi-desync=fake,fakedsplit;
+    --dpi-desync-split-pos=1;
+    --dpi-desync-autottl;
+    --dpi-desync-fooling=badseq;
+    --dpi-desync-repeats=8;
+    --dpi-desync-fake-tls-mod=rnd,dupsid,sni=www.google.com;
+    --new;
+    --filter-udp={GAME_FILTER};
+    --ipset={BLACKLIST_FOLDER}\ipset-discord.txt;
+    --dpi-desync=fake;
+    --dpi-desync-autottl=2;
+    --dpi-desync-repeats=10;
+    --dpi-desync-any-protocol=1;
+    --dpi-desync-fake-unknown-udp={ZAPRET_FOLDER}\quic_initial_www_google_com.bin;
+    --dpi-desync-cutoff=n2;
 ```
 ### Дополнительные файлы конфигурации
 
-В архиве с программой лежат конфигурации которые вы можете использовать вместо обычных `default.ini`. `DiscordFix (для МГТС).ini`, `YoutubeFix (для МГТС).ini`, `FixYouTube+Discord (для Билайн, Ростелеком, Инфолинк).ini` и т.д. Чтобы открыть папку с конфигурациями нажмите кнопку `Открыть configs`.
+В архиве с программой лежат конфигурации которые вы можете использовать вместо обычных `default.ini`. Чтобы открыть папку с конфигурациями нажмите кнопку `Открыть configs`.
 
 ### Возможные ошибки
 
@@ -125,6 +160,7 @@ light_theme.qss - светлый интерфейс
 
 - **GoodbyeDPI:** Основа для работы YouTube. Разработчик: ValdikSS. [Репозиторий](https://github.com/ValdikSS/GoodbyeDPI)
 - **Zapret:** Основа для работы Discord и YouTube. Разработчик: bol-van. [Репозиторий](https://github.com/bol-van/zapret)
+- **Flowseal:** Сборка для работы Discord и YouTube. Разработчик: Flowseal. [Репозиторий](https://github.com/Flowseal/zapret-discord-youtube)
 
 ## Лицензия 
 
