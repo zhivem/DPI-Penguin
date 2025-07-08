@@ -1,6 +1,6 @@
 # DPI Penguin [YouTube + Discord]
 
-<img src="https://github.com/zhivem/DPI-Penguin/blob/main/resources/icon/newicon.ico" width=10% height=10%>
+<img src="https://github.com/zhivem/DPI-Penguin/blob/main/resources/icon/newicon.ico">
 
 [![en](https://img.shields.io/badge/lang-en-red.svg)](./README.EN.md)
 [![ru](https://img.shields.io/badge/lang-ru-green.svg)](./README.md)
