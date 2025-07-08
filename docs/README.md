@@ -56,7 +56,6 @@
 
 ```py
 [Пример названия]
-[Универсальный доступ 🚀]
 executable = {ZAPRET_FOLDER}\winws.exe
 args =
     --wf-tcp=80,443,{GAME_FILTER};
