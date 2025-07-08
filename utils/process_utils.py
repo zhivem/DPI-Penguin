@@ -124,8 +124,7 @@ class WorkerThread(QtCore.QThread):
                 self.output_signal.emit(line)
 
     def _log_completion(self, returncode: int) -> None:
-        """Логирование завершения процесса."""
-        if returncode == 0:
+        if returncode == 0 or (self.process_name == "winws.exe" and returncode == 1):
             logger.info(tr("Процесс {name} завершён успешно").format(name=self.process_name))
         else:
             logger.warning(tr("Процесс {name} завершён с кодом ошибки {code}").format(

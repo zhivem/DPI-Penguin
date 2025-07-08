@@ -165,8 +165,6 @@ class DPIPenguin(QtWidgets.QMainWindow):
                 QMessageBox.StandardButton.Ok
             )
             self.open_settings_dialog()
-        else:
-            self.logger.info(tr("Все компоненты обновлены до последней версии."))
 
     def run_autorun(self) -> None:
         """
@@ -196,7 +194,7 @@ class DPIPenguin(QtWidgets.QMainWindow):
         Инициализирует пользовательский интерфейс главного окна.
         """
         self.setWindowTitle("DPI Penguin v{version}".format(version=CURRENT_VERSION))
-        self.setFixedSize(420, 570)
+        self.setFixedSize(420, 600)
         self.set_window_icon(TRAY_ICON_PATH)
 
         saved_theme = settings.value("theme", "light")
@@ -374,6 +372,12 @@ class DPIPenguin(QtWidgets.QMainWindow):
 
         return process_tab
 
+    def toggle_game_filter(self, checked: bool) -> None:
+        """
+        Включает или отключает Game Filter и сохраняет настройку.
+        """
+        settings.setValue("game_filter_enabled", checked)
+
     def open_converter(self):
         self.converter_window = ConfigConverterDialog(self)
         self.converter_window.show()
@@ -398,6 +402,40 @@ class DPIPenguin(QtWidgets.QMainWindow):
         Обработчик нажатия кнопки переключения темы.
         """
         utils.theme_utils.toggle_theme(self, settings, BASE_FOLDER)
+
+    def toggle_tray_behavior(self, checked: bool) -> None:
+        """
+        Переключает поведение приложения при закрытии.
+        """
+        self.minimize_to_tray = checked
+        settings.setValue("minimize_to_tray", self.minimize_to_tray)
+
+        if not checked and self.tray_icon.isVisible():
+            self.tray_icon.hide()
+
+    def toggle_autostart(self, checked: bool) -> None:
+        """
+        Включает или отключает автозапуск при старте системы.
+        """
+        if checked:
+            enable_autostart()
+        else:
+            disable_autostart()
+
+    def toggle_autorun_with_last_config(self, checked: bool) -> None:
+        """
+        Включает или отключает автозапуск с последней конфигурацией.
+        """
+        self.autorun_with_last_config = checked
+        settings.setValue("autorun_with_last_config", self.autorun_with_last_config)
+        if checked:
+            settings.setValue("last_config_path", self.current_config_path)
+
+    def toggle_update_blacklists_on_start(self, checked: bool) -> None:
+        """
+        Включает или отключает обновление черных списков при запуске.
+        """
+        settings.setValue("update_blacklists_on_start", checked)
 
     def create_settings_tab(self) -> QWidget:
         """
@@ -424,7 +462,7 @@ class DPIPenguin(QtWidgets.QMainWindow):
         language_layout.addWidget(self.language_combo)
         settings_layout.addWidget(self.language_group)
 
-        self.autostart_group = QGroupBox(tr("Автозапуск"))
+        self.autostart_group = QGroupBox(tr("Настройки"))
         autostart_layout = QVBoxLayout()
         self.autostart_group.setLayout(autostart_layout)
 
@@ -447,6 +485,16 @@ class DPIPenguin(QtWidgets.QMainWindow):
         self.update_blacklists_on_start_checkbox.setChecked(settings.value("update_blacklists_on_start", False, type=bool))
         self.update_blacklists_on_start_checkbox.toggled.connect(self.toggle_update_blacklists_on_start)
         autostart_layout.addWidget(self.update_blacklists_on_start_checkbox)
+
+        self.game_filter_checkbox = QCheckBox(tr("Включить Game Filter (дополнительные порты для игр)"))
+        self.game_filter_checkbox.setChecked(settings.value("game_filter_enabled", False, type=bool))
+        self.game_filter_checkbox.toggled.connect(self.toggle_game_filter)
+
+        font = self.game_filter_checkbox.font()
+        font.setPointSize(9)
+        self.game_filter_checkbox.setFont(font)
+
+        autostart_layout.addWidget(self.game_filter_checkbox)
 
         font = self.tray_checkbox.font()
         font.setPointSize(9)
@@ -678,44 +726,6 @@ class DPIPenguin(QtWidgets.QMainWindow):
 
         return section
 
-    def toggle_tray_behavior(self, checked: bool) -> None:
-        """
-        Переключает поведение приложения при закрытии.
-        """
-        self.minimize_to_tray = checked
-        settings.setValue("minimize_to_tray", self.minimize_to_tray)
-
-        if not checked and self.tray_icon.isVisible():
-            self.tray_icon.hide()
-
-    def toggle_autostart(self, checked: bool) -> None:
-        """
-        Включает или отключает автозапуск при старте системы.
-        """
-        if checked:
-            enable_autostart()
-            self.logger.info(tr("Автозапуск включен"))
-        else:
-            disable_autostart()
-            self.logger.info(tr("Автозапуск отключен"))
-
-    def toggle_autorun_with_last_config(self, checked: bool) -> None:
-        """
-        Включает или отключает автозапуск с последней конфигурацией.
-        """
-        self.autorun_with_last_config = checked
-        settings.setValue("autorun_with_last_config", self.autorun_with_last_config)
-        self.logger.info(f"{tr('Автозапуск с последним конфигом')} {'включен' if checked else 'отключен'}")
-        if checked:
-            settings.setValue("last_config_path", self.current_config_path)
-
-    def toggle_update_blacklists_on_start(self, checked: bool) -> None:
-        """
-        Включает или отключает обновление черных списков при запуске.
-        """
-        settings.setValue("update_blacklists_on_start", checked)
-        self.logger.info(f"{tr('Обновление черных списков при запуске программы')} {'включено' if checked else 'отключено'}")
-
     def create_button(self, text, func, layout, enabled=True, icon=None, icon_size=(24, 24), tooltip=None):
         """
         Создает кнопку с заданными параметрами.
@@ -748,9 +758,8 @@ class DPIPenguin(QtWidgets.QMainWindow):
 
     def run_exe(self, auto_run: bool = False) -> None:
         """
-        Запускает выбранный скрипт.
+        Запускает выбранный скрипт с учетом GameFilter.
         """
-        self.logger.debug(f"Запуск скрипта, auto_run={auto_run}")
         if self.config_error:
             self.console_output.append(tr("Не удалось загрузить конфигурацию из-за ошибок"))
             self.logger.error(tr("Не удалось загрузить конфигурацию из-за ошибок"))
@@ -767,6 +776,26 @@ class DPIPenguin(QtWidgets.QMainWindow):
 
         executable, args = self.script_options[selected_option]
 
+        game_filter_enabled = settings.value("game_filter_enabled", False, type=bool)
+        game_filter_ports = settings.value("game_filter_ports", "1024-65535", type=str).strip()
+        if game_filter_enabled and not game_filter_ports:
+            logger.error("Game Filter включён, но порты не заданы")
+            self.console_output.append(tr("Ошибка: Порты для Game Filter не заданы"))
+            return
+
+        modified_args = []
+        for arg in args:
+            if "{GAME_FILTER}" in arg:
+                if game_filter_enabled and game_filter_ports:
+                    new_arg = arg.replace("{GAME_FILTER}", game_filter_ports)
+                else:
+                    new_arg = ""  # Пропускаем аргумент, если Game Filter выключен
+            else:
+                new_arg = arg
+            if new_arg:
+                modified_args.append(new_arg)
+        args = modified_args
+
         if not self.is_executable_available(executable, selected_option):
             return
 
@@ -774,7 +803,6 @@ class DPIPenguin(QtWidgets.QMainWindow):
         clear_console_text = tr("Установка: {option} запущена...").format(option=translated_option)
 
         command = [executable] + args
-        self.logger.debug(f"{tr('Команда для запуска')}: {command}")
 
         try:
             self.start_main_process(
@@ -784,7 +812,6 @@ class DPIPenguin(QtWidgets.QMainWindow):
                 clear_console_text=clear_console_text,
                 capture_output=True
             )
-            self.logger.info(f"{tr('Процесс')} '{selected_option}' {tr('запущен')}")
 
             winws_path = os.path.join(ZAPRET_FOLDER, "winws.exe")
             self.start_winws(winws_path)
@@ -798,11 +825,16 @@ class DPIPenguin(QtWidgets.QMainWindow):
             settings.setValue("last_config_path", self.current_config_path)
 
     def is_executable_available(self, executable, selected_option):
+        """
+        Проверяет доступность исполняемого файла.
+        """
         if not os.path.exists(executable):
             self.logger.error(f"{tr('Файл не найден')}: {executable}")
+            self.console_output.append(f"{tr('Ошибка')}: {tr('Файл не найден')}: {executable}")
             return False
         if not os.access(executable, os.X_OK):
             self.logger.error(f"{tr('Недостаточно прав для запуска')}: {executable}")
+            self.console_output.append(f"{tr('Ошибка')}: {tr('Недостаточно прав для запуска')}: {executable}")
             return False
         return True
 
@@ -886,12 +918,9 @@ class DPIPenguin(QtWidgets.QMainWindow):
         Обработчик завершения процесса.
         """
         if process_name in self.script_options or process_name == "winws.exe":
-            if process_name == "winws.exe":
-                self.logger.info(f"{tr('Процесс')} {process_name} {tr('завершён')}")
-            else:
+            if process_name != "winws.exe":
                 self.run_button.setEnabled(True)
                 self.stop_close_button.setEnabled(False)
-                self.logger.info(f"{tr('Процесс')} {process_name} {tr('завершён')}")
                 self.console_output.append(tr("Обход блокировки завершен"))
 
             if process_name == "winws.exe":
@@ -924,10 +953,7 @@ class DPIPenguin(QtWidgets.QMainWindow):
         """
         Завершает все запущенные процессы и закрывает приложение.
         """
-        self.logger.info(tr("Начата процедура остановки и закрытия процессов"))
-
         if self.main_worker_thread is not None:
-            self.logger.info(tr("Завершение работы основного WorkerThread"))
             self.main_worker_thread.terminate_process()
             self.main_worker_thread.quit()
             if not self.main_worker_thread.wait(5000):
@@ -937,20 +963,17 @@ class DPIPenguin(QtWidgets.QMainWindow):
             self.main_worker_thread = None
 
         if self.winws_worker_thread is not None:
-            self.logger.info(tr("Завершение работы WorkerThread для winws.exe"))
             self.winws_worker_thread.terminate_process()
             self.winws_worker_thread.quit()
             if not self.winws_worker_thread.wait(5000):
                 self.logger.warning(tr("WorkerThread для winws.exe не завершился в течение 5 секунд. Принудительно заверяем"))
                 self.winws_worker_thread.terminate()
-                self.winws_worker_thread.wait()
+                self.main_worker_thread.wait()
             self.winws_worker_thread = None
 
         service_name = "WinDivert"
         try:
-            self.logger.info(tr(f"Попытка остановить службу '{service_name}'"))
             stop_service(service_name)
-            self.logger.info(tr(f"Служба '{service_name}' успешно остановлена"))
         except Exception as e:
             self.logger.error(tr(f"Ошибка при остановке службы '{service_name}': {e}"))
             QMessageBox.warning(
@@ -982,17 +1005,13 @@ class DPIPenguin(QtWidgets.QMainWindow):
         )
 
         if file_path:
-            self.logger.info(f"{tr('Выбран файл конфигурации')}: {file_path}")
-
             if self.main_worker_thread is not None:
-                self.logger.info(tr("Завершение работы WorkerThread перед загрузкой новой конфигурации"))
                 self.main_worker_thread.terminate_process()
                 self.main_worker_thread.quit()
                 self.main_worker_thread.wait()
                 self.main_worker_thread = None
 
             if self.winws_worker_thread is not None:
-                self.logger.info(tr("Завершение работы WorkerThread для winws.exe перед загрузкой новой конфигурации"))
                 self.winws_worker_thread.terminate_process()
                 self.winws_worker_thread.quit()
                 self.winws_worker_thread.wait()
@@ -1087,7 +1106,6 @@ class DPIPenguin(QtWidgets.QMainWindow):
         """
         Перезагружает конфигурацию после обновления.
         """
-        self.logger.debug("Перезагрузка конфигурации")
         if self.main_worker_thread is not None:
             self.main_worker_thread.terminate_process()
             self.main_worker_thread.quit()

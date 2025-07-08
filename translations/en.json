@@ -222,7 +222,6 @@
     "Запускать при старте Windows": "Start with Windows",
     "Запускать в тихом режиме": "Run in Silent Mode",
     "Проверять обновления черных списков при запуске": "Check Blacklist Updates on Startup",
-    "Автозапуск": "Autostart",
     "Обновления": "Updates",
     "Черные списки успешно обновлены": "Blacklists Successfully Updated",
     "Обход блокировки завершен": "Bypass Completed",
@@ -256,5 +255,6 @@
     "Сохранить файл": "Save File",
     "INI Files (*.ini)": "INI Files (*.ini)",
     "Сохранено": "Saved",
-    "Файл успешно сохранен": "File Successfully Saved"
+    "Файл успешно сохранен": "File Successfully Saved",
+    "Включить Game Filter (дополнительные порты для игр)": "Enable Game Filter"
 }

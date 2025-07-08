@@ -27,7 +27,7 @@ BLACKLIST_FILES: List[str] = [
 ]
 
 # --- Логгер ---
-logger = logging.getLogger("dpipenguin") 
+logger = logging.getLogger("dpipenguin")
 
 # --- Переводы и настройки ---
 settings = QSettings("Zhivem", "DPI Penguin")
@@ -100,7 +100,6 @@ def enable_autostart() -> None:
             0, winreg.KEY_SET_VALUE
         ) as key:
             winreg.SetValueEx(key, "WinWSApp", 0, winreg.REG_SZ, get_executable_path())
-            logger.info(tr("Автозапуск успешно установлен"))
     except Exception as e:
         logger.error(tr("Ошибка при установке автозапуска: {error}").format(error=e))
         raise
@@ -114,9 +113,8 @@ def disable_autostart() -> None:
             0, winreg.KEY_SET_VALUE
         ) as key:
             winreg.DeleteValue(key, "WinWSApp")
-            logger.info(tr("Автозапуск успешно отключен"))
     except FileNotFoundError:
-        logger.info(tr("Автозапуск уже отключен"))
+        pass  # Автозапуск уже отключен, не логируем
     except Exception as e:
         logger.error(tr("Ошибка при отключении автозапуска: {error}").format(error=e))
         raise
@@ -126,6 +124,7 @@ def load_script_options(config_path: str) -> Tuple[Optional[Dict[str, Tuple[str,
     """Загружает опции скрипта из конфигурационного файла."""
     config = configparser.ConfigParser()
     config.optionxform = str
+
     try:
         config.read(config_path, encoding='utf-8')
     except configparser.Error as e:
@@ -133,13 +132,13 @@ def load_script_options(config_path: str) -> Tuple[Optional[Dict[str, Tuple[str,
         logger.error(msg)
         return None, msg
 
-    # Проверка на дубли секций
     section_counts = {}
     try:
         with open(config_path, 'r', encoding='utf-8') as f:
             for line in f:
-                if line.strip().startswith('[') and line.strip().endswith(']'):
-                    section = line.strip()[1:-1]
+                line = line.strip()
+                if line.startswith('[') and line.endswith(']'):
+                    section = line[1:-1]
                     section_counts[section] = section_counts.get(section, 0) + 1
     except Exception as e:
         msg = tr("Ошибка при обработке config.ini: {error}").format(error=e)
@@ -155,14 +154,21 @@ def load_script_options(config_path: str) -> Tuple[Optional[Dict[str, Tuple[str,
         return None, msg
 
     script_options = {}
+    game_filter_enabled = settings.value("game_filter_enabled", False, type=bool)
+    game_filter_ports = settings.value("game_filter_ports", "1024-65535", type=str).strip() if game_filter_enabled else ""
+
     for section in config.sections():
         if section == "SCRIPT_OPTIONS":
             continue
+
         executable = config.get(section, 'executable', fallback=None)
         args = config.get(section, 'args', fallback='')
-        args_list = [arg.strip() for arg in ' '.join(args.splitlines()).split(';') if arg.strip()] if args else []
 
-        # Подстановка путей
+        args_list = []
+        if args:
+            args_split = ' '.join(args.splitlines()).split(';')
+            args_list = [arg.strip() for arg in args_split if arg.strip()]
+
         args_list = [
             arg.replace('{ZAPRET_FOLDER}', ZAPRET_FOLDER)
                .replace('{BLACKLIST_FOLDER}', BLACKLIST_FOLDER)
@@ -170,15 +176,20 @@ def load_script_options(config_path: str) -> Tuple[Optional[Dict[str, Tuple[str,
                .replace('{BLACKLIST_FILES_1}', BLACKLIST_FILES[1])
                .replace('{BLACKLIST_FILES_2}', BLACKLIST_FILES[2])
                .replace('{BASE_FOLDER}', BASE_FOLDER)
+               .replace('{GAME_FILTER}', game_filter_ports)
+               .replace(',,', ',')
+               .rstrip(';,').lstrip(',')
             for arg in args_list
         ]
+
+        args_list = [arg for arg in args_list if arg and not arg.endswith('=')]
+
         if executable:
             executable = executable.replace('{ZAPRET_FOLDER}', ZAPRET_FOLDER).replace('{BASE_FOLDER}', BASE_FOLDER)
             if not os.path.isabs(executable):
                 executable = os.path.join(BASE_FOLDER, executable)
-        script_options[section] = (executable, args_list)
 
-    logger.info(tr("SCRIPT_OPTIONS успешно загружены"))
+        script_options[section] = (executable, args_list)
     return script_options, None
 
 # --- Работа со службой Windows ---
@@ -261,7 +272,6 @@ def create_service() -> str:
         if err:
             return tr("Не удалось добавить описание службы")
 
-        logger.info(tr("Служба создана и настроена для автоматического запуска"))
         return tr("Служба создана и настроена для автоматического запуска")
     except Exception as e:
         logger.error(tr("Не удалось создать службу из-за неизвестной ошибки: {error}").format(error=e))
@@ -275,7 +285,6 @@ def delete_service() -> str:
     )
     if err:
         return tr("Не удалось удалить службу")
-    logger.info(tr("Служба успешно удалена"))
     return tr("Служба успешно удалена")
 
 # --- Исправление через fix.bat ---
@@ -289,11 +298,10 @@ def start_fix_process(parent) -> None:
         startupinfo = subprocess.STARTUPINFO()
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         subprocess.run([FIX_BAT_PATH], startupinfo=startupinfo)
-        logger.info(tr("Процесс исправления завершён успешно"))
         QMessageBox.information(parent, tr("Исправление"), tr("Процесс исправления завершен успешно"))
     except subprocess.CalledProcessError:
         logger.warning(tr("Частичное исправление завершено с ошибкой"))
         QMessageBox.warning(parent, tr("Частичное исправление"), tr("Частичное исправление завершено"))
     except Exception as e:
         logger.error(tr("Ошибка при выполнении процесса исправления: {error}").format(error=e))
-        QMessageBox.warning(parent, tr("Служба и процесс"), tr("Успешно завершено, запустите обход блокировки снова"))
+        QMessageBox(parent, tr("Служба и процесс"), tr("Успешно завершено, запустите обход блокировки снова"))
